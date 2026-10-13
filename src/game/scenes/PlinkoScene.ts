@@ -85,6 +85,23 @@ export class PlinkoScene {
     g.stroke({ color: 0x6366f1, alpha: 0.05, width: 1 })
   }
 
+  /** Light interaction: tapping the board drops a bonus ball at that x. */
+  tapDrop(x: number) {
+    if (this.tapCd > 0) return
+    this.tapCd = 0.22
+    const B = this.board
+    const b = this.balls.acquire()
+    if (!b) return
+    const hw = B.halfWidthAt(B.top) - B.ballR
+    const cx = Math.max(B.cx - hw, Math.min(B.cx + hw, x))
+    b.spawn(cx, B.top - B.s * 0.9, B.ballR, Math.random() < goldChance(this.eco.levels.gold))
+    this.fx.ring(cx, B.top - B.s * 0.9, 0x67e8f9, B.s * 1.5)
+    this.audio.plink(0, false)
+    this.hint = 0
+  }
+  private tapCd = 0
+  hint = 1
+
   private spawn() {
     const B = this.board
     const count = 1 + this.eco.levels.multi
@@ -124,6 +141,7 @@ export class PlinkoScene {
   }
 
   update(dt: number) {
+    if (this.tapCd > 0) this.tapCd -= dt
     this.dropT -= dt
     if (this.dropT <= 0) {
       this.spawn()

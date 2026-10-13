@@ -57,6 +57,12 @@ export class Game {
     )
     this.loop.start()
 
+    this.app.canvas.addEventListener('pointerdown', (e) => {
+      const r = this.app.canvas.getBoundingClientRect()
+      const k = this.viewport.info.scale
+      this.scene.tapDrop((e.clientX - r.left) / k)
+    })
+
     // audio unlock on first gesture (autoplay policy)
     const unlock = () => this.audio.unlock()
     window.addEventListener('pointerdown', unlock, { passive: true })

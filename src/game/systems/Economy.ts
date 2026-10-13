@@ -32,7 +32,7 @@ export const UPGRADES: UpgradeDef[] = [
 ]
 
 function fmtShort(n: number) {
-  return n < 10 ? n.toFixed(1).replace(/\.0$/, '') : n < 1000 ? Math.round(n).toString() : n.toExponential(1)
+  return n < 1 ? n.toFixed(2) : n < 10 ? n.toFixed(1).replace(/\.0$/, '') : n < 1000 ? Math.round(n).toString() : n.toExponential(1)
 }
 export const dropInterval = (l: number) => Math.max(0.07, 1.1 * Math.pow(0.9, l))
 export const ballValue = (l: number) => 1 + l * 0.7

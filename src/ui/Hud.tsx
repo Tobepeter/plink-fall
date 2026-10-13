@@ -36,6 +36,9 @@ export function Hud({ game, onPrestige }: { game: Game; onPrestige: () => void }
         </span>
       </div>
       <div className="num mt-[1cqw] text-[3.6cqw] font-semibold text-cyan-200/80">+{fmt(eco.rate)} / 秒</div>
+      {game.scene.hint > 0 && eco.runEarned < 60 && (
+        <div className="mt-[1.5cqw] animate-pulse text-[3cqw] text-white/40">点击钉板可额外投球 · 升级自动加速</div>
+      )}
     </div>
   )
 }
