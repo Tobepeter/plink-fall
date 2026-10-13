@@ -103,7 +103,7 @@ export class Board {
     // slots
     const n = rows + 1
     const c = rows / 2
-    const edge = 4 + rows * 1.5
+    const edge = 4 + rows * 1.2
     this.slotY = this.lastRowY + s * 0.62
     this.slots = []
     this.baseMults = []

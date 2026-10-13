@@ -15,29 +15,29 @@ export interface UpgradeDef {
 }
 
 export const UPGRADES: UpgradeDef[] = [
-  { id: 'rate', name: '掉落速度', icon: 'timer', base: 8, growth: 1.5, max: 35, unlockAt: 0,
+  { id: 'rate', name: '掉落速度', icon: 'timer', base: 8, growth: 1.72, max: 40, unlockAt: 0,
     effect: (l) => `${(1 / dropInterval(l)).toFixed(1)} 球/秒` },
-  { id: 'value', name: '球价值', icon: 'gem', base: 20, growth: 1.65, max: 200, unlockAt: 6,
+  { id: 'value', name: '球价值', icon: 'gem', base: 20, growth: 1.95, max: 200, unlockAt: 6,
     effect: (l) => `×${fmtShort(ballValue(l))}` },
-  { id: 'peg', name: '钉子收益', icon: 'sparkles', base: 50, growth: 1.75, max: 200, unlockAt: 25,
+  { id: 'peg', name: '钉子收益', icon: 'sparkles', base: 45, growth: 2.0, max: 200, unlockAt: 25,
     effect: (l) => `+${fmtShort(pegValue(l))}/次` },
-  { id: 'mult', name: '倍率强化', icon: 'trending', base: 220, growth: 2.0, max: 200, unlockAt: 120,
+  { id: 'mult', name: '倍率强化', icon: 'trending', base: 300, growth: 2.5, max: 200, unlockAt: 200,
     effect: (l) => `×${multBoost(l).toFixed(2)}` },
-  { id: 'rows', name: '扩展钉板', icon: 'rows', base: 600, growth: 3.4, max: 8, unlockAt: 350,
+  { id: 'rows', name: '扩展钉板', icon: 'rows', base: 1500, growth: 5, max: 8, unlockAt: 900,
     effect: (l) => `${8 + l} 行` },
-  { id: 'gold', name: '金球概率', icon: 'coins', base: 1500, growth: 2.3, max: 12, unlockAt: 900,
+  { id: 'gold', name: '金球概率', icon: 'coins', base: 5000, growth: 2.8, max: 12, unlockAt: 3000,
     effect: (l) => `${Math.round(goldChance(l) * 100)}% (×10)` },
-  { id: 'multi', name: '多球齐发', icon: 'layers', base: 6000, growth: 4.5, max: 4, unlockAt: 3500,
+  { id: 'multi', name: '多球齐发', icon: 'layers', base: 40000, growth: 7, max: 4, unlockAt: 20000,
     effect: (l) => `每次 ${1 + l} 球` },
 ]
 
 function fmtShort(n: number) {
   return n < 10 ? n.toFixed(1).replace(/\.0$/, '') : n < 1000 ? Math.round(n).toString() : n.toExponential(1)
 }
-export const dropInterval = (l: number) => Math.max(0.07, 1.1 * Math.pow(0.86, l))
-export const ballValue = (l: number) => (1 + l) * Math.pow(1.12, l)
-export const pegValue = (l: number) => 0.1 * (1 + l) * Math.pow(1.12, l)
-export const multBoost = (l: number) => Math.pow(1.22, l)
+export const dropInterval = (l: number) => Math.max(0.07, 1.1 * Math.pow(0.9, l))
+export const ballValue = (l: number) => 1 + l * 0.7
+export const pegValue = (l: number) => 0.1 * (1 + l * 0.8)
+export const multBoost = (l: number) => Math.pow(1.15, l)
 export const goldChance = (l: number) => Math.min(0.36, l * 0.03)
 
 export const PRESTIGE_MIN = 1e5

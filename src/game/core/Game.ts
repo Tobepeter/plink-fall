@@ -34,7 +34,7 @@ export class Game {
     stage.appendChild(this.app.canvas)
     this.app.ticker.stop() // we drive rendering from our own loop
 
-    const tex = await loadAssets(this.app.renderer)
+    const tex = await loadAssets()
     this.scene = new PlinkoScene(tex, this.eco, this.audio)
     this.app.stage.addChild(this.scene.view)
 

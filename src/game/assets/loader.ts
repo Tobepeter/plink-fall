@@ -1,4 +1,4 @@
-import { Texture, type Renderer } from 'pixi.js'
+import { Texture } from 'pixi.js'
 
 export interface GameTextures {
   dot: Texture
@@ -17,7 +17,7 @@ function canvasTex(size: number, draw: (c: CanvasRenderingContext2D, s: number) 
  * Asset loading entry point. Currently all art is procedural (generated once and shared,
  * so sprites batch into a few draw calls); external assets would go through Assets.load here.
  */
-export async function loadAssets(_renderer: Renderer): Promise<GameTextures> {
+export async function loadAssets(): Promise<GameTextures> {
   const dot = canvasTex(64, (c, s) => {
     const g = c.createRadialGradient(s * 0.4, s * 0.38, 2, s / 2, s / 2, s / 2)
     g.addColorStop(0, '#ffffff')

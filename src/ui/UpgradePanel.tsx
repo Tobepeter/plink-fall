@@ -18,8 +18,8 @@ export function UpgradePanel({ game }: { game: Game }) {
   const list = UPGRADES.filter((u) => eco.unlocked(u))
   const next = eco.nextUnlock()
   return (
-    <div className="absolute inset-x-0 bottom-0 h-[59.7cqw] border-t border-cyan-300/15 bg-gradient-to-b from-slate-950/70 to-slate-950/95 px-[3cqw] pt-[2.5cqw] backdrop-blur-md">
-      <div className="pe grid max-h-full grid-cols-2 gap-[2.2cqw] overflow-y-auto pb-[3cqw]" style={{ touchAction: 'pan-y' }}>
+    <div className="absolute inset-x-0 bottom-0 h-[59.7cqw] border-t border-cyan-300/15 bg-gradient-to-b from-slate-950/70 to-slate-950/95 px-[3cqw] pt-[2cqw] backdrop-blur-md">
+      <div className="pe grid max-h-full grid-cols-2 gap-[2cqw] overflow-y-auto pb-[3cqw]" style={{ touchAction: 'pan-y' }}>
         {list.map((u) => {
           const Icon = ICONS[u.icon]
           const lvl = eco.levels[u.id]
@@ -32,7 +32,7 @@ export function UpgradePanel({ game }: { game: Game }) {
               onClick={() => game.buy(u.id)}
               disabled={maxed}
               className={cn(
-                'relative flex h-[18cqw] flex-col justify-between overflow-hidden rounded-2xl border p-[2.4cqw] text-left transition-all active:scale-95',
+                'relative flex h-[16.6cqw] flex-col justify-between overflow-hidden rounded-2xl border px-[2.6cqw] py-[1.8cqw] text-left transition-all active:scale-95',
                 afford
                   ? 'border-cyan-300/60 bg-cyan-400/10 shadow-[0_0_18px_rgba(34,211,238,.25)]'
                   : 'border-white/10 bg-white/[.04]',
@@ -63,7 +63,7 @@ export function UpgradePanel({ game }: { game: Game }) {
           )
         })}
         {next && (
-          <div className="flex h-[18cqw] flex-col items-center justify-center gap-[1cqw] rounded-2xl border border-dashed border-white/15 text-white/40">
+          <div className="flex h-[16.6cqw] flex-col items-center justify-center gap-[1cqw] rounded-2xl border border-dashed border-white/15 text-white/40">
             <Lock className="size-[4.4cqw]" />
             <span className="num text-center text-[3cqw]">累计 {fmt(next.unlockAt)} 金币解锁</span>
           </div>
