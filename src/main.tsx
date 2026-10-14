@@ -1,5 +1,4 @@
 import './style.css'
-import { createRoot } from 'react-dom/client'
 
 async function boot() {
   const root = document.getElementById('root')!
@@ -14,7 +13,11 @@ async function boot() {
     bootMine(root)
     return
   }
-  const [{ Game }, { App }] = await Promise.all([import('@/game/core/Game'), import('@/ui/App')])
+  const [{ Game }, { App }, { createRoot }] = await Promise.all([
+    import('@/game/core/Game'),
+    import('@/ui/App'),
+    import('react-dom/client'),
+  ])
   const frame = document.getElementById('frame')!
   const game = new Game()
   await game.init(root, frame, document.getElementById('stage')!)

@@ -48,6 +48,7 @@
   margin-top: 4px;
   background: var(--rush-mint);
   transform: skew(-30deg);
+  animation: rush-socket-contact 0.18s ease-out both;
 }
 .rush-loadout {
   display: flex;
@@ -165,6 +166,14 @@
   height: 4px;
   background: var(--rush-brass);
   transform: skew(-12deg);
+  animation: rush-pin-charge 0.25s ease-out both;
+  animation-delay: calc(var(--weapon-order) * 0.025s);
+}
+.rush-mount-pins > i:nth-child(2) {
+  animation-delay: calc(var(--weapon-order) * 0.025s + 0.035s);
+}
+.rush-mount-pins > i:nth-child(3) {
+  animation-delay: calc(var(--weapon-order) * 0.025s + 0.07s);
 }
 .rush-weapon > b {
   margin-top: 9px;
@@ -298,6 +307,26 @@
     opacity: 0;
     scale: 0.35;
     translate: 0 0;
+  }
+}
+@keyframes rush-socket-contact {
+  from {
+    scale: 0.15 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+@keyframes rush-pin-charge {
+  from {
+    opacity: 0.2;
+    translate: 0 3px;
+    background: var(--rush-mint);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    background: var(--rush-brass);
   }
 }
 @media (max-width: 600px) {

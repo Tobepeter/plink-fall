@@ -7,6 +7,22 @@
     <meta name="theme-color" content="#05060f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>plink-fall</title>
+    <script>
+      const rushMode = new URLSearchParams(location.search).get('type')
+      if (rushMode === 'codex-rush' || rushMode === 'codex-forge') {
+        for (const [key, href] of [
+          ['modules', '/rush/modules-v2.webp'],
+          ['actors', '/rush/actors-v3.webp'],
+        ]) {
+          const preload = document.createElement('link')
+          preload.rel = 'preload'
+          preload.as = 'image'
+          preload.href = href
+          preload.setAttribute(`data-rush-${key}`, '')
+          document.head.appendChild(preload)
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"><div id="frame"><div id="stage"></div><div id="ui"></div></div></div>

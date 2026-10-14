@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite } from 'pixi.js'
 import type { Texture } from 'pixi.js'
 import type { EnemyKind, Foe, RushEvent, RushState, Vec } from '../types'
 import { clamp, foeColors, palette } from './palette'
+import { RushGait } from './rush-gait'
 
 const frameIndex: Record<EnemyKind, number> = {
   chaser: 1,
@@ -24,6 +25,9 @@ export class RushActors {
   private foes = new Map<number, Sprite>()
   private fire = 0
   private dashLines = new Graphics()
+  private steps = new Graphics()
+  private gait = new RushGait()
+  private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
   private playerScale = 1
   private playerPoint: Vec = { x: 0, y: 0 }
 
@@ -37,6 +41,7 @@ export class RushActors {
     this.view.addChild(
       this.telegraphs,
       this.shadows,
+      this.steps,
       this.dashLines,
       this.bodies,
       this.weapon,
@@ -51,24 +56,41 @@ export class RushActors {
   render(state: RushState, dt: number) {
     const p = state.player
     this.playerPoint = { x: p.x, y: p.y }
-    const moving = Math.hypot(p.vx, p.vy) > 10
-    const frame = moving ? [0, 7, 8][Math.floor(p.walk / 38) % 3] : 0
+    const pose = this.gait.update(p, dt)
+    const frame = pose.frame
     this.player.texture = this.textures[frame]
     // 相同头盔轴、脚基线与量尺；独立裁图不改变步态尺寸
     const headAxis = frame === 0 ? 141 : frame === 7 ? 130 : 131
     this.player.anchor.set(headAxis / this.player.texture.width, 1)
     const scale = this.playerScale
-    const left = moving && Math.abs(p.vx) > 1 ? p.vx < 0 : Math.cos(p.angle) < 0
-    this.player.scale.set(scale * (left ? -1 : 1), scale)
-    this.player.position.set(p.x, p.y + 14)
-    this.player.rotation = 0
+    const reduced = this.reducedMotion.matches
+    this.player.scale.set(
+      scale * pose.face * (reduced ? 1 : pose.scaleX),
+      scale * (reduced ? 1 : pose.scaleY),
+    )
+    this.player.position.set(p.x, p.y + 14 - (reduced ? 0 : pose.lift))
+    this.player.rotation = reduced ? 0 : pose.lean
     this.player.alpha = 1
     this.player.tint = 0xffffff
     this.fire = Math.max(0, this.fire - dt)
     this.drawDash(state)
+    this.drawSteps(state)
     this.drawShadows(state)
     this.drawFoes(state)
     this.drawEquipment(state)
+  }
+
+  private drawSteps(state: RushState) {
+    const g = this.steps.clear()
+    if (state.phase === 'dead' || state.phase === 'won') this.gait.contacts = []
+    if (this.reducedMotion.matches) return
+    for (const contact of this.gait.contacts) {
+      const progress = contact.life / 0.18
+      const width = 2 + (1 - progress) * 3
+      g.moveTo(contact.x - width, contact.y)
+        .lineTo(contact.x + width, contact.y)
+        .stroke({ color: palette.cream, alpha: progress * 0.18, width: 1 })
+    }
   }
 
   private drawDash(state: RushState) {
@@ -238,10 +260,27 @@ export class RushActors {
       this.fire = 0.055
   }
 
+  gaitSnapshot() {
+    const frames = [this.textures[0], this.textures[7], this.textures[8]]
+    const players = this.bodies.children.filter(
+      (child) => child instanceof Sprite && frames.includes(child.texture),
+    )
+    return {
+      pose: { ...this.gait.pose },
+      contacts: this.gait.contacts.map((contact) => ({ ...contact })),
+      playerCopies: players.length,
+      playerAlpha: this.player.alpha,
+      bodyScale: { x: this.player.scale.x, y: this.player.scale.y },
+      gunPivot: { x: this.weapon.x, y: this.weapon.y },
+    }
+  }
+
   reset() {
     for (const sprite of this.foes.values()) sprite.destroy()
     this.foes.clear()
     this.dashLines.clear()
+    this.steps.clear()
+    this.gait.reset()
     this.fire = 0
   }
 

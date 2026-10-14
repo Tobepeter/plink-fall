@@ -1,0 +1,240 @@
+.rush-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #101b2a;
+  color: var(--rush-ivory);
+  pointer-events: none;
+}
+.rush-loading-rig {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  margin-bottom: 3px;
+}
+.rush-loading-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--rush-brass);
+  stroke-width: 3;
+}
+.rush-loading-track {
+  stroke: #334c4c;
+  stroke-width: 1;
+}
+.rush-loading-charge {
+  stroke: var(--rush-mint);
+  stroke-width: 3;
+  stroke-dasharray: 74 28;
+  transform-origin: center;
+  animation: rush-loading-orbit 1.3s linear infinite;
+}
+.rush-loading-body {
+  position: absolute;
+  left: 46px;
+  top: 30px;
+  width: 100px;
+  height: 126px;
+  overflow: visible;
+  stroke: #0b1623;
+  stroke-width: 3;
+  stroke-linejoin: bevel;
+}
+.rush-loading-body .is-ivory {
+  fill: var(--rush-ivory);
+}
+.rush-loading-body .is-mint {
+  fill: var(--rush-mint);
+}
+.rush-loading-body .is-brass {
+  fill: var(--rush-brass);
+}
+.rush-loading-body .is-ink {
+  fill: #132430;
+}
+.rush-loading-head {
+  animation: rush-loading-head 1.3s cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
+}
+.rush-loading-arm.is-left {
+  animation: rush-loading-left 1.3s cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
+}
+.rush-loading-arm.is-right {
+  animation: rush-loading-right 1.3s cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
+}
+.rush-loading-leg {
+  animation: rush-loading-legs 1.3s cubic-bezier(0.2, 0.75, 0.25, 1) infinite;
+}
+.rush-loading-clamp {
+  position: absolute;
+  top: 84px;
+  width: 14px;
+  height: 21px;
+  background: var(--rush-brass);
+  border: 3px solid #132430;
+  clip-path: polygon(0 0, 100% 0, 100% 30%, 55% 30%, 55% 70%, 100% 70%, 100% 100%, 0 100%);
+}
+.rush-loading-clamp.is-left {
+  left: 4px;
+  animation: rush-loading-clamp-left 1.3s ease-out infinite;
+}
+.rush-loading-clamp.is-right {
+  right: 4px;
+  rotate: 180deg;
+  animation: rush-loading-clamp-right 1.3s ease-out infinite;
+}
+.rush-loading-ignition {
+  fill: var(--rush-red);
+  stroke: #f3c482;
+  stroke-width: 1;
+  transform-origin: 92px 74px;
+  animation: rush-loading-ignite 1.3s ease-out infinite;
+}
+.rush-loading > b {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+.rush-loading-caption {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #9fb9aa;
+  font-size: 11px;
+  font-weight: 750;
+}
+.rush-loading-caption > i {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--rush-mint);
+  animation: rush-loading-lamp 0.65s ease-in-out infinite alternate;
+}
+.rush-loading-caption > i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.rush-loading-caption > i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes rush-loading-orbit {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes rush-loading-head {
+  0%,
+  100% {
+    translate: 0 -11px;
+  }
+  23%,
+  82% {
+    translate: 0 0;
+  }
+}
+@keyframes rush-loading-left {
+  0%,
+  100% {
+    translate: -14px 0;
+  }
+  29%,
+  82% {
+    translate: 0 0;
+  }
+}
+@keyframes rush-loading-right {
+  0%,
+  100% {
+    translate: 14px 0;
+  }
+  35%,
+  82% {
+    translate: 0 0;
+  }
+}
+@keyframes rush-loading-legs {
+  0%,
+  100% {
+    translate: 0 11px;
+  }
+  18%,
+  82% {
+    translate: 0 0;
+  }
+}
+@keyframes rush-loading-clamp-left {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  42%,
+  67% {
+    translate: 18px 0;
+  }
+}
+@keyframes rush-loading-clamp-right {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  42%,
+  67% {
+    translate: -18px 0;
+  }
+}
+@keyframes rush-loading-ignite {
+  0%,
+  42%,
+  62%,
+  100% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  48%,
+  54% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes rush-loading-lamp {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-height: 500px) {
+  .rush-loading {
+    gap: 8px;
+  }
+  .rush-loading-rig {
+    width: 166px;
+    height: 166px;
+    margin-bottom: 0;
+  }
+  .rush-loading-body {
+    left: 34px;
+    top: 20px;
+  }
+  .rush-loading-clamp {
+    top: 72px;
+  }
+  .rush-loading > b {
+    font-size: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rush-loading-ignition {
+    opacity: 0;
+  }
+  .rush-loading-charge {
+    stroke-dasharray: 74 28;
+  }
+}

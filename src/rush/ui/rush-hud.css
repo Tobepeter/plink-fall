@@ -198,6 +198,7 @@
   height: 4px;
   background: var(--rush-red);
   transform: skew(-25deg);
+  animation: rush-wave-strike 0.25s ease-out both;
 }
 .rush-breather {
   position: absolute;
@@ -235,6 +236,13 @@
 .rush-protocols > span {
   display: flex;
   align-items: center;
+  animation: rush-protocol-seat 0.26s ease-out both;
+}
+.rush-protocols > span > .rush-module:first-child {
+  animation: rush-protocol-left 0.26s ease-out both;
+}
+.rush-protocols > span > .rush-module:last-child {
+  animation: rush-protocol-right 0.26s ease-out both;
 }
 .rush-protocols > span > i {
   position: relative;
@@ -252,6 +260,57 @@
   border: 1px solid #d9fbd5;
   background: #3a6f5b;
   transform: rotate(45deg);
+  animation: rush-protocol-latch 0.32s ease-out both;
+}
+@keyframes rush-wave-strike {
+  from {
+    scale: 0.15 1;
+    opacity: 0;
+  }
+  to {
+    scale: 1 1;
+    opacity: 1;
+  }
+}
+@keyframes rush-protocol-seat {
+  from {
+    translate: 0 5px;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+@keyframes rush-protocol-left {
+  from {
+    translate: -8px 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes rush-protocol-right {
+  from {
+    translate: 8px 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes rush-protocol-latch {
+  from {
+    scale: 0.4;
+    background: var(--rush-brass);
+  }
+  45% {
+    scale: 1.2;
+    background: var(--rush-brass);
+  }
+  to {
+    scale: 1;
+    background: #3a6f5b;
+  }
 }
 .rush-shell.is-paused .rush-hud {
   z-index: 8;

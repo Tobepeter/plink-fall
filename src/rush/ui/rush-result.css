@@ -10,6 +10,7 @@
   padding: 20px 0;
   box-sizing: border-box;
   background: radial-gradient(ellipse at center, #101c29f5 0%, #101c29ed 45%, #111a2a80 100%);
+  animation: rush-result-reveal 0.18s ease-out both;
 }
 .rush-result-title {
   text-align: center;
@@ -176,6 +177,14 @@
 .rush-restart:active {
   background: #52755c;
   transform: translateY(1px);
+}
+@keyframes rush-result-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .rush-clock > b.is-lockdown {
   font-size: 21px;

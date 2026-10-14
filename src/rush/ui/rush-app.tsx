@@ -3,6 +3,7 @@ import { frameDefinitions } from '../model/data'
 import type { RushPort } from '../types'
 import { RushHud } from './rush-hud'
 import { RushChoice } from './rush-choice'
+import { RushLoading } from './rush-loading'
 import { ControlGlyph, FrameGlyph, time } from './weapon-glyph'
 import '../rush.css'
 
@@ -40,12 +41,8 @@ export function RushApp(props: RushAppProps) {
       aria-label="零点突围游戏"
     >
       <div className="rush-stage" ref={mountStage} aria-label="弹幕战斗场景" />
-      <RushHud state={state} store={store} ready={props.ready && !props.error} />
-      {!props.ready && !props.error && (
-        <span className="rush-loading" role="status">
-          进入战场
-        </span>
-      )}
+      {props.ready && !props.error && <RushHud state={state} store={store} ready />}
+      {!props.ready && !props.error && <RushLoading />}
       {props.error && (
         <div className="rush-error" role="alert">
           <span>战场加载失败</span>

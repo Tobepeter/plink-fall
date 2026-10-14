@@ -45,7 +45,8 @@
     inset 0 -3px #0a121f;
   transition:
     background 0.1s,
-    color 0.1s;
+    color 0.1s,
+    translate 0.08s;
 }
 .rush-icon::after {
   content: '';
@@ -58,6 +59,7 @@
 .rush-icon:active {
   background: #496258;
   color: var(--rush-mint);
+  translate: 0 1px;
 }
 .rush-icon:disabled {
   opacity: 0.35;
@@ -121,6 +123,9 @@
 .rush-dash.is-ready > span {
   opacity: 1;
 }
+.rush-dash.is-ready .rush-dash-ring {
+  animation: rush-ring-lock 0.2s ease-out;
+}
 .rush-dash.is-ready:active {
   transform: scale(0.93);
 }
@@ -164,6 +169,14 @@
   to {
     opacity: 0.3;
     translate: 0 -6px;
+  }
+}
+@keyframes rush-ring-lock {
+  from {
+    scale: 0.95;
+  }
+  to {
+    scale: 1;
   }
 }
 @media (max-width: 600px) {

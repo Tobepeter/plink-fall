@@ -80,7 +80,6 @@ body.rush-mode #root {
   background: var(--rush-brass);
   transform: rotate(45deg);
 }
-.rush-loading,
 .rush-error {
   position: absolute;
   z-index: 10;
@@ -141,6 +140,11 @@ body.rush-mode #root {
   z-index: 4;
   pointer-events: none;
   background: #101a2bda;
+}
+.rush-shell.is-paused *,
+.rush-shell.is-paused *::before,
+.rush-shell.is-paused *::after {
+  animation-play-state: paused;
 }
 @keyframes rush-alert {
   50% {

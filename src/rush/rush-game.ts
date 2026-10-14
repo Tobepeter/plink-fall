@@ -93,6 +93,8 @@ export class RushGame {
     window.addEventListener('pagehide', this.save)
     document.addEventListener('visibilitychange', this.visibility)
     this.last = performance.now()
+    if (!document.hidden && document.activeElement === document.body)
+      this.canvas.focus({ preventScroll: true })
     if (!document.hidden) this.raf = requestAnimationFrame(this.tick)
   }
 
@@ -189,6 +191,8 @@ export class RushGame {
     this.store.setMove(this.direction())
   }
   private keyDown = (event: KeyboardEvent) => {
+    const target = event.target instanceof HTMLElement ? event.target : null
+    if (target?.isContentEditable || target?.closest('input, textarea, [role="textbox"]')) return
     if (event.repeat && (event.code === 'Escape' || event.code === 'Space')) return
     if (event.code === 'Escape') {
       event.preventDefault()
@@ -197,11 +201,7 @@ export class RushGame {
       if (!this.store.state.paused) this.canvas?.focus({ preventScroll: true })
       return
     }
-    if (
-      event.target instanceof HTMLElement &&
-      event.target.closest('button, input, [role="dialog"]')
-    )
-      return
+    if (target?.closest('button, [role="dialog"]')) return
     if (this.store.state.paused || this.store.state.phase !== 'playing') return
     if (event.code === 'Space') {
       event.preventDefault()

@@ -25,6 +25,8 @@ export function attachRushDebug(store: RushPort, game: RushGame) {
       snapshot: () => structuredClone(store.state),
       frames: () => game.frames,
       events: () => structuredClone(events),
+      motion: () => game.scene.motionSnapshot(),
+      gait: () => game.scene.gaitSnapshot(),
       screen: (point: Vec) => game.scene.worldToScreen(point),
       world: (point: Vec) => game.scene.screenToWorld(point.x, point.y),
       advance(seconds: number) {

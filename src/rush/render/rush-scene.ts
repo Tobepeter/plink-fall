@@ -6,6 +6,7 @@ import { RushCamera } from './rush-camera'
 import { RushEffects } from './rush-effects'
 import { RushFloor } from './rush-floor'
 import { RushProjectiles } from './rush-projectiles'
+import { RushMotion } from './rush-motion'
 
 // 全屏弹幕追击场景
 export class RushScene {
@@ -15,6 +16,8 @@ export class RushScene {
   private floor = new RushFloor()
   private projectiles = new RushProjectiles()
   private effects = new RushEffects(() => this.getState().player)
+  private motion = new RushMotion(() => this.getState().player)
+  private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
   private overlay = new Graphics()
   private stick = new Graphics()
   private actors?: RushActors
@@ -50,6 +53,7 @@ export class RushScene {
     this.world.addChild(
       this.floor.view,
       this.projectiles.fields,
+      this.motion.view,
       this.projectiles.loot,
       this.actors.view,
       this.projectiles.satellites,
@@ -127,6 +131,8 @@ export class RushScene {
       this.runId = state.runId
       this.actors?.reset()
       this.effects.reset()
+      this.motion.reset()
+      this.motion.launch()
       this.camera.reset(state)
       this.hurt = 0
     }
@@ -140,6 +146,7 @@ export class RushScene {
     this.projectiles.render(state)
     this.actors?.render(state, dt)
     this.effects.render(effectsDt)
+    this.motion.render(effectsDt, this.reducedMotion.matches)
     this.hurt = Math.max(0, this.hurt - effectsDt)
     this.drawOverlay(state)
   }
@@ -170,6 +177,7 @@ export class RushScene {
       return
     }
     this.effects.event(event)
+    this.motion.event(event)
     this.actors?.event(event)
     if (event.type === 'hurt') {
       this.camera.impact(0.6)
@@ -189,6 +197,14 @@ export class RushScene {
 
   worldSize(): Vec {
     return this.camera.worldSize()
+  }
+
+  motionSnapshot() {
+    return this.motion.snapshot()
+  }
+
+  gaitSnapshot() {
+    return this.actors?.gaitSnapshot() ?? null
   }
 
   setStick(input: { origin: Vec; current: Vec } | null) {
@@ -218,6 +234,7 @@ export class RushScene {
     this.floor.destroy()
     this.projectiles.destroy()
     this.effects.destroy()
+    this.motion.destroy()
     this.overlay.destroy()
     this.stick.destroy()
     this.view.destroy({ children: true })
