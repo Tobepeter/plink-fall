@@ -1,6 +1,7 @@
 import type { EnemyKind, Foe, FrameId, RushRecord, RushState, Vec } from '../types'
 import { enemyStats } from './data'
 import type { Hooks } from './math'
+import { createWave } from './campaign/waves'
 
 export function foe(kind: EnemyKind, point: Vec, tier: number, hooks: Hooks): Foe {
   const stats = enemyStats[kind]
@@ -39,6 +40,7 @@ export function createState(
     runId,
     seed,
     clock: 0,
+    wave: createWave(1),
     player: {
       x: 0,
       y: 0,
@@ -51,6 +53,7 @@ export function createState(
       invulnerable: 3.6,
       dashTime: 0,
       dashCooldown: 0,
+      intercepted: 0,
       lastMove: { x: 0, y: -1 },
       walk: 0,
       frame,

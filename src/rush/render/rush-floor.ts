@@ -18,13 +18,13 @@ export class RushFloor {
     const right = left + size.x + 384
     const bottom = top + size.y + 384
     g.rect(left, top, size.x + 384, size.y + 384).fill(palette.ground)
-    for (let x = Math.floor(left / 64) * 64; x <= right; x += 64) {
+    for (let x = Math.floor(left / 128) * 128; x <= right; x += 128) {
       g.moveTo(x, top).lineTo(x, bottom)
     }
-    for (let y = Math.floor(top / 64) * 64; y <= bottom; y += 64) {
+    for (let y = Math.floor(top / 128) * 128; y <= bottom; y += 128) {
       g.moveTo(left, y).lineTo(right, y)
     }
-    g.stroke({ color: palette.grid, width: 1, alpha: 0.42 })
+    g.stroke({ color: palette.grid, width: 1, alpha: 0.3 })
     for (let x = Math.floor(left / 384) * 384; x <= right; x += 384) {
       g.rect(x - 46, top, 92, size.y + 384).fill({ color: palette.floor, alpha: 0.55 })
       g.moveTo(x - 46, top).lineTo(x - 46, bottom)
@@ -43,6 +43,18 @@ export class RushFloor {
         g.moveTo(x + 162, y + 155).lineTo(x + 162, y + 171)
         g.moveTo(x + 154, y + 163).lineTo(x + 170, y + 163)
         g.stroke({ color: palette.lane, width: 2, alpha: 0.6 })
+        g.moveTo(x + 26, y + 28)
+          .lineTo(x + 26, y + 18)
+          .lineTo(x + 38, y + 18)
+        g.moveTo(x + 228, y + 28)
+          .lineTo(x + 228, y + 18)
+          .lineTo(x + 216, y + 18)
+        g.moveTo(x + 26, y + 226)
+          .lineTo(x + 26, y + 238)
+          .lineTo(x + 38, y + 238)
+        g.stroke({ color: palette.lane, width: 1, alpha: 0.32 })
+        for (let i = 0; i < 3; i++) g.moveTo(x + 74 + i * 9, y + 78).lineTo(x + 79 + i * 9, y + 83)
+        g.stroke({ color: palette.amber, width: 2, alpha: 0.34 })
       }
     }
   }

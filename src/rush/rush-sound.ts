@@ -7,6 +7,7 @@ export class RushSound {
   private noise: AudioBuffer | null = null
   private lastShot = 0
   private lastHit = 0
+  private lastCut = 0
   private nextBeat = 0
   private beat = 0
   constructor(private getState: () => RushState) {}
@@ -38,8 +39,10 @@ export class RushSound {
   resume() {
     if (document.hidden || this.getState().record.muted) return
     if (this.output) this.output.gain.value = 0.18
-    if (this.context?.state === 'suspended') void this.context.resume().catch(() => {})
-    this.nextBeat = 0
+    if (this.context?.state === 'suspended') {
+      void this.context.resume().catch(() => {})
+      this.nextBeat = 0
+    }
   }
   suspend() {
     if (this.output) this.output.gain.value = 0
@@ -64,9 +67,10 @@ export class RushSound {
       261.6, 0, 311.1, 392, 349.2, 0, 311.1, 0, 261.6, 392, 466.2, 0, 392, 349.2, 311.1, 0,
     ]
     if (step % 2 === 0) this.tone(step < 8 ? 65.4 : 77.8, now, 0.13, 0.15, 'triangle', 45)
-    if (notes[step]) this.tone(notes[step], now, 0.09, 0.065, 'triangle')
+    if (notes[step] && (s.wave.phase === 'combat' || step % 2 === 0))
+      this.tone(notes[step], now, 0.09, 0.065, 'triangle')
     if (step % 4 === 2) this.crackle(now, 0.075, 3400)
-    this.nextBeat = now + 30 / (s.overdrive > 0 ? 158 : 144)
+    this.nextBeat = now + 30 / (s.wave.phase === 'breather' ? 112 : s.overdrive > 0 ? 158 : 144)
   }
   event(event: RushEvent) {
     if (
@@ -86,6 +90,22 @@ export class RushSound {
       this.lastHit = now
       this.crackle(now, event.type === 'kill' ? 0.15 : 0.07, 1600)
       if (event.type === 'kill') this.tone(145, now, 0.065, 0.1, 'triangle', 90)
+    } else if (event.type === 'intercept') {
+      if (now - this.lastCut < 0.065) return
+      this.lastCut = now
+      this.tone(1280, now, 0.04, 0.08, 'triangle', 720)
+    } else if (event.type === 'counter') {
+      this.crackle(now, 0.26, 650)
+      this.tone(280, now, 0.11, 0.18, 'sawtooth', 80)
+      this.tone(950, now + 0.025, 0.08, 0.1, 'triangle', 510)
+    } else if (event.type === 'protocol' && event.amount === 1) {
+      const notes = [523, 659, 784, 1047]
+      notes.forEach((note, i) =>
+        this.tone(note, now + i * 0.045, 0.13, 0.14, 'triangle'),
+      )
+    } else if (event.type === 'wave-clear') {
+      this.tone(392, now, 0.18, 0.12, 'triangle')
+      this.tone(523, now + 0.075, 0.18, 0.1, 'triangle')
     } else if (event.type === 'hurt' || event.type === 'explode') {
       this.crackle(now, 0.35, 500)
       this.tone(190, now, 0.17, 0.23, 'sawtooth', 50)

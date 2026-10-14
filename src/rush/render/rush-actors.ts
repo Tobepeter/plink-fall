@@ -1,4 +1,4 @@
-import { ColorMatrixFilter, Container, Graphics, Sprite } from 'pixi.js'
+import { Container, Graphics, Sprite } from 'pixi.js'
 import type { Texture } from 'pixi.js'
 import type { EnemyKind, Foe, RushEvent, RushState, Vec } from '../types'
 import { clamp, foeColors, palette } from './palette'
@@ -20,20 +20,30 @@ export class RushActors {
   private bodies = new Container()
   private equipment = new Graphics()
   private player = new Sprite()
-  private playerLight = new ColorMatrixFilter()
+  private weapon = new Sprite()
   private foes = new Map<number, Sprite>()
-  private ghosts: Array<Vec & { life: number; angle: number; texture: Texture }> = []
-  private ghostSprites: Sprite[] = []
   private fire = 0
-  private dashClock = 0
+  private dashLines = new Graphics()
+  private playerScale = 1
   private playerPoint: Vec = { x: 0, y: 0 }
 
-  constructor(private textures: Texture[]) {
-    this.view.addChild(this.telegraphs, this.shadows, this.bodies, this.equipment)
+  constructor(
+    private textures: Texture[],
+    weapon: Texture,
+  ) {
+    this.weapon.texture = weapon
+    this.weapon.anchor.set(229 / weapon.width, 132 / weapon.height)
+    this.weapon.scale.set(17 / Math.hypot(176, 44))
+    this.view.addChild(
+      this.telegraphs,
+      this.shadows,
+      this.dashLines,
+      this.bodies,
+      this.weapon,
+      this.equipment,
+    )
     this.bodies.sortableChildren = true
-    this.player.anchor.set(0.5, 0.68)
-    this.playerLight.brightness(1.35, false)
-    this.player.filters = [this.playerLight]
+    this.playerScale = 52 / Math.max(...[0, 7, 8].map((i) => textures[i].height))
     this.player.zIndex = 100000
     this.bodies.addChild(this.player)
   }
@@ -42,53 +52,38 @@ export class RushActors {
     const p = state.player
     this.playerPoint = { x: p.x, y: p.y }
     const moving = Math.hypot(p.vx, p.vy) > 10
-    const frame = moving ? [0, 7, 8][Math.floor(p.walk / 24) % 3] : 0
+    const frame = moving ? [0, 7, 8][Math.floor(p.walk / 38) % 3] : 0
     this.player.texture = this.textures[frame]
-    const scale = 43 / this.player.texture.height
+    // 相同头盔轴、脚基线与量尺；独立裁图不改变步态尺寸
+    const headAxis = frame === 0 ? 141 : frame === 7 ? 130 : 131
+    this.player.anchor.set(headAxis / this.player.texture.width, 1)
+    const scale = this.playerScale
     const left = moving && Math.abs(p.vx) > 1 ? p.vx < 0 : Math.cos(p.angle) < 0
     this.player.scale.set(scale * (left ? -1 : 1), scale)
-    this.player.position.set(p.x, p.y + (moving ? Math.sin(state.clock * 22) * 1.2 : 0))
-    this.player.rotation = p.dashTime > 0 ? Math.sign(p.vx || 1) * 0.16 : 0
-    this.player.alpha = p.invulnerable > 0 && Math.floor(state.clock * 18) % 2 ? 0.78 : 1
-    this.player.tint = p.frame === 'spark' ? 0xbdedff : p.frame === 'warden' ? 0xdefff0 : 0xffffff
+    this.player.position.set(p.x, p.y + 14)
+    this.player.rotation = 0
+    this.player.alpha = 1
+    this.player.tint = 0xffffff
     this.fire = Math.max(0, this.fire - dt)
-    this.dashClock -= dt
-    if (p.dashTime > 0 && this.dashClock <= 0) {
-      this.ghosts.push({
-        x: p.x,
-        y: p.y,
-        life: 0.16,
-        angle: this.player.rotation,
-        texture: this.player.texture,
-      })
-      this.dashClock = 0.025
-    }
-    this.drawGhosts(dt)
+    this.drawDash(state)
     this.drawShadows(state)
     this.drawFoes(state)
     this.drawEquipment(state)
   }
 
-  private drawGhosts(dt: number) {
-    for (const ghost of this.ghosts) ghost.life -= dt
-    this.ghosts = this.ghosts.filter((g) => g.life > 0).slice(-8)
-    while (this.ghostSprites.length < this.ghosts.length) {
-      const sprite = new Sprite()
-      sprite.anchor.set(0.5, 0.68)
-      this.ghostSprites.push(sprite)
-      this.bodies.addChildAt(sprite, 0)
+  private drawDash(state: RushState) {
+    const g = this.dashLines.clear()
+    const p = state.player
+    if (p.dashTime <= 0) return
+    const a = Math.atan2(p.vy, p.vx)
+    const dx = Math.cos(a),
+      dy = Math.sin(a)
+    for (const offset of [-11, 0, 11]) {
+      const x = p.x - dx * 12 - dy * offset
+      const y = p.y - dy * 12 + dx * offset
+      g.moveTo(x, y).lineTo(x - dx * (offset === 0 ? 54 : 36), y - dy * (offset === 0 ? 54 : 36))
     }
-    for (const [i, sprite] of this.ghostSprites.entries()) {
-      const ghost = this.ghosts[i]
-      sprite.visible = !!ghost
-      if (!ghost) continue
-      sprite.texture = ghost.texture
-      sprite.position.set(ghost.x, ghost.y)
-      sprite.scale.copyFrom(this.player.scale)
-      sprite.rotation = ghost.angle
-      sprite.tint = palette.teal
-      sprite.alpha = (ghost.life / 0.16) * 0.32
-    }
+    g.stroke({ color: palette.cream, width: 2, alpha: 0.8, cap: 'round' })
   }
 
   private drawShadows(state: RushState) {
@@ -118,21 +113,25 @@ export class RushActors {
       }
       const moving = Math.hypot(foe.vx, foe.vy) > 20
       const size =
-        foe.kind === 'boss' ? 102 : foe.kind === 'brute' ? 48 : foe.kind === 'charger' ? 39 : 34
-      const hurtScale = foe.hurt > 0 ? 1 + Math.min(0.12, foe.hurt * 0.6) : 1
-      const scale = (size / Math.max(sprite.texture.width, sprite.texture.height)) * hurtScale
+        foe.kind === 'boss' ? 112 : foe.kind === 'brute' ? 58 : foe.kind === 'charger' ? 48 : 43
+      const hurt = Math.min(1, foe.hurt / 0.1)
+      const scale = size / Math.max(sprite.texture.width, sprite.texture.height)
       const faceLeft = Math.cos(foe.angle) < 0
-      sprite.scale.set(scale * (faceLeft && foe.kind !== 'boss' ? -1 : 1), scale)
-      sprite.position.set(foe.x, foe.y + (moving ? Math.sin(foe.age * 18 + foe.id) * 1.2 : 0))
+      sprite.scale.set(
+        scale * (faceLeft && foe.kind !== 'boss' ? -1 : 1) * (1 + hurt * 0.12),
+        scale * (1 - hurt * 0.1),
+      )
+      const away = Math.atan2(foe.y - state.player.y, foe.x - state.player.x)
+      sprite.position.set(foe.x + Math.cos(away) * hurt * 3, foe.y + Math.sin(away) * hurt * 3)
       sprite.rotation =
         foe.kind === 'boss'
           ? Math.sin(foe.age * 2) * 0.025
           : moving
             ? Math.sin(foe.age * 14 + foe.id) * 0.075
             : 0
-      sprite.tint = foe.hurt > 0 ? 0xffb5b5 : foe.slow > 0 ? 0xa8dfff : 0xffffff
-      sprite.blendMode = foe.hurt > 0 ? 'add' : 'normal'
-      sprite.alpha = foe.hurt > 0 ? 0.76 : 1
+      sprite.tint = foe.slow > 0 ? 0xb2dacb : 0xffffff
+      sprite.blendMode = foe.hurt > 0.055 ? 'add' : 'normal'
+      sprite.alpha = 1
       sprite.zIndex = foe.y
       this.foeSignals(foe)
     }
@@ -215,19 +214,10 @@ export class RushActors {
     const a = p.angle
     const dx = Math.cos(a)
     const dy = Math.sin(a)
-    const recoil = this.fire > 0 ? 2 : 0
-    const start = { x: p.x + dx * (9 - recoil), y: p.y + dy * (9 - recoil) }
-    const tip = { x: p.x + dx * (21 - recoil), y: p.y + dy * (21 - recoil) }
-    g.moveTo(start.x, start.y)
-      .lineTo(tip.x, tip.y)
-      .stroke({ color: palette.ink, width: 7, cap: 'round' })
-    g.moveTo(start.x, start.y)
-      .lineTo(tip.x, tip.y)
-      .stroke({
-        color: state.overdrive > 0 ? palette.amber : palette.teal,
-        width: 3.5,
-        cap: 'round',
-      })
+    // 胸前枢轴、枪口与模型同一个起点；身体不含静态武器
+    this.weapon.position.set(p.x, p.y - 16)
+    this.weapon.rotation = a - Math.atan2(44, -176)
+    const tip = { x: p.x + dx * 17, y: p.y - 16 + dy * 17 }
     if (this.fire > 0) {
       g.poly([
         tip.x + dx * 13,
@@ -251,15 +241,12 @@ export class RushActors {
   reset() {
     for (const sprite of this.foes.values()) sprite.destroy()
     this.foes.clear()
-    this.ghosts = []
-    for (const sprite of this.ghostSprites) sprite.visible = false
+    this.dashLines.clear()
     this.fire = 0
-    this.dashClock = 0
   }
 
   destroy() {
     this.reset()
     this.view.destroy({ children: true })
-    this.playerLight.destroy()
   }
 }

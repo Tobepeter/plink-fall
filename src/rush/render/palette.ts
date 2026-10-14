@@ -1,25 +1,26 @@
 import type { EnemyKind } from '../types'
 
 export const palette = {
-  ground: 0x101f31,
-  floor: 0x142639,
-  grid: 0x294253,
-  lane: 0x3b5360,
+  ground: 0x101724,
+  floor: 0x151f30,
+  grid: 0x2b3a4d,
+  lane: 0x465164,
   ink: 0x07121e,
-  teal: 0x66f4c0,
-  cream: 0xf5f3d1,
-  amber: 0xffce67,
-  red: 0xff646f,
-  violet: 0xf979ef,
+  teal: 0x92e6c6,
+  cream: 0xf8ead5,
+  amber: 0xdfb76c,
+  red: 0xf15e4c,
+  violet: 0xf88c77,
 }
 
+// 同一机械军团；危险由形状与预警表达
 export const foeColors: Record<EnemyKind, number> = {
-  chaser: 0xff646f,
-  charger: 0xff9856,
-  shooter: 0xdb74f6,
-  splitter: 0xff80b7,
-  brute: 0xdd5062,
-  boss: 0xff655f,
+  chaser: palette.red,
+  charger: palette.red,
+  shooter: palette.red,
+  splitter: palette.red,
+  brute: palette.red,
+  boss: palette.red,
 }
 
 export const clamp = (value: number, min: number, max: number) =>

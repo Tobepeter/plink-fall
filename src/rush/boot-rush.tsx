@@ -11,6 +11,14 @@ export function bootRush(root: HTMLElement) {
   document.body.classList.add('rush-mode')
   document.title = '零点突围'
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0b1223')
+  if (!document.querySelector('link[data-rush-modules]')) {
+    const preload = document.createElement('link')
+    preload.rel = 'preload'
+    preload.as = 'image'
+    preload.href = '/rush/modules-v2.png'
+    preload.dataset.rushModules = ''
+    document.head.appendChild(preload)
+  }
   root.replaceChildren()
   createRoot(root).render(<RushRuntime />)
 }

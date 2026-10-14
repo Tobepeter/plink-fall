@@ -1,7 +1,8 @@
 import type { RushState, Shot, Vec } from '../types'
-import { distance, level, nearest, toward } from './math'
+import { distance, level, nearest, playerGunOrigin, toward, visible } from './math'
 import type { Hooks } from './math'
-import { blast, damageFoe } from './world'
+import { blast, damageFoe } from './combat/damage'
+import { hasProtocol, interceptShots, linkArc, recallShots } from './combat/protocols'
 
 export const dashMaxCooldown = (s: RushState) => Math.max(0.85, 1.6 - level(s, 'haste') * 0.12)
 
@@ -9,6 +10,7 @@ export class Weapons {
   private shotClock = 0.05
   private rocketClock = 0.1
   private pulseClock = 0.1
+  private targetId = 0
 
   constructor(
     private s: RushState,
@@ -50,6 +52,7 @@ export class Weapons {
       bounce: kind === 'shot' ? level(s, 'ricochet') + 1 * Number(level(s, 'ricochet') > 0) : 0,
       hits: [],
       grazed: false,
+      scatter: kind === 'shot' && level(s, 'split') > 0,
     })
     this.hooks.emit({ type: 'shot', ...point, side: 'player', power: kind === 'rocket' ? 2 : 1 })
   }
@@ -76,6 +79,7 @@ export class Weapons {
         const target = s.enemies.find((e) => e.hp > 0 && distance(v, e) < e.radius + 20)
         if (target) {
           damageFoe(s, this.hooks, target, 1.8 + level(s, 'orbit') * 0.45)
+          if (hasProtocol(s, 'circuit')) linkArc(s, this.hooks, v, target, 'circuit')
           v.cooldown = 0.16
         }
       }
@@ -101,18 +105,22 @@ export class Weapons {
 
   update(dt: number) {
     const s = this.s
-    this.shotClock -= dt
+    // 没目标时不积存射击次数，波间空场不能变成60Hz补射
+    this.shotClock = Math.max(0, this.shotClock - dt)
     this.rocketClock -= dt
     this.pulseClock -= dt
-    const target = nearest(s, s.player)
+    const locked = s.enemies.find((e) => e.id === this.targetId && e.hp > 0 && visible(s, e, 14))
+    const target = locked || nearest(s, s.player)
+    this.targetId = target?.id || 0
+    const origin = playerGunOrigin(s.player)
+    if (target) s.player.angle = toward(origin, target)
     if (target && this.shotClock <= 0) {
-      const a = toward(s.player, target)
-      s.player.angle = a
+      const a = s.player.angle
       const spread = level(s, 'split') || s.overdrive > 0
       const count = spread ? 3 + Math.max(0, Math.floor((level(s, 'split') - 1) / 2)) * 2 : 1
       for (let i = 0; i < count; i++)
         this.fire(
-          s.player,
+          origin,
           a + (i - (count - 1) / 2) * 0.16,
           'shot',
           level(s, 'pierce') * 0.08 + Math.floor(level(s, 'split') / 2) * 0.2,
@@ -120,7 +128,7 @@ export class Weapons {
       this.shotClock += 0.24 / (1 + level(s, 'haste') * 0.23) / (s.overdrive > 0 ? 1.9 : 1)
     }
     if (target && level(s, 'rocket') && this.rocketClock <= 0) {
-      this.fire(s.player, toward(s.player, target), 'rocket', 1)
+      this.fire(origin, s.player.angle, 'rocket', 1)
       this.rocketClock = Math.max(0.5, 1.55 - level(s, 'rocket') * 0.13)
     }
     if (level(s, 'pulse') && this.pulseClock <= 0) {
@@ -134,14 +142,17 @@ export class Weapons {
   dash() {
     const s = this.s
     const p = s.player
-    if (s.phase !== 'playing' || s.paused || p.dashCooldown > 0) return false
+    if (s.phase !== 'playing' || s.paused || s.wave.phase !== 'combat' || p.dashCooldown > 0)
+      return false
     p.dashTime = 0.2
     p.dashCooldown = dashMaxCooldown(s)
     p.invulnerable = Math.max(0.25, p.invulnerable)
     const direction = Math.hypot(s.move.x, s.move.y) > 0.05 ? s.move : p.lastMove
     const len = Math.hypot(direction.x, direction.y) || 1
     p.lastMove = { x: direction.x / len, y: direction.y / len }
-    s.shots = s.shots.filter((shot) => shot.side === 'player' || distance(p, shot) > 90)
+    p.intercepted = 0
+    interceptShots(s, this.hooks, 90)
+    recallShots(s, this.hooks)
     if (level(s, 'frost')) {
       s.zones.push({
         id: this.hooks.id(),

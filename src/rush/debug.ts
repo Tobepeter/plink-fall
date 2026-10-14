@@ -1,17 +1,23 @@
-import type { RushPort, RushState, Vec } from './types'
+import type { RushEvent, RushPort, RushState, Vec } from './types'
 import type { RushGame } from './rush-game'
 
 // DEBUG 开发期真实战斗与确定性场景
 export function attachRushDebug(store: RushPort, game: RushGame) {
   if (!import.meta.env.DEV) return
-  const events: { clock: number; type: string; amount?: number; side?: string }[] = []
+  const events: (Pick<RushEvent, 'type' | 'amount' | 'side' | 'protocol' | 'power'> & {
+    clock: number
+    wave: number
+  })[] = []
   store.onEvent((event) => {
     if (events.length > 300) events.shift()
     events.push({
       clock: store.state.clock,
+      wave: store.state.wave.index,
       type: event.type,
       amount: event.amount,
       side: event.side,
+      protocol: event.protocol,
+      power: event.power,
     })
   })
   Object.assign(window, {
@@ -28,7 +34,7 @@ export function attachRushDebug(store: RushPort, game: RushGame) {
       },
       fixture(data: Partial<RushState>) {
         Object.assign(store.state, structuredClone(data))
-        store.update(0.001)
+        store.update(0.1)
       },
       actions: {
         move: store.setMove.bind(store),

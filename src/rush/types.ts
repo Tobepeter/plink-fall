@@ -14,6 +14,17 @@ export type UpgradeId =
   | 'vital'
   | 'magnet'
 export type RushPhase = 'playing' | 'choice' | 'dead' | 'won'
+export type ProtocolId = 'circuit' | 'frostburst' | 'returnfire'
+export interface WaveState {
+  index: number
+  act: number
+  name: string
+  phase: 'combat' | 'breather'
+  elapsed: number
+  duration: number
+  spawned: number
+  budget: number
+}
 export interface Vec {
   x: number
   y: number
@@ -28,6 +39,7 @@ export interface Runner extends Vec {
   invulnerable: number
   dashTime: number
   dashCooldown: number
+  intercepted: number
   lastMove: Vec
   walk: number
   frame: FrameId
@@ -52,7 +64,8 @@ export interface Foe extends Vec {
 export interface Shot extends Vec {
   id: number
   side: 'player' | 'enemy'
-  kind: 'shot' | 'rocket' | 'spark'
+  kind: 'shot' | 'rocket' | 'spark' | 'counter' | 'return'
+  scatter?: boolean
   vx: number
   vy: number
   radius: number
@@ -101,6 +114,7 @@ export interface RushState {
   runId: number
   seed: number
   clock: number
+  wave: WaveState
   player: Runner
   enemies: Foe[]
   shots: Shot[]
@@ -149,12 +163,18 @@ export interface RushEvent extends Vec {
     | 'overdrive'
     | 'upgrade'
     | 'run-end'
+    | 'wave'
+    | 'wave-clear'
+    | 'intercept'
+    | 'counter'
+    | 'protocol'
   kind?: EnemyKind
   amount?: number
   power?: number
   targets?: Vec[]
   upgrade?: UpgradeId
   side?: 'player' | 'enemy'
+  protocol?: ProtocolId
 }
 export interface RushPort {
   state: RushState

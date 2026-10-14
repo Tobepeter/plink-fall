@@ -4,7 +4,15 @@ import { EnemyDirector } from './enemies'
 import { distance, level } from './math'
 import type { Hooks } from './math'
 import { Weapons } from './weapons'
-import { advanceLoot, advanceShots, blast } from './world'
+import { blast } from './combat/damage'
+import { advanceLoot } from './combat/loot'
+import { advanceShots } from './combat/projectiles'
+import {
+  activeProtocols,
+  counterFire,
+  interceptShots,
+  protocolDefinitions,
+} from './combat/protocols'
 
 export class Simulation {
   readonly enemies: EnemyDirector
@@ -35,7 +43,7 @@ export class Simulation {
     p.y += p.vy * dt
     p.walk += Math.hypot(p.vx, p.vy) * dt
     if (dash) {
-      s.shots = s.shots.filter((shot) => shot.side === 'player' || distance(p, shot) > 80)
+      interceptShots(s, this.hooks, 80)
       if (
         level(s, 'frost') &&
         s.zones.filter((z) => z.kind === 'frost').every((z) => distance(z, p) > 50)
@@ -50,6 +58,7 @@ export class Simulation {
           tick: 0,
         })
       }
+      if (p.dashTime === 0) counterFire(s, this.hooks)
     }
   }
 
@@ -69,7 +78,16 @@ export class Simulation {
     const pool = upgrades.filter((u) => level(this.s, u.id) < u.maxLevel).map((u) => u.id)
     const choices: UpgradeId[] = []
     while (choices.length < 3 && pool.length) {
-      const index = Math.floor(this.hooks.random() * pool.length)
+      const weights = pool.map((id) => {
+        const paired = protocolDefinitions.some(
+          (p) =>
+            p.parts.includes(id) && p.parts.some((part) => part !== id && level(this.s, part) > 0),
+        )
+        return paired && level(this.s, id) === 0 ? 3 : level(this.s, id) > 0 ? 1.4 : 1
+      })
+      let roll = this.hooks.random() * weights.reduce((sum, value) => sum + value, 0)
+      let index = 0
+      while (index < weights.length - 1 && roll >= weights[index]) roll -= weights[index++]
       choices.push(pool.splice(index, 1)[0])
     }
     return choices
@@ -78,6 +96,7 @@ export class Simulation {
   choose(id: UpgradeId) {
     const s = this.s
     if (s.phase !== 'choice' || s.paused || !s.choices.includes(id)) return false
+    const previousProtocols = activeProtocols(s)
     s.upgrades[id] = level(s, id) + 1
     s.xp -= s.nextXp
     s.level++
@@ -95,7 +114,6 @@ export class Simulation {
       e.y = s.player.y + Math.sin(a) * (110 + e.radius)
       e.slow = Math.max(e.slow, 0.4)
     }
-    this.enemies.introducePressure()
     if (id === 'vital') {
       s.player.maxHp++
       s.player.hp = Math.min(s.player.maxHp, s.player.hp + 2)
@@ -113,6 +131,10 @@ export class Simulation {
       })
     this.weapons.syncSatellites()
     this.hooks.emit({ type: 'upgrade', ...s.player, upgrade: id, amount: level(s, id) })
+    for (const protocol of activeProtocols(s)) {
+      if (!previousProtocols.includes(protocol))
+        this.hooks.emit({ type: 'protocol', ...s.player, protocol, amount: 1 })
+    }
     return true
   }
 
@@ -120,7 +142,7 @@ export class Simulation {
     const s = this.s
     if (s.phase !== 'playing' || s.paused) return
     s.clock += dt
-    if (s.clock > 2.5) s.notice = ''
+    if (s.wave.elapsed > 3) s.notice = ''
     s.overdrive = Math.max(0, s.overdrive - dt)
     s.comboTimer = Math.max(0, s.comboTimer - dt)
     if (s.comboTimer === 0) s.combo = 0
@@ -132,6 +154,10 @@ export class Simulation {
     this.movement(dt)
     this.enemies.update(dt)
     if (s.phase !== 'playing') return
+    if (s.wave.phase === 'breather') {
+      this.progression()
+      return
+    }
     this.weapons.update(dt)
     advanceShots(s, this.hooks, dt)
     advanceLoot(s, this.hooks, dt)

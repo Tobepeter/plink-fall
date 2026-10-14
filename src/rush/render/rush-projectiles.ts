@@ -19,11 +19,17 @@ export class RushProjectiles {
   private drawFields(state: RushState) {
     const g = this.fields.clear()
     for (const zone of state.zones) {
-      const color = zone.kind === 'frost' ? 0x90d8fa : palette.teal
+      const color = zone.kind === 'frost' ? palette.cream : palette.teal
       const progress = Math.max(0, zone.life / zone.duration)
       const radius = zone.kind === 'blast' ? zone.radius * (1 - progress * 0.3) : zone.radius
       g.circle(zone.x, zone.y, radius).fill({ color, alpha: 0.04 + progress * 0.04 })
-      g.circle(zone.x, zone.y, radius).stroke({ color, width: 2, alpha: progress * 0.45 })
+      if (zone.kind === 'frost') {
+        const points = Array.from({ length: 6 }, (_, i) => {
+          const a = (i * Math.PI) / 3
+          return [zone.x + Math.cos(a) * radius, zone.y + Math.sin(a) * radius]
+        }).flat()
+        g.poly(points).stroke({ color: palette.teal, width: 1.5, alpha: progress * 0.42 })
+      } else g.circle(zone.x, zone.y, radius).stroke({ color, width: 2, alpha: progress * 0.45 })
       if (zone.kind === 'frost') {
         for (let i = 0; i < 8; i++) {
           const a = (i * Math.PI) / 4
@@ -55,7 +61,7 @@ export class RushProjectiles {
           .lineTo(x, y + r * 0.2)
           .stroke({ color: palette.cream, width: 1 })
       } else {
-        const color = drop.kind === 'heal' ? 0xa3f990 : palette.teal
+        const color = palette.teal
         g.circle(x, y, 10).fill(palette.ink).stroke({ color, width: 2 })
         if (drop.kind === 'heal') {
           g.rect(x - 2, y - 6, 4, 12)
@@ -83,6 +89,35 @@ export class RushProjectiles {
       const length = shot.side === 'enemy' ? 7 : shot.kind === 'rocket' ? 20 : 13
       const tail = { x: shot.x - dx * length, y: shot.y - dy * length }
       if (shot.side === 'player') {
+        if (shot.kind === 'counter') {
+          g.poly([
+            shot.x + dx * 11,
+            shot.y + dy * 11,
+            shot.x - dx * 5 - dy * 6,
+            shot.y - dy * 5 + dx * 6,
+            shot.x - dx * 19,
+            shot.y - dy * 19,
+            shot.x - dx * 5 + dy * 6,
+            shot.y - dy * 5 - dx * 6,
+          ])
+            .fill(palette.cream)
+            .stroke({ color: palette.ink, width: 2 })
+          g.moveTo(shot.x - dx * 27, shot.y - dy * 27)
+            .lineTo(shot.x - dx * 7, shot.y - dy * 7)
+            .stroke({ color: palette.teal, width: 3, alpha: 0.85 })
+          continue
+        }
+        if (shot.kind === 'return') {
+          g.moveTo(shot.x - dx * 8 - dy * 7, shot.y - dy * 8 + dx * 7)
+            .lineTo(shot.x + dx * 5, shot.y + dy * 5)
+            .lineTo(shot.x - dx * 8 + dy * 7, shot.y - dy * 8 - dx * 7)
+            .stroke({ color: palette.ink, width: 7, cap: 'round' })
+          g.moveTo(shot.x - dx * 8 - dy * 7, shot.y - dy * 8 + dx * 7)
+            .lineTo(shot.x + dx * 5, shot.y + dy * 5)
+            .lineTo(shot.x - dx * 8 + dy * 7, shot.y - dy * 8 - dx * 7)
+            .stroke({ color: palette.teal, width: 3, cap: 'round' })
+          continue
+        }
         const color = shot.kind === 'rocket' ? palette.amber : palette.teal
         g.moveTo(tail.x, tail.y)
           .lineTo(shot.x, shot.y)
@@ -94,7 +129,7 @@ export class RushProjectiles {
         if (shot.kind === 'rocket') {
           g.moveTo(tail.x - dx * 8, tail.y - dy * 8)
             .lineTo(tail.x, tail.y)
-            .stroke({ color: palette.red, width: 2.5, cap: 'round', alpha: 0.7 })
+            .stroke({ color: palette.cream, width: 2.5, cap: 'round', alpha: 0.7 })
         }
       } else {
         g.moveTo(tail.x, tail.y)
@@ -102,7 +137,7 @@ export class RushProjectiles {
           .stroke({ color: palette.violet, width: r * 2, alpha: 0.2, cap: 'round' })
         g.circle(shot.x, shot.y, r + 2).fill(palette.ink)
         g.circle(shot.x, shot.y, r + 0.5).fill(palette.violet)
-        g.circle(shot.x, shot.y, r * 0.45).fill(0xffe4fa)
+        g.circle(shot.x, shot.y, r * 0.45).fill(palette.cream)
       }
     }
   }

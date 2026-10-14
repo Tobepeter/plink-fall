@@ -14,7 +14,7 @@ export class RushScene {
   private camera = new RushCamera()
   private floor = new RushFloor()
   private projectiles = new RushProjectiles()
-  private effects = new RushEffects()
+  private effects = new RushEffects(() => this.getState().player)
   private overlay = new Graphics()
   private stick = new Graphics()
   private actors?: RushActors
@@ -24,7 +24,6 @@ export class RushScene {
   private destroyed = false
   private runId = -1
   private hurt = 0
-  private stop = 0
   private pending: RushEvent[] = []
 
   constructor(private getState: () => RushState) {
@@ -39,10 +38,15 @@ export class RushScene {
   }
 
   private async load() {
-    const atlas = await Assets.load<Texture>('/rush/actors.png')
+    const [atlas, modules] = await Promise.all([
+      Assets.load<Texture>('/rush/actors-v3.png'),
+      Assets.load<Texture>('/rush/modules-v2.png'),
+    ])
     if (this.destroyed) return
     for (let i = 0; i < 9; i++) this.frames.push(this.extract(atlas, i))
-    this.actors = new RushActors(this.frames)
+    const weapon = this.extract(modules, 0, 3, 4)
+    this.frames.push(weapon)
+    this.actors = new RushActors(this.frames, weapon)
     this.world.addChild(
       this.floor.view,
       this.projectiles.fields,
@@ -60,13 +64,13 @@ export class RushScene {
   }
 
   // 裁掉透明外边，只派生 frame 不修改纹理源
-  private extract(atlas: Texture, index: number) {
-    const col = index % 3
-    const row = Math.floor(index / 3)
-    const x = Math.floor((col * atlas.width) / 3)
-    const y = Math.floor((row * atlas.height) / 3)
-    const width = Math.floor(((col + 1) * atlas.width) / 3) - x
-    const height = Math.floor(((row + 1) * atlas.height) / 3) - y
+  private extract(atlas: Texture, index: number, cols = 3, rows = 3) {
+    const col = index % cols
+    const row = Math.floor(index / cols)
+    const x = Math.floor((col * atlas.width) / cols)
+    const y = Math.floor((row * atlas.height) / rows)
+    const width = Math.floor(((col + 1) * atlas.width) / cols) - x
+    const height = Math.floor(((row + 1) * atlas.height) / rows) - y
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
@@ -90,7 +94,7 @@ export class RushScene {
       const pixels = ctx.getImageData(0, 0, width, height).data
       for (let py = 0; py < height; py++) {
         for (let px = 0; px < width; px++) {
-          if (pixels[(py * width + px) * 4 + 3] < 32) continue
+          if (pixels[(py * width + px) * 4 + 3] < 128) continue
           left = Math.min(left, px)
           right = Math.max(right, px)
           top = Math.min(top, py)
@@ -125,20 +129,18 @@ export class RushScene {
       this.effects.reset()
       this.camera.reset(state)
       this.hurt = 0
-      this.stop = 0
     }
     const active = state.phase === 'playing' && !state.paused
     const realDt = Math.min(0.1, Math.max(0, dt))
-    this.stop = Math.max(0, this.stop - realDt)
+    const effectsDt = state.paused || state.phase === 'choice' ? 0 : realDt
     dt = active ? realDt : 0
-    if (this.stop > 0) return
-    this.camera.update(state, dt)
+    this.camera.update(state, effectsDt)
     this.transform()
     this.floor.render(this.camera)
     this.projectiles.render(state)
     this.actors?.render(state, dt)
-    this.effects.render(dt)
-    this.hurt = Math.max(0, this.hurt - dt)
+    this.effects.render(effectsDt)
+    this.hurt = Math.max(0, this.hurt - effectsDt)
     this.drawOverlay(state)
   }
 
@@ -170,16 +172,11 @@ export class RushScene {
     this.effects.event(event)
     this.actors?.event(event)
     if (event.type === 'hurt') {
-      this.camera.impact(0.48)
+      this.camera.impact(0.6)
       this.hurt = 0.3
-      this.stop = 0.028
     }
-    if (event.type === 'explode') {
-      this.camera.impact(0.12)
-      this.stop = 0.024
-    }
-    if (event.type === 'boss-down') this.camera.impact(0.5)
-    if (event.type === 'overdrive') this.camera.impact(0.2)
+    if (event.type === 'boss-down') this.camera.impact(0.75)
+    if (event.type === 'counter') this.camera.impact(0.35)
   }
 
   screenToWorld(x: number, y: number): Vec {

@@ -1,10 +1,9 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { Play, RotateCcw } from 'lucide-react'
 import { frameDefinitions } from '../model/data'
 import type { RushPort } from '../types'
 import { RushHud } from './rush-hud'
 import { RushChoice } from './rush-choice'
-import { FrameGlyph, time } from './weapon-glyph'
+import { ControlGlyph, FrameGlyph, time } from './weapon-glyph'
 import '../rush.css'
 
 export interface RushAppProps {
@@ -37,7 +36,7 @@ export function RushApp(props: RushAppProps) {
   }
   return (
     <main
-      className={`rush-shell${state.paused ? ' is-paused' : ''}${ended ? ' has-ended' : ''}`}
+      className={`rush-shell${state.paused ? ' is-paused' : ''}${ended ? ' has-ended' : ''}${state.phase === 'choice' ? ' is-choosing' : ''}`}
       aria-label="零点突围游戏"
     >
       <div className="rush-stage" ref={mountStage} aria-label="弹幕战斗场景" />
@@ -55,7 +54,7 @@ export function RushApp(props: RushAppProps) {
             onClick={() => window.location.reload()}
             aria-label="重新加载"
           >
-            <RotateCcw size={20} />
+            <ControlGlyph id="retry" />
           </button>
         </div>
       )}
@@ -63,20 +62,24 @@ export function RushApp(props: RushAppProps) {
         <span className="rush-intro">
           <span className="rush-intro-keyboard">WASD 移动</span>
           <span className="rush-intro-touch">轻推空地移动</span>
-          <i /> 自动开火
+          <i /> 自动开火 · 冲刺截弹
         </span>
       )}
       {props.ready && !props.error && <RushChoice state={state} store={store} />}
       {state.paused && !ended && (
         <button className="rush-resume" onClick={resume} aria-label="继续战斗">
-          <Play size={32} fill="currentColor" />
+          <ControlGlyph id="play" />
           <span>继续突围</span>
         </button>
       )}
       {ended && (
         <div className="rush-result" aria-label={state.phase === 'won' ? '突围成功' : '本局战绩'}>
           <div className="rush-result-title">
-            <span>{state.phase === 'won' ? 'ESCAPED' : 'RUN OVER'}</span>
+            <span>
+              {state.phase === 'won'
+                ? '封锁解除'
+                : `第 ${state.wave.index} 波 · ${state.wave.name}`}
+            </span>
             <h1>{state.phase === 'won' ? '突破封锁' : '突围失败'}</h1>
           </div>
           <div className="rush-results">
@@ -107,19 +110,16 @@ export function RushApp(props: RushAppProps) {
                   disabled={!unlocked}
                   aria-label={`${frame.name}，${unlocked ? frame.hint : '尚未解锁'}`}
                   aria-pressed={state.record.selected === frame.id}
-                  style={{ color: frame.color }}
                 >
                   <FrameGlyph id={frame.id} />
                   <b>{frame.name}</b>
-                  <small>
-                    {unlocked ? (state.record.selected === frame.id ? '出战' : '可出战') : '未解锁'}
-                  </small>
+                  <small>{unlocked ? frame.hint : frame.unlock}</small>
                 </button>
               )
             })}
           </div>
           <button className="rush-restart" onClick={restart}>
-            <RotateCcw size={19} />
+            <ControlGlyph id="retry" />
             <span>再来一局</span>
           </button>
         </div>

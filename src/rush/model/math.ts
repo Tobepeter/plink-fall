@@ -4,6 +4,7 @@ export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y)
 export const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
 export const toward = (a: Vec, b: Vec) => Math.atan2(b.y - a.y, b.x - a.x)
 export const level = (s: RushState, id: keyof RushState['upgrades']) => s.upgrades[id] || 0
+export const playerGunOrigin = (p: Vec) => ({ x: p.x, y: p.y - 16 })
 
 export function visible(s: RushState, e: Vec, margin = 0) {
   return (

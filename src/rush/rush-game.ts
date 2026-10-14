@@ -1,5 +1,5 @@
 import { Application } from 'pixi.js'
-import type { RushPort, Vec } from './types'
+import type { RushEvent, RushPort, Vec } from './types'
 import { RushScene } from './render/rush-scene'
 import { RushSound } from './rush-sound'
 
@@ -17,6 +17,8 @@ export class RushGame {
   private raf = 0
   private last = 0
   private accumulator = 0
+  private impactTime = 0
+  private lastImpact = 0
   private initialized = false
   private disposed = false
   frames = 0
@@ -75,6 +77,7 @@ export class RushGame {
     this.unsubscribe = this.store.onEvent((event) => {
       this.scene.event(event)
       this.sound.event(event)
+      this.impact(event)
       if (event.type === 'level' || event.type === 'run-end') this.cancelInput()
     })
     this.canvas.addEventListener('pointerdown', this.pointerDown)
@@ -100,15 +103,21 @@ export class RushGame {
     const active = this.store.state.phase === 'playing' && !this.store.state.paused
     if (!active) this.cancelInput()
     else this.store.setMove(this.direction())
-    this.accumulator += dt
+    const frozen = Math.min(dt, this.impactTime)
+    this.impactTime = active ? Math.max(0, this.impactTime - dt) : 0
+    this.accumulator += active ? dt - frozen : 0
     let steps = 0
     while (this.accumulator >= 1 / 60 && steps++ < 8) {
       this.store.update(1 / 60)
       this.accumulator -= 1 / 60
+      if (this.impactTime > 0) {
+        this.accumulator = 0
+        break
+      }
     }
     if (steps >= 8) this.accumulator = 0
     this.scene.setStick(this.stick)
-    this.scene.render(dt)
+    this.scene.render(active ? (this.impactTime ? 0 : dt - frozen) : dt)
     this.sound.update()
     const player = this.scene.worldToScreen(this.store.state.player)
     this.shell?.style.setProperty('--rush-player-x', player.x + 'px')
@@ -132,6 +141,22 @@ export class RushGame {
     }
     const length = Math.max(1, Math.hypot(x, y))
     return { x: x / length, y: y / length }
+  }
+
+  // 重要命中的短停顿
+  private impact(event: RushEvent) {
+    const duration =
+      event.type === 'hurt'
+        ? 0.032
+        : event.type === 'counter'
+          ? 0.024
+          : event.type === 'boss-down'
+            ? 0.06
+            : 0
+    const now = performance.now()
+    if (!duration || (event.type !== 'hurt' && now - this.lastImpact < 250)) return
+    this.impactTime = Math.max(this.impactTime, duration)
+    this.lastImpact = now
   }
 
   private point(event: PointerEvent) {
@@ -164,7 +189,7 @@ export class RushGame {
     this.store.setMove(this.direction())
   }
   private keyDown = (event: KeyboardEvent) => {
-    if (event.repeat) return
+    if (event.repeat && (event.code === 'Escape' || event.code === 'Space')) return
     if (event.code === 'Escape') {
       event.preventDefault()
       this.cancelInput()
@@ -185,6 +210,7 @@ export class RushGame {
       this.store.dash()
     } else if (/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(event.code)) {
       event.preventDefault()
+      if (this.keys.has(event.code)) return
       this.sound.unlock()
       this.keys.add(event.code)
     }
@@ -215,6 +241,7 @@ export class RushGame {
     this.sound.resume()
     this.last = performance.now()
     this.accumulator = 0
+    this.impactTime = 0
     this.raf = requestAnimationFrame(this.tick)
   }
 

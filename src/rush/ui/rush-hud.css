@@ -3,190 +3,346 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  text-shadow:
-    0 2px 3px #031018,
-    0 0 12px #031018;
+  text-shadow: 0 2px 2px #080d19;
 }
 
 .rush-hud button {
   pointer-events: auto;
 }
-
 .rush-vitals {
   position: absolute;
-  left: max(18px, env(safe-area-inset-left));
-  top: max(21px, env(safe-area-inset-top));
+  left: max(22px, calc(env(safe-area-inset-left) + 10px));
+  top: max(19px, calc(env(safe-area-inset-top) + 8px));
 }
-
 .rush-health {
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: #76e5c8;
+  gap: 8px;
+  color: var(--rush-mint);
 }
-
+.rush-health > svg {
+  width: 26px;
+  height: 26px;
+}
 .rush-health-cells {
   display: flex;
-  align-items: center;
   gap: 4px;
-  width: 104px;
-  height: 10px;
+  width: 112px;
+  height: 12px;
 }
-
 .rush-health-cells i {
   flex: 1;
   height: 100%;
-  background: #244f53;
-  box-shadow: 0 1px 2px #0007;
-  transform: skew(-12deg);
+  background: #223a3e;
+  border: 1px solid #52716c;
+  box-shadow: 0 2px 0 #060d16;
+  transform: skew(-18deg);
 }
-
 .rush-health-cells .is-filled {
-  background: #76e5c8;
-  box-shadow: 0 0 8px #69dcc649;
+  background: var(--rush-mint);
+  border-color: #c8f9de;
 }
-
 .rush-health.is-low {
-  color: #ff7f8b;
+  color: var(--rush-red);
 }
-
 .rush-health.is-low .is-filled {
-  background: #ff7f8b;
+  background: var(--rush-red);
+  border-color: #ffba96;
   animation: rush-alert 1s ease-in-out infinite;
 }
-
 .rush-kills {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 11px;
-  color: #eff8e8;
-  font-size: 15px;
+  gap: 7px;
+  margin-top: 7px;
+  color: var(--rush-brass);
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
-
+.rush-kills > svg {
+  width: 18px;
+  height: 18px;
+}
 .rush-clock {
   position: absolute;
-  top: max(15px, env(safe-area-inset-top));
+  top: max(16px, calc(env(safe-area-inset-top) + 6px));
   left: 50%;
   transform: translateX(-50%);
   display: grid;
   justify-items: center;
-  gap: 2px;
-  min-width: 76px;
+  gap: 3px;
+  width: 160px;
 }
-
+.rush-wave-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rush-mint);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.rush-wave-name > i,
+.rush-level > i,
+.rush-overdrive > i {
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
 .rush-clock > b {
   font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 750;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.5px;
-  line-height: 1.25;
+  letter-spacing: -1px;
+  line-height: 1.1;
 }
-
-.rush-clock > span {
-  color: #bfd4cb;
+.rush-level {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #acbfb4;
   font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2px;
+  font-weight: 750;
 }
-
 .rush-xp {
   display: block;
-  width: 86px;
-  height: 3px;
-  margin-top: 5px;
-  background: #22393f;
+  width: 106px;
+  height: 4px;
+  margin-top: 2px;
+  background: #26323b;
   overflow: hidden;
+  transform: skew(-18deg);
 }
-
 .rush-xp > i {
   display: block;
   width: 100%;
   height: 100%;
-  background: #f5d470;
-  box-shadow: 0 0 8px #f5d4707f;
+  background: var(--rush-brass);
   transform-origin: left center;
   transition: transform 0.09s linear;
 }
-
+.rush-clock.is-breather > b {
+  color: var(--rush-mint);
+}
 .rush-boss {
   position: absolute;
-  top: max(87px, calc(env(safe-area-inset-top) + 67px));
+  top: max(110px, calc(env(safe-area-inset-top) + 94px));
   left: 50%;
   transform: translateX(-50%);
   width: min(360px, 68vw);
   display: grid;
-  gap: 7px;
+  gap: 6px;
   text-align: center;
-  color: #ff9b94;
-  font-weight: 700;
+  color: #ff8b77;
+  font-weight: 800;
   font-size: 10px;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
 }
-
 .rush-boss > i {
   display: block;
-  height: 5px;
+  height: 6px;
+  padding: 2px;
+  border: 1px solid #754448;
+  background: #251e2a;
+  transform: skew(-12deg);
   overflow: hidden;
-  background: #4a2235;
 }
-
 .rush-boss > i > i {
   display: block;
   width: 100%;
   height: 100%;
-  background: #ff737e;
-  box-shadow: 0 0 10px #ff737e;
+  background: var(--rush-red);
   transform-origin: left center;
   transition: transform 0.09s linear;
 }
-
 .rush-overdrive {
   position: absolute;
   display: flex;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
   left: 50%;
-  top: max(73px, calc(env(safe-area-inset-top) + 58px));
+  top: max(93px, calc(env(safe-area-inset-top) + 82px));
   transform: translateX(-50%);
-  color: #fff7b6;
-  font-size: 12px;
-  font-weight: 800;
+  color: var(--rush-brass);
+  font-size: 11px;
+  font-weight: 850;
+}
+.rush-boss ~ .rush-overdrive {
+  top: max(153px, calc(env(safe-area-inset-top) + 135px));
+}
+.rush-wave-banner {
+  position: absolute;
+  left: 50%;
+  top: 26%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  white-space: nowrap;
+  color: var(--rush-ivory);
+  animation: rush-wave-flash 1.4s ease-out both;
+}
+.rush-wave-banner > b {
+  font-size: 22px;
   letter-spacing: 3px;
 }
-
-.rush-boss ~ .rush-overdrive {
-  top: max(125px, calc(env(safe-area-inset-top) + 105px));
+.rush-wave-banner > span {
+  color: var(--rush-mint);
+  font-size: 12px;
+  font-weight: 800;
 }
-
+.rush-wave-banner > i {
+  width: 28px;
+  height: 4px;
+  background: var(--rush-red);
+  transform: skew(-25deg);
+}
+.rush-breather {
+  position: absolute;
+  top: max(110px, calc(env(safe-area-inset-top) + 100px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  color: var(--rush-mint);
+  font-size: 11px;
+  font-weight: 800;
+}
+.rush-breather > b {
+  font-variant-numeric: tabular-nums;
+  color: var(--rush-brass);
+}
+.rush-breather > small {
+  color: #afc0b9;
+  font-size: 10px;
+}
+.rush-breather > i {
+  width: 24px;
+  height: 1px;
+  background: #679488;
+}
+.rush-protocols {
+  position: absolute;
+  left: max(21px, calc(env(safe-area-inset-left) + 9px));
+  bottom: max(46px, calc(env(safe-area-inset-bottom) + 40px));
+  display: flex;
+  gap: 12px;
+}
+.rush-protocols > span {
+  display: flex;
+  align-items: center;
+}
+.rush-protocols > span > i {
+  position: relative;
+  width: 10px;
+  height: 2px;
+  background: var(--rush-mint);
+}
+.rush-protocols > span > i::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #d9fbd5;
+  background: #3a6f5b;
+  transform: rotate(45deg);
+}
 .rush-shell.is-paused .rush-hud {
   z-index: 8;
 }
-
+@keyframes rush-wave-flash {
+  0% {
+    opacity: 0;
+    translate: 0 7px;
+  }
+  15%,
+  62% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -3px;
+  }
+}
 @media (max-width: 600px) {
   .rush-vitals {
-    left: max(13px, env(safe-area-inset-left));
-    top: max(19px, env(safe-area-inset-top));
+    left: max(12px, calc(env(safe-area-inset-left) + 5px));
+    top: max(17px, calc(env(safe-area-inset-top) + 6px));
   }
   .rush-health {
-    gap: 6px;
+    gap: 5px;
   }
   .rush-health > svg {
-    width: 16px;
-    height: 16px;
+    width: 21px;
+    height: 21px;
   }
   .rush-health-cells {
-    width: 81px;
-    height: 9px;
+    width: 77px;
+    height: 10px;
     gap: 3px;
   }
   .rush-kills {
     font-size: 13px;
-    margin-top: 9px;
+    margin-top: 8px;
+    gap: 5px;
+  }
+  .rush-kills > svg {
+    width: 15px;
+    height: 15px;
+  }
+  .rush-clock {
+    width: 138px;
+    top: max(15px, calc(env(safe-area-inset-top) + 4px));
   }
   .rush-clock > b {
-    font-size: 23px;
+    font-size: 24px;
+  }
+  .rush-wave-name {
+    font-size: 10px;
+    gap: 4px;
+  }
+  .rush-xp {
+    width: 89px;
+    height: 3px;
+  }
+  .rush-level {
+    font-size: 8px;
+  }
+  .rush-protocols {
+    bottom: max(22px, calc(env(safe-area-inset-bottom) + 14px));
+    gap: 4px;
+    left: max(12px, calc(env(safe-area-inset-left) + 5px));
+  }
+  .rush-wave-banner {
+    gap: 8px;
+    top: 25%;
+  }
+  .rush-wave-banner > b {
+    font-size: 19px;
+    letter-spacing: 2px;
+  }
+  .rush-wave-banner > i {
+    width: 18px;
+  }
+}
+@media (max-height: 500px) {
+  .rush-clock {
+    top: max(9px, env(safe-area-inset-top));
+  }
+  .rush-wave-banner {
+    top: 30%;
+  }
+  .rush-boss {
+    top: 87px;
+  }
+  .rush-breather {
+    top: 90px;
   }
 }
