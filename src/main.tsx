@@ -4,7 +4,12 @@ import { createRoot } from 'react-dom/client'
 async function boot() {
   const root = document.getElementById('root')!
   const mode = new URLSearchParams(location.search).get('type')
-  if (mode === 'codex-forge' || mode === 'codex-mine') {
+  if (mode === 'codex-rush' || mode === 'codex-forge') {
+    const { bootRush } = await import('./rush/boot-rush')
+    bootRush(root)
+    return
+  }
+  if (mode === 'codex-mine') {
     const { bootMine } = await import('./mine/boot-mine')
     bootMine(root)
     return

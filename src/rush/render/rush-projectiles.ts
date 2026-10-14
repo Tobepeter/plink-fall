@@ -1,0 +1,154 @@
+import { Graphics } from 'pixi.js'
+import type { RushState } from '../types'
+import { palette } from './palette'
+
+// 真实弹道、拾取物与武器场
+export class RushProjectiles {
+  fields = new Graphics()
+  loot = new Graphics()
+  shots = new Graphics()
+  satellites = new Graphics()
+
+  render(state: RushState) {
+    this.drawFields(state)
+    this.drawLoot(state)
+    this.drawShots(state)
+    this.drawSatellites(state)
+  }
+
+  private drawFields(state: RushState) {
+    const g = this.fields.clear()
+    for (const zone of state.zones) {
+      const color = zone.kind === 'frost' ? 0x90d8fa : palette.teal
+      const progress = Math.max(0, zone.life / zone.duration)
+      const radius = zone.kind === 'blast' ? zone.radius * (1 - progress * 0.3) : zone.radius
+      g.circle(zone.x, zone.y, radius).fill({ color, alpha: 0.04 + progress * 0.04 })
+      g.circle(zone.x, zone.y, radius).stroke({ color, width: 2, alpha: progress * 0.45 })
+      if (zone.kind === 'frost') {
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI) / 4
+          const x = zone.x + Math.cos(a) * radius * 0.75
+          const y = zone.y + Math.sin(a) * radius * 0.75
+          g.moveTo(x - 4, y)
+            .lineTo(x + 4, y)
+            .moveTo(x, y - 4)
+            .lineTo(x, y + 4)
+        }
+        g.stroke({ color, width: 1.5, alpha: progress * 0.35 })
+      }
+    }
+  }
+
+  private drawLoot(state: RushState) {
+    const g = this.loot.clear()
+    for (const drop of state.loot) {
+      const bob = Math.sin(drop.age * 6 + drop.id) * 1.2
+      const x = drop.x
+      const y = drop.y + bob
+      g.ellipse(x, drop.y + 6, 5, 2).fill({ color: palette.ink, alpha: 0.55 })
+      if (drop.kind === 'xp') {
+        const r = drop.value > 2 ? 6 : 4.2
+        g.poly([x, y - r, x + r * 0.7, y, x, y + r, x - r * 0.7, y])
+          .fill(palette.amber)
+          .stroke({ color: palette.ink, width: 1.5 })
+        g.moveTo(x, y - r * 0.65)
+          .lineTo(x, y + r * 0.2)
+          .stroke({ color: palette.cream, width: 1 })
+      } else {
+        const color = drop.kind === 'heal' ? 0xa3f990 : palette.teal
+        g.circle(x, y, 10).fill(palette.ink).stroke({ color, width: 2 })
+        if (drop.kind === 'heal') {
+          g.rect(x - 2, y - 6, 4, 12)
+            .rect(x - 6, y - 2, 12, 4)
+            .fill(color)
+        } else {
+          g.moveTo(x + 5, y - 1)
+            .arc(x, y - 1, 5, 0, Math.PI)
+            .stroke({ color, width: 3 })
+          g.rect(x - 5, y - 4, 3, 4)
+            .rect(x + 2, y - 4, 3, 4)
+            .fill(color)
+        }
+      }
+    }
+  }
+
+  private drawShots(state: RushState) {
+    const g = this.shots.clear()
+    for (const shot of state.shots) {
+      const a = Math.atan2(shot.vy, shot.vx)
+      const dx = Math.cos(a)
+      const dy = Math.sin(a)
+      const r = Math.max(2.8, shot.radius)
+      const length = shot.side === 'enemy' ? 7 : shot.kind === 'rocket' ? 20 : 13
+      const tail = { x: shot.x - dx * length, y: shot.y - dy * length }
+      if (shot.side === 'player') {
+        const color = shot.kind === 'rocket' ? palette.amber : palette.teal
+        g.moveTo(tail.x, tail.y)
+          .lineTo(shot.x, shot.y)
+          .stroke({ color: palette.ink, width: r * 2 + 3, cap: 'round' })
+        g.moveTo(tail.x, tail.y)
+          .lineTo(shot.x, shot.y)
+          .stroke({ color, width: r * 1.5, cap: 'round' })
+        g.circle(shot.x, shot.y, r * 0.75).fill(palette.cream)
+        if (shot.kind === 'rocket') {
+          g.moveTo(tail.x - dx * 8, tail.y - dy * 8)
+            .lineTo(tail.x, tail.y)
+            .stroke({ color: palette.red, width: 2.5, cap: 'round', alpha: 0.7 })
+        }
+      } else {
+        g.moveTo(tail.x, tail.y)
+          .lineTo(shot.x, shot.y)
+          .stroke({ color: palette.violet, width: r * 2, alpha: 0.2, cap: 'round' })
+        g.circle(shot.x, shot.y, r + 2).fill(palette.ink)
+        g.circle(shot.x, shot.y, r + 0.5).fill(palette.violet)
+        g.circle(shot.x, shot.y, r * 0.45).fill(0xffe4fa)
+      }
+    }
+  }
+
+  private drawSatellites(state: RushState) {
+    const g = this.satellites.clear()
+    for (const sat of state.satellites) {
+      const x = sat.x
+      const y = sat.y
+      if (sat.kind === 'blade') {
+        const a = state.clock * 14 + sat.id
+        const dx = Math.cos(a)
+        const dy = Math.sin(a)
+        g.moveTo(x + Math.cos(a - 1.1) * 13, y + Math.sin(a - 1.1) * 13)
+          .arc(x, y, 13, a - 1.1, a + 1.1)
+          .stroke({ color: palette.teal, width: 2, alpha: 0.5 })
+        g.poly([
+          x + dx * 13,
+          y + dy * 13,
+          x - dy * 5,
+          y + dx * 5,
+          x - dx * 13,
+          y - dy * 13,
+          x + dy * 5,
+          y - dx * 5,
+        ])
+          .fill(palette.cream)
+          .stroke({ color: palette.ink, width: 2 })
+        g.circle(x, y, 3).fill(palette.teal)
+      } else {
+        g.ellipse(x, y + 7, 10, 4).fill({ color: palette.ink, alpha: 0.6 })
+        g.roundRect(x - 8, y - 7, 16, 13, 4)
+          .fill(palette.teal)
+          .stroke({ color: palette.ink, width: 2 })
+        g.rect(x - 3, y - 4, 6, 3).fill(palette.cream)
+        g.moveTo(x + 3, y)
+          .lineTo(x + Math.cos(sat.angle) * 13, y + Math.sin(sat.angle) * 13)
+          .stroke({ color: palette.cream, width: 4 })
+      }
+    }
+  }
+
+  destroy() {
+    this.fields.destroy()
+    this.loot.destroy()
+    this.shots.destroy()
+    this.satellites.destroy()
+  }
+}

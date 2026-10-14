@@ -1,0 +1,160 @@
+import type { RushEvent, RushState } from './types'
+
+// 节奏底鼓、枪火与击杀音色
+export class RushSound {
+  private context: AudioContext | null = null
+  private output: GainNode | null = null
+  private noise: AudioBuffer | null = null
+  private lastShot = 0
+  private lastHit = 0
+  private nextBeat = 0
+  private beat = 0
+  constructor(private getState: () => RushState) {}
+  unlock() {
+    if (document.hidden || this.getState().record.muted) return
+    try {
+      const Constructor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!Constructor) return
+      if (!this.context) {
+        this.context = new Constructor()
+        this.output = this.context.createGain()
+        this.output.gain.value = 0.18
+        this.output.connect(this.context.destination)
+        this.noise = this.context.createBuffer(
+          1,
+          this.context.sampleRate * 0.12,
+          this.context.sampleRate,
+        )
+        const data = this.noise.getChannelData(0)
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+      }
+      this.resume()
+    } catch {
+      /* 无音频设备仍可战斗 */
+    }
+  }
+  resume() {
+    if (document.hidden || this.getState().record.muted) return
+    if (this.output) this.output.gain.value = 0.18
+    if (this.context?.state === 'suspended') void this.context.resume().catch(() => {})
+    this.nextBeat = 0
+  }
+  suspend() {
+    if (this.output) this.output.gain.value = 0
+    if (this.context?.state === 'running') void this.context.suspend().catch(() => {})
+  }
+  update() {
+    const s = this.getState()
+    if (this.output)
+      this.output.gain.value = document.hidden || s.record.muted || s.paused ? 0 : 0.18
+    if (
+      document.hidden ||
+      s.record.muted ||
+      s.paused ||
+      s.phase !== 'playing' ||
+      this.context?.state !== 'running'
+    )
+      return
+    const now = this.context.currentTime
+    if (now < this.nextBeat) return
+    const step = this.beat++ % 16
+    const notes = [
+      261.6, 0, 311.1, 392, 349.2, 0, 311.1, 0, 261.6, 392, 466.2, 0, 392, 349.2, 311.1, 0,
+    ]
+    if (step % 2 === 0) this.tone(step < 8 ? 65.4 : 77.8, now, 0.13, 0.15, 'triangle', 45)
+    if (notes[step]) this.tone(notes[step], now, 0.09, 0.065, 'triangle')
+    if (step % 4 === 2) this.crackle(now, 0.075, 3400)
+    this.nextBeat = now + 30 / (s.overdrive > 0 ? 158 : 144)
+  }
+  event(event: RushEvent) {
+    if (
+      document.hidden ||
+      this.getState().record.muted ||
+      this.getState().paused ||
+      this.context?.state !== 'running'
+    )
+      return
+    const now = this.context.currentTime
+    if (event.type === 'shot') {
+      if (event.side === 'enemy' || now - this.lastShot < 0.08) return
+      this.lastShot = now
+      this.tone(740 + (this.beat % 3) * 60, now, 0.045, 0.07, 'triangle', 370)
+    } else if (event.type === 'hit' || event.type === 'kill') {
+      if (now - this.lastHit < 0.045) return
+      this.lastHit = now
+      this.crackle(now, event.type === 'kill' ? 0.15 : 0.07, 1600)
+      if (event.type === 'kill') this.tone(145, now, 0.065, 0.1, 'triangle', 90)
+    } else if (event.type === 'hurt' || event.type === 'explode') {
+      this.crackle(now, 0.35, 500)
+      this.tone(190, now, 0.17, 0.23, 'sawtooth', 50)
+    } else if (event.type === 'dash') {
+      this.tone(500, now, 0.12, 0.18, 'sine', 100)
+      this.crackle(now, 0.1, 2400)
+    } else if (
+      event.type === 'upgrade' ||
+      event.type === 'level' ||
+      event.type === 'overdrive' ||
+      event.type === 'boss-down'
+    ) {
+      const notes = event.type === 'overdrive' ? [330, 440, 660, 880] : [523, 659, 784]
+      notes.forEach((note, i) => this.tone(note, now + i * 0.045, 0.12, 0.16, 'triangle'))
+    } else if (event.type === 'boss') {
+      this.tone(110, now, 0.5, 0.19, 'sawtooth', 75)
+    } else if (event.type === 'run-end') {
+      const notes = this.getState().phase === 'won' ? [523, 659, 784, 1047] : [330, 277, 220]
+      notes.forEach((note, i) => this.tone(note, now + i * 0.1, 0.3, 0.14, 'triangle'))
+    }
+  }
+  private tone(
+    frequency: number,
+    time: number,
+    duration: number,
+    volume: number,
+    type: OscillatorType,
+    end = frequency,
+  ) {
+    if (!this.context || !this.output) return
+    const oscillator = this.context.createOscillator(),
+      gain = this.context.createGain()
+    oscillator.type = type
+    oscillator.frequency.setValueAtTime(frequency, time)
+    oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, end), time + duration)
+    gain.gain.setValueAtTime(0, time)
+    gain.gain.linearRampToValueAtTime(volume, time + 0.004)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + duration)
+    oscillator.connect(gain).connect(this.output)
+    oscillator.onended = () => {
+      oscillator.disconnect()
+      gain.disconnect()
+    }
+    oscillator.start(time)
+    oscillator.stop(time + duration + 0.015)
+  }
+  private crackle(time: number, volume: number, cutoff: number) {
+    if (!this.context || !this.output || !this.noise) return
+    const source = this.context.createBufferSource(),
+      filter = this.context.createBiquadFilter(),
+      gain = this.context.createGain()
+    source.buffer = this.noise
+    filter.type = 'lowpass'
+    filter.frequency.value = cutoff
+    gain.gain.setValueAtTime(volume, time)
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09)
+    source.connect(filter).connect(gain).connect(this.output)
+    source.onended = () => {
+      source.disconnect()
+      filter.disconnect()
+      gain.disconnect()
+    }
+    source.start(time)
+    source.stop(time + 0.12)
+  }
+  destroy() {
+    if (this.context) void this.context.close().catch(() => {})
+    this.context = null
+    this.output = null
+    this.noise = null
+  }
+}

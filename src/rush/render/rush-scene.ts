@@ -1,0 +1,230 @@
+import { Assets, Container, Graphics, Rectangle, Texture } from 'pixi.js'
+import type { RushEvent, RushState, Vec } from '../types'
+import { palette } from './palette'
+import { RushActors } from './rush-actors'
+import { RushCamera } from './rush-camera'
+import { RushEffects } from './rush-effects'
+import { RushFloor } from './rush-floor'
+import { RushProjectiles } from './rush-projectiles'
+
+// 全屏弹幕追击场景
+export class RushScene {
+  view = new Container()
+  private world = new Container()
+  private camera = new RushCamera()
+  private floor = new RushFloor()
+  private projectiles = new RushProjectiles()
+  private effects = new RushEffects()
+  private overlay = new Graphics()
+  private stick = new Graphics()
+  private actors?: RushActors
+  private frames: Texture[] = []
+  private loading?: Promise<void>
+  private ready = false
+  private destroyed = false
+  private runId = -1
+  private hurt = 0
+  private stop = 0
+  private pending: RushEvent[] = []
+
+  constructor(private getState: () => RushState) {
+    this.view.eventMode = 'none'
+    this.view.addChild(this.world, this.overlay, this.stick)
+  }
+
+  async init() {
+    if (this.destroyed) return
+    this.loading ??= this.load()
+    await this.loading
+  }
+
+  private async load() {
+    const atlas = await Assets.load<Texture>('/rush/actors.png')
+    if (this.destroyed) return
+    for (let i = 0; i < 9; i++) this.frames.push(this.extract(atlas, i))
+    this.actors = new RushActors(this.frames)
+    this.world.addChild(
+      this.floor.view,
+      this.projectiles.fields,
+      this.projectiles.loot,
+      this.actors.view,
+      this.projectiles.satellites,
+      this.projectiles.shots,
+      this.effects.view,
+    )
+    this.ready = true
+    this.resize(this.camera.width, this.camera.height)
+    this.render(0)
+    for (const event of this.pending) this.event(event)
+    this.pending = []
+  }
+
+  // 裁掉透明外边，只派生 frame 不修改纹理源
+  private extract(atlas: Texture, index: number) {
+    const col = index % 3
+    const row = Math.floor(index / 3)
+    const x = Math.floor((col * atlas.width) / 3)
+    const y = Math.floor((row * atlas.height) / 3)
+    const width = Math.floor(((col + 1) * atlas.width) / 3) - x
+    const height = Math.floor(((row + 1) * atlas.height) / 3) - y
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    let left = width
+    let top = height
+    let right = 0
+    let bottom = 0
+    if (ctx) {
+      ctx.drawImage(
+        atlas.source.resource as CanvasImageSource,
+        x,
+        y,
+        width,
+        height,
+        0,
+        0,
+        width,
+        height,
+      )
+      const pixels = ctx.getImageData(0, 0, width, height).data
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          if (pixels[(py * width + px) * 4 + 3] < 32) continue
+          left = Math.min(left, px)
+          right = Math.max(right, px)
+          top = Math.min(top, py)
+          bottom = Math.max(bottom, py)
+        }
+      }
+    }
+    if (left >= right || top >= bottom)
+      return new Texture({ source: atlas.source, frame: new Rectangle(x, y, width, height) })
+    left = Math.max(0, left - 2)
+    top = Math.max(0, top - 2)
+    right = Math.min(width - 1, right + 2)
+    bottom = Math.min(height - 1, bottom + 2)
+    return new Texture({
+      source: atlas.source,
+      frame: new Rectangle(x + left, y + top, right - left + 1, bottom - top + 1),
+    })
+  }
+
+  resize(width: number, height: number) {
+    this.camera.resize(width, height, this.getState())
+    this.transform()
+    if (this.ready) this.floor.render(this.camera)
+  }
+
+  render(dt: number) {
+    if (!this.ready || this.destroyed) return
+    const state = this.getState()
+    if (state.runId !== this.runId) {
+      this.runId = state.runId
+      this.actors?.reset()
+      this.effects.reset()
+      this.camera.reset(state)
+      this.hurt = 0
+      this.stop = 0
+    }
+    const active = state.phase === 'playing' && !state.paused
+    const realDt = Math.min(0.1, Math.max(0, dt))
+    this.stop = Math.max(0, this.stop - realDt)
+    dt = active ? realDt : 0
+    if (this.stop > 0) return
+    this.camera.update(state, dt)
+    this.transform()
+    this.floor.render(this.camera)
+    this.projectiles.render(state)
+    this.actors?.render(state, dt)
+    this.effects.render(dt)
+    this.hurt = Math.max(0, this.hurt - dt)
+    this.drawOverlay(state)
+  }
+
+  private transform() {
+    this.world.scale.set(this.camera.zoom)
+    this.world.position.set(this.camera.x, this.camera.y)
+  }
+
+  private drawOverlay(state: RushState) {
+    const g = this.overlay.clear()
+    const w = this.camera.width
+    const h = this.camera.height
+    const low = state.player.hp <= state.player.maxHp * 0.3
+    const alpha = this.hurt * 0.55 + (low ? 0.07 + Math.sin(state.clock * 6) * 0.035 : 0)
+    if (alpha <= 0) return
+    g.rect(0, 0, w, 7)
+      .rect(0, h - 7, w, 7)
+      .rect(0, 7, 7, h - 14)
+      .rect(w - 7, 7, 7, h - 14)
+      .fill({ color: palette.red, alpha: Math.min(0.4, alpha) })
+  }
+
+  event(event: RushEvent) {
+    if (this.destroyed) return
+    if (!this.ready) {
+      if (this.pending.length < 30) this.pending.push(event)
+      return
+    }
+    this.effects.event(event)
+    this.actors?.event(event)
+    if (event.type === 'hurt') {
+      this.camera.impact(0.48)
+      this.hurt = 0.3
+      this.stop = 0.028
+    }
+    if (event.type === 'explode') {
+      this.camera.impact(0.12)
+      this.stop = 0.024
+    }
+    if (event.type === 'boss-down') this.camera.impact(0.5)
+    if (event.type === 'overdrive') this.camera.impact(0.2)
+  }
+
+  screenToWorld(x: number, y: number): Vec {
+    return this.camera.screenToWorld({ x, y })
+  }
+
+  worldToScreen(point: Vec): Vec {
+    return this.camera.worldToScreen(point)
+  }
+
+  worldSize(): Vec {
+    return this.camera.worldSize()
+  }
+
+  setStick(input: { origin: Vec; current: Vec } | null) {
+    const g = this.stick.clear()
+    if (!input || this.destroyed) return
+    const { origin, current } = input
+    const dx = current.x - origin.x
+    const dy = current.y - origin.y
+    const distance = Math.hypot(dx, dy)
+    const limit = Math.min(42, distance) / (distance || 1)
+    const x = origin.x + dx * limit
+    const y = origin.y + dy * limit
+    g.circle(origin.x, origin.y, 48)
+      .fill({ color: palette.ink, alpha: 0.22 })
+      .stroke({ color: palette.cream, width: 1.5, alpha: 0.22 })
+    g.moveTo(origin.x, origin.y).lineTo(x, y).stroke({ color: palette.teal, width: 3, alpha: 0.4 })
+    g.circle(x, y, 18)
+      .fill({ color: palette.teal, alpha: 0.14 })
+      .stroke({ color: palette.teal, width: 2, alpha: 0.6 })
+  }
+
+  destroy() {
+    if (this.destroyed) return
+    this.destroyed = true
+    this.pending = []
+    this.actors?.destroy()
+    this.floor.destroy()
+    this.projectiles.destroy()
+    this.effects.destroy()
+    this.overlay.destroy()
+    this.stick.destroy()
+    this.view.destroy({ children: true })
+    for (const texture of this.frames) texture.destroy(false)
+    this.frames = []
+  }
+}

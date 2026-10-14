@@ -1,0 +1,192 @@
+.rush-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  text-shadow:
+    0 2px 3px #031018,
+    0 0 12px #031018;
+}
+
+.rush-hud button {
+  pointer-events: auto;
+}
+
+.rush-vitals {
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  top: max(21px, env(safe-area-inset-top));
+}
+
+.rush-health {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #76e5c8;
+}
+
+.rush-health-cells {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 104px;
+  height: 10px;
+}
+
+.rush-health-cells i {
+  flex: 1;
+  height: 100%;
+  background: #244f53;
+  box-shadow: 0 1px 2px #0007;
+  transform: skew(-12deg);
+}
+
+.rush-health-cells .is-filled {
+  background: #76e5c8;
+  box-shadow: 0 0 8px #69dcc649;
+}
+
+.rush-health.is-low {
+  color: #ff7f8b;
+}
+
+.rush-health.is-low .is-filled {
+  background: #ff7f8b;
+  animation: rush-alert 1s ease-in-out infinite;
+}
+
+.rush-kills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 11px;
+  color: #eff8e8;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rush-clock {
+  position: absolute;
+  top: max(15px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 76px;
+}
+
+.rush-clock > b {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+}
+
+.rush-clock > span {
+  color: #bfd4cb;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.rush-xp {
+  display: block;
+  width: 86px;
+  height: 3px;
+  margin-top: 5px;
+  background: #22393f;
+  overflow: hidden;
+}
+
+.rush-xp > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #f5d470;
+  box-shadow: 0 0 8px #f5d4707f;
+  transform-origin: left center;
+  transition: transform 0.09s linear;
+}
+
+.rush-boss {
+  position: absolute;
+  top: max(87px, calc(env(safe-area-inset-top) + 67px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, 68vw);
+  display: grid;
+  gap: 7px;
+  text-align: center;
+  color: #ff9b94;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+
+.rush-boss > i {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  background: #4a2235;
+}
+
+.rush-boss > i > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #ff737e;
+  box-shadow: 0 0 10px #ff737e;
+  transform-origin: left center;
+  transition: transform 0.09s linear;
+}
+
+.rush-overdrive {
+  position: absolute;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  left: 50%;
+  top: max(73px, calc(env(safe-area-inset-top) + 58px));
+  transform: translateX(-50%);
+  color: #fff7b6;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.rush-boss ~ .rush-overdrive {
+  top: max(125px, calc(env(safe-area-inset-top) + 105px));
+}
+
+.rush-shell.is-paused .rush-hud {
+  z-index: 8;
+}
+
+@media (max-width: 600px) {
+  .rush-vitals {
+    left: max(13px, env(safe-area-inset-left));
+    top: max(19px, env(safe-area-inset-top));
+  }
+  .rush-health {
+    gap: 6px;
+  }
+  .rush-health > svg {
+    width: 16px;
+    height: 16px;
+  }
+  .rush-health-cells {
+    width: 81px;
+    height: 9px;
+    gap: 3px;
+  }
+  .rush-kills {
+    font-size: 13px;
+    margin-top: 9px;
+  }
+  .rush-clock > b {
+    font-size: 23px;
+  }
+}

@@ -1,0 +1,217 @@
+.rush-choice {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 25px;
+  background: radial-gradient(ellipse at center, #031421e8 0%, #031421b8 35%, #03142112 80%);
+  pointer-events: none;
+}
+
+.rush-choice-title {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: center;
+  text-shadow: 0 0 16px #081b20;
+  animation: rush-appear 0.15s ease-out;
+}
+
+.rush-choice-title > span {
+  color: #f3d16c;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 4px;
+}
+
+.rush-choice-title > b {
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: 5px;
+}
+
+.rush-weapons {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(20px, 5vw, 75px);
+  width: 100%;
+}
+
+.rush-weapon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 9px 0 18px;
+  border: 0;
+  background: transparent;
+  color: var(--weapon-color);
+  width: 185px;
+  min-height: 230px;
+  pointer-events: auto;
+  animation: rush-equip 0.18s ease-out both;
+  animation-delay: calc(var(--weapon-order) * 0.045s);
+}
+
+.rush-weapon::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: var(--weapon-color);
+  box-shadow: 0 0 10px var(--weapon-color);
+  opacity: 0.6;
+}
+
+.rush-weapon-device {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 124px;
+  height: 124px;
+  color: var(--weapon-color);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--weapon-color) 35%, transparent));
+  transition: transform 0.15s ease;
+}
+
+.rush-weapon-device > i {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    30deg,
+    color-mix(in srgb, var(--weapon-color) 14%, transparent),
+    transparent
+  );
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+}
+
+.rush-weapon-device::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 1px dashed color-mix(in srgb, var(--weapon-color) 35%, transparent);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+
+.rush-weapon-device > svg {
+  position: relative;
+}
+
+.rush-weapon > b {
+  margin-top: 11px;
+  color: #edfff8;
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.rush-weapon-level {
+  margin-top: 4px;
+  font-size: 10px;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  letter-spacing: 2px;
+}
+
+.rush-weapon > small {
+  max-width: 190px;
+  margin-top: 11px;
+  color: #bacfc8;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+  text-align: center;
+}
+
+.rush-weapon:hover .rush-weapon-device {
+  transform: translateY(-5px) scale(1.06);
+}
+
+.rush-weapon:active .rush-weapon-device {
+  transform: scale(0.94);
+}
+
+@media (max-width: 600px) {
+  .rush-choice {
+    gap: 19px;
+  }
+  .rush-choice-title > b {
+    font-size: 21px;
+  }
+  .rush-weapons {
+    gap: 6px;
+    padding: 0 8px;
+    box-sizing: border-box;
+  }
+  .rush-weapon {
+    width: calc((100vw - 28px) / 3);
+    min-height: 227px;
+    padding-top: 10px;
+  }
+  .rush-weapon-device {
+    width: 82px;
+    height: 82px;
+  }
+  .rush-weapon-device > svg {
+    width: 64px;
+    height: 64px;
+  }
+  .rush-weapon-device::before {
+    inset: -6px;
+  }
+  .rush-weapon > b {
+    margin-top: 16px;
+    font-size: 16px;
+    letter-spacing: 0;
+  }
+  .rush-weapon > small {
+    font-size: 11px;
+    margin-top: 9px;
+    max-width: 102px;
+    line-height: 1.65;
+  }
+  .rush-weapon-level {
+    font-size: 9px;
+  }
+}
+
+@media (max-height: 500px) and (min-width: 600px) {
+  .rush-choice {
+    gap: 8px;
+  }
+  .rush-choice-title {
+    gap: 4px;
+  }
+  .rush-choice-title > b {
+    font-size: 20px;
+  }
+  .rush-weapon {
+    min-height: 180px;
+    padding-top: 5px;
+  }
+  .rush-weapon-device {
+    width: 90px;
+    height: 90px;
+  }
+  .rush-weapon-device > svg {
+    width: 65px;
+    height: 65px;
+  }
+  .rush-weapon > b {
+    margin-top: 7px;
+    font-size: 17px;
+  }
+  .rush-weapon > small {
+    margin-top: 5px;
+    font-size: 11px;
+  }
+}

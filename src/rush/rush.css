@@ -1,0 +1,177 @@
+@import './ui/rush-hud.css';
+@import './ui/rush-controls.css';
+@import './ui/rush-choice.css';
+@import './ui/rush-result.css';
+
+body.rush-mode {
+  background: #07171f;
+  color: #e3f9f0;
+}
+
+body.rush-mode #root {
+  display: block;
+  padding: 0;
+  background: #07171f;
+}
+
+.rush-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  color: #e3f9f0;
+}
+
+.rush-shell button {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.rush-shell button:focus-visible {
+  outline: 2px solid #eefaff;
+  outline-offset: 5px;
+}
+
+.rush-shell button:disabled {
+  cursor: default;
+}
+
+.rush-stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.rush-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  touch-action: none;
+}
+
+.rush-intro {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: calc(var(--rush-player-y, 50vh) + 76px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  white-space: nowrap;
+  color: #eafcef;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow:
+    0 2px 4px #031017,
+    0 0 9px #031017;
+  pointer-events: none;
+  animation: rush-appear 0.16s ease-out;
+}
+
+.rush-intro-touch {
+  display: none;
+}
+@media (max-width: 600px), (pointer: coarse) {
+  .rush-intro-keyboard {
+    display: none;
+  }
+  .rush-intro-touch {
+    display: inline;
+  }
+}
+.rush-intro i,
+.rush-best i {
+  width: 3px;
+  height: 3px;
+  background: #77edcf;
+  border-radius: 50%;
+}
+
+.rush-loading,
+.rush-error {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #b2e8d7;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+.rush-error {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.rush-resume {
+  position: absolute;
+  z-index: 7;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  border: 0;
+  background: transparent;
+  color: #ddfff2;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-shadow: 0 0 24px #7ee8c966;
+}
+
+.rush-shell.is-paused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: #04131dbb;
+}
+
+@keyframes rush-alert {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes rush-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rush-equip {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rush-shell *,
+  .rush-shell *::before,
+  .rush-shell *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

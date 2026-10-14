@@ -1,0 +1,252 @@
+import { Application } from 'pixi.js'
+import type { RushPort, Vec } from './types'
+import { RushScene } from './render/rush-scene'
+import { RushSound } from './rush-sound'
+
+// 全屏战斗与单指方向输入
+export class RushGame {
+  private app = new Application()
+  readonly scene: RushScene
+  private sound: RushSound
+  private canvas: HTMLCanvasElement | null = null
+  private shell: HTMLElement | null = null
+  private observer: ResizeObserver | null = null
+  private unsubscribe: (() => void) | null = null
+  private keys = new Set<string>()
+  private stick: { id: number; origin: Vec; current: Vec } | null = null
+  private raf = 0
+  private last = 0
+  private accumulator = 0
+  private initialized = false
+  private disposed = false
+  frames = 0
+
+  constructor(readonly store: RushPort) {
+    this.scene = new RushScene(() => store.state)
+    this.sound = new RushSound(() => store.state)
+  }
+
+  async init(stage: HTMLElement) {
+    this.shell = stage.parentElement
+    await this.app.init({
+      width: Math.max(1, stage.clientWidth),
+      height: Math.max(1, stage.clientHeight),
+      resolution: Math.min(devicePixelRatio || 1, 2),
+      autoDensity: true,
+      antialias: true,
+      background: '#0b1223',
+      preference: 'webgl',
+      powerPreference: 'high-performance',
+      autoStart: false,
+    })
+    this.initialized = true
+    if (this.disposed) {
+      this.releaseRenderer()
+      return
+    }
+    await this.scene.init()
+    if (this.disposed) {
+      this.releaseRenderer()
+      return
+    }
+    this.canvas = this.app.canvas
+    this.canvas.tabIndex = 0
+    this.canvas.setAttribute('role', 'application')
+    this.canvas.setAttribute(
+      'aria-label',
+      '零点突围。WASD或方向键移动，空格冲刺；手机按住空地拖动方向，自动开火',
+    )
+    stage.appendChild(this.canvas)
+    this.app.stage.addChild(this.scene.view)
+    this.app.ticker.stop()
+    const resize = () => {
+      if (this.disposed) return
+      const width = Math.max(1, stage.clientWidth),
+        height = Math.max(1, stage.clientHeight)
+      this.app.renderer.resolution = Math.min(devicePixelRatio || 1, 2)
+      this.app.renderer.resize(width, height)
+      this.scene.resize(width, height)
+      const size = this.scene.worldSize()
+      this.store.setViewport(size.x, size.y)
+    }
+    this.observer = new ResizeObserver(resize)
+    this.observer.observe(stage)
+    resize()
+    this.unsubscribe = this.store.onEvent((event) => {
+      this.scene.event(event)
+      this.sound.event(event)
+      if (event.type === 'level' || event.type === 'run-end') this.cancelInput()
+    })
+    this.canvas.addEventListener('pointerdown', this.pointerDown)
+    this.canvas.addEventListener('pointermove', this.pointerMove)
+    this.canvas.addEventListener('pointerup', this.pointerUp)
+    this.canvas.addEventListener('pointercancel', this.pointerUp)
+    this.canvas.addEventListener('contextmenu', this.contextMenu)
+    this.canvas.addEventListener('blur', this.cancelKeys)
+    window.addEventListener('keydown', this.keyDown)
+    window.addEventListener('keyup', this.keyUp)
+    window.addEventListener('blur', this.cancelInput)
+    window.addEventListener('click', this.unlock, { passive: true })
+    window.addEventListener('pagehide', this.save)
+    document.addEventListener('visibilitychange', this.visibility)
+    this.last = performance.now()
+    if (!document.hidden) this.raf = requestAnimationFrame(this.tick)
+  }
+
+  private tick = (now: number) => {
+    if (this.disposed || document.hidden) return
+    const dt = Math.min(0.12, Math.max(0, (now - this.last) / 1000))
+    this.last = now
+    const active = this.store.state.phase === 'playing' && !this.store.state.paused
+    if (!active) this.cancelInput()
+    else this.store.setMove(this.direction())
+    this.accumulator += dt
+    let steps = 0
+    while (this.accumulator >= 1 / 60 && steps++ < 8) {
+      this.store.update(1 / 60)
+      this.accumulator -= 1 / 60
+    }
+    if (steps >= 8) this.accumulator = 0
+    this.scene.setStick(this.stick)
+    this.scene.render(dt)
+    this.sound.update()
+    const player = this.scene.worldToScreen(this.store.state.player)
+    this.shell?.style.setProperty('--rush-player-x', player.x + 'px')
+    this.shell?.style.setProperty('--rush-player-y', player.y + 'px')
+    this.app.renderer.render(this.app.stage)
+    this.frames++
+    this.raf = requestAnimationFrame(this.tick)
+  }
+
+  private direction() {
+    let x =
+      Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) -
+      Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft'))
+    let y =
+      Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) -
+      Number(this.keys.has('KeyW') || this.keys.has('ArrowUp'))
+    if (!x && !y && this.stick) {
+      x = (this.stick.current.x - this.stick.origin.x) / 52
+      y = (this.stick.current.y - this.stick.origin.y) / 52
+      if (Math.hypot(x, y) < 0.08) return { x: 0, y: 0 }
+    }
+    const length = Math.max(1, Math.hypot(x, y))
+    return { x: x / length, y: y / length }
+  }
+
+  private point(event: PointerEvent) {
+    const rect = this.canvas!.getBoundingClientRect()
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  }
+  private pointerDown = (event: PointerEvent) => {
+    if (
+      event.button !== 0 ||
+      this.stick ||
+      this.store.state.paused ||
+      this.store.state.phase !== 'playing'
+    )
+      return
+    event.preventDefault()
+    this.sound.unlock()
+    this.canvas?.focus({ preventScroll: true })
+    const point = this.point(event)
+    this.stick = { id: event.pointerId, origin: point, current: point }
+    this.canvas?.setPointerCapture(event.pointerId)
+  }
+  private pointerMove = (event: PointerEvent) => {
+    if (this.stick?.id === event.pointerId) this.stick.current = this.point(event)
+  }
+  private pointerUp = (event: PointerEvent) => {
+    if (this.stick?.id !== event.pointerId) return
+    if (this.canvas?.hasPointerCapture(event.pointerId))
+      this.canvas.releasePointerCapture(event.pointerId)
+    this.stick = null
+    this.store.setMove(this.direction())
+  }
+  private keyDown = (event: KeyboardEvent) => {
+    if (event.repeat) return
+    if (event.code === 'Escape') {
+      event.preventDefault()
+      this.cancelInput()
+      this.store.setPaused(!this.store.state.paused)
+      if (!this.store.state.paused) this.canvas?.focus({ preventScroll: true })
+      return
+    }
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('button, input, [role="dialog"]')
+    )
+      return
+    if (this.store.state.paused || this.store.state.phase !== 'playing') return
+    if (event.code === 'Space') {
+      event.preventDefault()
+      this.sound.unlock()
+      this.store.setMove(this.direction())
+      this.store.dash()
+    } else if (/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(event.code)) {
+      event.preventDefault()
+      this.sound.unlock()
+      this.keys.add(event.code)
+    }
+  }
+  private keyUp = (event: KeyboardEvent) => {
+    if (this.keys.delete(event.code)) event.preventDefault()
+  }
+  private cancelKeys = () => this.keys.clear()
+  private cancelInput = () => {
+    this.keys.clear()
+    if (this.stick && this.canvas?.hasPointerCapture(this.stick.id))
+      this.canvas.releasePointerCapture(this.stick.id)
+    this.stick = null
+    this.store.setMove({ x: 0, y: 0 })
+    this.scene.setStick(null)
+  }
+  private unlock = () => this.sound.unlock()
+  private contextMenu = (event: Event) => event.preventDefault()
+  private save = () => this.store.save()
+  private visibility = () => {
+    this.cancelInput()
+    cancelAnimationFrame(this.raf)
+    if (document.hidden) {
+      this.store.save()
+      this.sound.suspend()
+      return
+    }
+    this.sound.resume()
+    this.last = performance.now()
+    this.accumulator = 0
+    this.raf = requestAnimationFrame(this.tick)
+  }
+
+  destroy() {
+    if (this.disposed) return
+    this.disposed = true
+    this.cancelInput()
+    cancelAnimationFrame(this.raf)
+    this.observer?.disconnect()
+    this.unsubscribe?.()
+    this.canvas?.removeEventListener('pointerdown', this.pointerDown)
+    this.canvas?.removeEventListener('pointermove', this.pointerMove)
+    this.canvas?.removeEventListener('pointerup', this.pointerUp)
+    this.canvas?.removeEventListener('pointercancel', this.pointerUp)
+    this.canvas?.removeEventListener('contextmenu', this.contextMenu)
+    this.canvas?.removeEventListener('blur', this.cancelKeys)
+    window.removeEventListener('keydown', this.keyDown)
+    window.removeEventListener('keyup', this.keyUp)
+    window.removeEventListener('blur', this.cancelInput)
+    window.removeEventListener('click', this.unlock)
+    window.removeEventListener('pagehide', this.save)
+    document.removeEventListener('visibilitychange', this.visibility)
+    this.store.save()
+    this.sound.destroy()
+    this.scene.destroy()
+    if (this.initialized) this.releaseRenderer()
+    this.canvas = null
+    this.shell = null
+  }
+  private releaseRenderer() {
+    if (!this.initialized) return
+    this.initialized = false
+    this.app.destroy({ removeView: true }, { children: true })
+  }
+}
