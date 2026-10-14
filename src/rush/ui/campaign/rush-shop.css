@@ -1,0 +1,256 @@
+.rush-intermission {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 22px;
+  padding: max(25px, env(safe-area-inset-top)) 25px max(25px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  overflow: auto;
+  background: radial-gradient(ellipse at 50% 45%, #243b35fa, #101b2af7 65%);
+  animation: rush-appear 0.16s ease-out;
+}
+.rush-shop-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(calc(100% - 50px), 920px);
+  position: absolute;
+  top: max(19px, env(safe-area-inset-top));
+}
+.rush-shop-header > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #a9c0ad;
+  font-size: 12px;
+  margin-right: auto;
+}
+.rush-shop-header > span > i {
+  width: 3px;
+  height: 3px;
+  background: var(--rush-mint);
+}
+.rush-shop-wallet {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--rush-mint);
+}
+.rush-shop-wallet b {
+  font:
+    800 26px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-shop-wallet small {
+  color: #a9c0ad;
+  font-size: 10px;
+}
+.rush-scrap {
+  display: block;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.rush-scrap > path:first-child {
+  fill: #25483d;
+  stroke: #84dabc;
+  stroke-width: 1.5;
+}
+.rush-scrap > path:last-child {
+  fill: #82d8b4;
+  stroke: #cef1d8;
+  stroke-width: 1;
+}
+.rush-shop-title {
+  text-align: center;
+}
+.rush-shop-title > small {
+  color: var(--rush-mint);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.rush-shop-title > h1 {
+  margin: 8px 0 9px;
+  font-size: 36px;
+  letter-spacing: 5px;
+}
+.rush-shop-title > span {
+  color: #a4bda9;
+  font-size: 12px;
+}
+.rush-shop-rack {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: min(100%, 850px);
+  gap: 33px;
+}
+.rush-shop-offer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 240px;
+  min-height: 289px;
+  padding: 10px 13px 16px;
+  color: var(--rush-ivory);
+  border: 0;
+  border-bottom: 2px solid #5d8069;
+  background: linear-gradient(180deg, transparent, #8ce6c20b);
+  transition: background 0.12s;
+}
+.rush-shop-offer.is-affordable {
+  border-bottom-color: var(--rush-mint);
+}
+.rush-shop-offer.is-affordable:hover {
+  background: linear-gradient(180deg, transparent, #8ce6c21b);
+}
+.rush-shop-offer.is-affordable:active {
+  translate: 0 1px;
+}
+.rush-shop-mount {
+  position: relative;
+  display: flex;
+  width: 148px;
+  height: 139px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 17px;
+}
+.rush-shop-mount > i {
+  position: absolute;
+  inset: 15px 9px;
+  border: 1px solid #8ce6c22f;
+  clip-path: polygon(0 0, 100% 0, 100% 82%, 82% 100%, 0 100%);
+  transform: rotate(-8deg);
+}
+.rush-shop-mount > .rush-module {
+  position: relative;
+}
+.rush-shop-pins {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  gap: 15px;
+}
+.rush-shop-pins > i {
+  width: 4px;
+  height: 9px;
+  background: #88a88e;
+  transform: skew(-10deg);
+}
+.rush-shop-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.rush-shop-info > b {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.rush-shop-rank {
+  color: var(--rush-mint);
+  font:
+    750 10px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-shop-info > small {
+  color: #afc0ac;
+  min-height: 29px;
+  font-size: 10px;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+.rush-shop-price {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  min-height: 32px;
+  color: #889c89;
+}
+.rush-shop-price > .rush-scrap {
+  width: 21px;
+  height: 21px;
+}
+.rush-shop-price > b {
+  font:
+    800 20px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-shop-price > span {
+  margin-left: 5px;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.rush-shop-offer.is-affordable .rush-shop-price {
+  color: var(--rush-mint);
+}
+.rush-shop-offer.is-installed .rush-shop-mount {
+  opacity: 0.55;
+}
+.rush-shop-offer.is-installed .rush-shop-price {
+  color: var(--rush-mint);
+}
+.rush-shop-feedback {
+  min-height: 16px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #b7cdb3;
+}
+.rush-shop-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+}
+.rush-shop-reroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 206px;
+  min-height: 54px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 1px solid #5c8070;
+  background: transparent;
+  color: #b8c9b6;
+}
+.rush-shop-reroll > .rush-control-glyph {
+  width: 20px;
+  height: 20px;
+}
+.rush-shop-reroll > .rush-scrap {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+}
+.rush-shop-reroll > span {
+  font-size: 12px;
+  font-weight: 800;
+}
+.rush-shop-reroll > b {
+  font:
+    800 14px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-shop-reroll:disabled {
+  opacity: 0.43;
+}
+.rush-shop-footnote {
+  color: #819a86;
+  font-size: 10px;
+}

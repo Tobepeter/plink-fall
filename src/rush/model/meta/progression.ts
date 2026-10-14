@@ -1,4 +1,5 @@
 import type { MetaLevels, MetaUpgradeId, RewardParts, RushRecord, RushState } from '../../types'
+import { difficultyStats } from '../campaign/difficulty'
 
 export interface MetaUpgradeDef {
   id: MetaUpgradeId
@@ -82,5 +83,7 @@ export function previewReward(s: RushState): RewardParts {
   const waves = count(completed, 9) * 3
   const bosses = count(s.bossesDefeated, 3) * 12
   const victory = s.phase === 'won' ? 24 : 0
-  return { base, kills, waves, bosses, victory, coins: base + kills + waves + bosses + victory }
+  const normal = base + kills + waves + bosses + victory
+  const difficultyBonus = Math.floor(normal * (difficultyStats(s.difficulty).rewardMultiplier - 1))
+  return { base, kills, waves, bosses, victory, difficultyBonus, coins: normal + difficultyBonus }
 }

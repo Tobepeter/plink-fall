@@ -6,7 +6,10 @@ import { RushLoading } from './rush-loading'
 import { ControlGlyph } from './weapon-glyph'
 import { RushMenu } from './meta/rush-menu'
 import { RushResult } from './meta/rush-result'
+import { RushShop } from './campaign/rush-shop'
+import { RushAim } from './campaign/rush-aim'
 import '../rush.css'
+import './campaign/rush-pause.css'
 
 export interface RushAppProps {
   store: RushPort
@@ -24,8 +27,11 @@ export function RushApp(props: RushAppProps) {
   const previousPhase = useRef(state.phase)
   const ended = state.phase === 'dead' || state.phase === 'won'
   const menu = state.phase === 'menu'
+  const shop = state.phase === 'shop'
   useLayoutEffect(() => {
-    const fromMenu = previousPhase.current === 'menu' && state.phase === 'playing'
+    const fromMenu =
+      (previousPhase.current === 'menu' || previousPhase.current === 'shop') &&
+      state.phase === 'playing'
     previousPhase.current = state.phase
     if (fromMenu && props.ready && document.activeElement === document.body)
       document
@@ -52,7 +58,9 @@ export function RushApp(props: RushAppProps) {
       aria-label="零点突围游戏"
     >
       <div className="rush-stage" ref={mountStage} aria-label="弹幕战斗场景" />
-      {props.ready && !props.error && !menu && <RushHud state={state} store={store} ready />}
+      {props.ready && !props.error && !menu && !shop && (
+        <RushHud state={state} store={store} ready />
+      )}
       {!props.ready && !props.error && <RushLoading />}
       {props.error && (
         <div className="rush-error" role="alert">
@@ -77,11 +85,18 @@ export function RushApp(props: RushAppProps) {
       {props.ready && !props.error && menu && (
         <RushMenu state={state} store={store} start={restart} />
       )}
-      {state.paused && !ended && !menu && (
-        <button className="rush-resume" onClick={resume} aria-label="继续战斗">
-          <ControlGlyph id="play" />
-          <span>继续突围</span>
-        </button>
+      {props.ready && !props.error && shop && <RushShop state={state} store={store} />}
+      {state.paused && !ended && !menu && !shop && (
+        <>
+          <button className="rush-resume" onClick={resume} aria-label="继续战斗">
+            <ControlGlyph id="play" />
+            <span>继续突围</span>
+          </button>
+          <div className="rush-pause-aim">
+            <RushAim store={store} enabled={state.record.mouseAim} />
+            <span>{state.record.mouseAim ? '鼠标方向瞄准' : '自动瞄准最近敌人'}</span>
+          </div>
+        </>
       )}
       {ended && <RushResult state={state} store={store} restart={restart} />}
     </main>

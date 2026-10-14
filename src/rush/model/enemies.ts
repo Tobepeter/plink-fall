@@ -4,6 +4,8 @@ import { distance, toward, visible } from './math'
 import type { Hooks } from './math'
 import { WaveDirector } from './campaign/director'
 import { hurtPlayer } from './combat/damage'
+import { clampToArena, keepInArena } from './arena'
+import { difficultyStats } from './campaign/difficulty'
 
 export class EnemyDirector {
   readonly waves: WaveDirector
@@ -19,20 +21,30 @@ export class EnemyDirector {
     this.waves.resize()
   }
 
+  private bulletSpeed(e: Foe) {
+    const speed = e.kind === 'boss' ? 225 + e.tier * 25 : 435 + e.tier * 15
+    return speed * difficultyStats(this.s.difficulty).bulletSpeedMultiplier
+  }
+
   private bullets(e: Foe, a: number, count: number, spread: number, radial = false) {
     const s = this.s
-    const speed = e.kind === 'boss' ? 225 + e.tier * 25 : 435 + e.tier * 15
+    const speed = this.bulletSpeed(e)
+    count += difficultyStats(s.difficulty).bulletExtra
     for (let i = 0; i < count; i++) {
       const direction = radial ? a + (i * Math.PI * 2) / count : a + (i - (count - 1) / 2) * spread
+      const radius = e.kind === 'boss' ? 7 : 6
+      const origin = clampToArena(
+        { x: e.x + Math.cos(direction) * e.radius, y: e.y + Math.sin(direction) * e.radius },
+        radius,
+      )
       s.shots.push({
         id: this.hooks.id(),
-        x: e.x + Math.cos(direction) * e.radius,
-        y: e.y + Math.sin(direction) * e.radius,
+        ...origin,
         side: 'enemy',
         kind: 'shot',
         vx: Math.cos(direction) * speed,
         vy: Math.sin(direction) * speed,
-        radius: e.kind === 'boss' ? 7 : 6,
+        radius,
         damage: 1,
         life: 4.6,
         age: 0,
@@ -65,17 +77,21 @@ export class EnemyDirector {
     }
     if (e.cooldown < 0) {
       e.cooldown = Math.min(0, e.cooldown + dt)
-      e.vx = Math.cos(e.angle) * 560
-      e.vy = Math.sin(e.angle) * 560
-      if (e.cooldown === 0) e.cooldown = 3.6
+      const speed = 560 * difficultyStats(this.s.difficulty).speedMultiplier
+      e.vx = Math.cos(e.angle) * speed
+      e.vy = Math.sin(e.angle) * speed
+      if (e.cooldown === 0) e.cooldown = 3.6 * difficultyStats(this.s.difficulty).cooldownMultiplier
       return
     }
     e.cooldown -= dt
     if (e.cooldown <= 0) {
-      e.target = {
-        x: this.s.player.x + this.s.player.vx * 0.25,
-        y: this.s.player.y + this.s.player.vy * 0.25,
-      }
+      e.target = clampToArena(
+        {
+          x: this.s.player.x + this.s.player.vx * 0.25,
+          y: this.s.player.y + this.s.player.vy * 0.25,
+        },
+        this.s.player.radius,
+      )
       e.angle = toward(e, e.target)
       e.telegraph = 0.65
       e.vx = e.vy = 0
@@ -88,7 +104,8 @@ export class EnemyDirector {
     if (
       this.wind(e, dt, () => {
         this.bullets(e, toward(e, e.target), 3 + e.tier * 2, 0.19)
-        e.cooldown = Math.max(1.8, 3 - e.tier * 0.3)
+        e.cooldown =
+          Math.max(1.8, 3 - e.tier * 0.3) * difficultyStats(this.s.difficulty).cooldownMultiplier
       })
     ) {
       e.vx = e.vy = 0
@@ -99,7 +116,8 @@ export class EnemyDirector {
       const p = this.s.player
       const dx = p.x + p.vx * 0.55 - e.x,
         dy = p.y + p.vy * 0.55 - e.y
-      const a = p.vx * p.vx + p.vy * p.vy - (435 + e.tier * 15) ** 2
+      const speed = this.bulletSpeed(e)
+      const a = p.vx * p.vx + p.vy * p.vy - speed ** 2
       const b = 2 * (dx * p.vx + dy * p.vy),
         c = dx * dx + dy * dy
       const discriminant = b * b - 4 * a * c
@@ -109,10 +127,13 @@ export class EnemyDirector {
           : []
       const intercept = roots.filter((time) => time > 0).sort((x, y) => x - y)[0] ?? 0.8
       const lead = e.id % 2 ? Math.min(4.1, intercept) + 0.55 : 0.55
-      e.target = {
-        x: this.s.player.x + this.s.player.vx * lead,
-        y: this.s.player.y + this.s.player.vy * lead,
-      }
+      e.target = clampToArena(
+        {
+          x: this.s.player.x + this.s.player.vx * lead,
+          y: this.s.player.y + this.s.player.vy * lead,
+        },
+        this.s.player.radius,
+      )
       e.telegraph = 0.55
       e.vx = e.vy = 0
     } else
@@ -128,7 +149,8 @@ export class EnemyDirector {
         const a = toward(e, e.target)
         this.bullets(e, e.age * 0.55, 12 + e.tier * 4, 0, true)
         if (e.tier > 1) this.bullets(e, a, 3 + e.tier, 0.13)
-        e.cooldown = Math.max(1, 1.8 - e.tier * 0.2)
+        e.cooldown =
+          Math.max(1, 1.8 - e.tier * 0.2) * difficultyStats(this.s.difficulty).cooldownMultiplier
       })
     ) {
       e.vx = e.vy = 0
@@ -143,6 +165,7 @@ export class EnemyDirector {
   }
 
   private pursue(e: Foe, speed: number) {
+    speed *= difficultyStats(this.s.difficulty).speedMultiplier
     e.angle = toward(e, this.s.player)
     e.vx = Math.cos(e.angle) * speed
     e.vy = Math.sin(e.angle) * speed
@@ -153,6 +176,8 @@ export class EnemyDirector {
     this.waves.update(dt)
     if (s.wave.phase === 'breather') return
     for (const e of s.enemies) {
+      keepInArena(e, e.radius)
+      e.target = clampToArena(e.target)
       if (e.hp <= 0) continue
       e.age += dt
       e.hurt = Math.max(0, e.hurt - dt)
@@ -171,6 +196,7 @@ export class EnemyDirector {
       const factor = frozen ? 0.04 : e.slow > 0 ? 0.24 : 1
       e.x += e.vx * dt * factor
       e.y += e.vy * dt * factor
+      keepInArena(e, e.radius)
       if (distance(e, s.player) < e.radius + s.player.radius - 4) hurtPlayer(s, this.hooks, e)
     }
   }

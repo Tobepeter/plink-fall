@@ -1,4 +1,4 @@
-import type { EnemyKind, RushState, WaveState } from '../../types'
+import type { Difficulty, EnemyKind, RushState, WaveState } from '../../types'
 
 interface WaveDef {
   name: string
@@ -91,7 +91,7 @@ export const waveDefinitions: WaveDef[] = [
   },
 ]
 
-export function createWave(index: number): WaveState {
+export function createWave(index: number, difficulty: Difficulty = 0): WaveState {
   const def = waveDefinitions[index - 1]
   return {
     index,
@@ -103,7 +103,8 @@ export function createWave(index: number): WaveState {
     spawned: 0,
     budget:
       def.groups.flat().length * (def.duration ? 2 : 1) +
-      (index === 1 ? 7 : index % 3 === 0 ? 1 : 0),
+      (index === 1 ? 7 : index % 3 === 0 ? 1 : 0) +
+      difficulty * 3 * (def.duration ? 2 : 1),
   }
 }
 

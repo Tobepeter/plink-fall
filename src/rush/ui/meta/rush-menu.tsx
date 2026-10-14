@@ -1,21 +1,27 @@
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { frameDefinitions } from '../../model/data'
+import { frameStats } from '../../model/frames'
+import { difficultyDefinitions } from '../../model/campaign/difficulty'
 import { metaPrice, metaUpgrades } from '../../model/meta/progression'
 import type { MetaUpgradeId, RushPort, RushState } from '../../types'
 import { ControlGlyph, FrameGlyph, WeaponGlyph, time } from '../weapon-glyph'
 import { RushCoin } from './rush-coin'
 import { RushFrames } from './rush-frames'
+import { RushAim } from '../campaign/rush-aim'
 import './rush-menu.css'
 import './rush-hangar.css'
 import './rush-meta-upgrades.css'
 import './rush-menu-layout.css'
+import './rush-deploy.css'
 
 // 机体整备与永久成长
 export function RushMenu(props: { state: RushState; store: RushPort; start: () => void }) {
   const { state, store } = props
   const { record } = state
   const frame = frameDefinitions.find((item) => item.id === record.selected)!
+  const stats = frameStats[frame.id]
+  const difficulty = difficultyDefinitions[record.difficulty]
   const [purchase, setPurchase] = useState<{ id: MetaUpgradeId; level: number } | null>(null)
   const purchaseUpgrade = (id: MetaUpgradeId) => {
     if (store.purchaseMeta(id)) setPurchase({ id, level: store.state.record.meta[id] })
@@ -42,6 +48,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
           <b>{record.coins}</b>
           <small>金币</small>
         </div>
+        <RushAim store={store} enabled={record.mouseAim} />
         <button
           className="rush-icon"
           onClick={sound}
@@ -72,6 +79,9 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
             <div className="rush-hangar-hero">
               <FrameGlyph id={frame.id} />
             </div>
+            <span className="rush-hangar-module">
+              <WeaponGlyph id={stats.startingSkill} size={55} />
+            </span>
             <div className="rush-hangar-platform">
               <i />
               <i />
@@ -81,7 +91,13 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
           </div>
           <div className="rush-hangar-name">
             <b>{frame.name}</b>
-            <span>{frame.hint}</span>
+            <span>
+              {stats.skillName} <kbd>E</kbd>
+            </span>
+          </div>
+          <div className="rush-frame-identity">
+            <b>{stats.skillHint}</b>
+            <small>{stats.tradeoff}</small>
           </div>
           <RushFrames state={state} store={store} />
         </div>
@@ -151,6 +167,29 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
                 ? `上次带回 ${record.lastRun.coins} 金币，倒下也会变强`
                 : '击败敌人 · 带回金币 · 强化再战'}
           </p>
+          <div className="rush-menu-difficulty" aria-label="选择封锁星级">
+            <span>封锁强度</span>
+            <div className="rush-star-options">
+              {difficultyDefinitions.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => store.selectDifficulty(item.id)}
+                  disabled={item.id > record.highestDifficulty}
+                  aria-label={`选择${item.id}星难度`}
+                  aria-pressed={record.difficulty === item.id}
+                  className={record.difficulty === item.id ? 'is-selected' : ''}
+                >
+                  <span>{item.id === 0 ? '○' : '★'}</span>
+                  <b>{item.id}</b>
+                </button>
+              ))}
+            </div>
+            <small>金币 ×{difficulty.rewardMultiplier}</small>
+          </div>
+          <p className="rush-difficulty-hint">
+            {difficulty.name} ·{' '}
+            {record.highestDifficulty === 3 ? '全部星级已解锁' : '通关当前星级开启下一星'}
+          </p>
           <div className="rush-menu-records" aria-label="累计战绩">
             <span>
               <b>{record.runs}</b>
@@ -176,7 +215,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
           <b>开始突围</b>
           <span>→</span>
         </button>
-        <small>自动射击 · 移动与冲刺</small>
+        <small>自动射击 · 移动 / 冲刺 / 机体技能</small>
       </footer>
     </section>
   )

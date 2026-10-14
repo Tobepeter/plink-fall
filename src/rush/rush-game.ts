@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js'
-import type { RushEvent, RushPort, Vec } from './types'
+import type { RushEvent, RushPort } from './types'
+import { RushInput } from './input/rush-input'
 import { RushScene } from './render/rush-scene'
 import { RushPresentation } from './render/rush-presentation'
 import { RushSound } from './rush-sound'
@@ -15,8 +16,7 @@ export class RushGame {
   private observer: ResizeObserver | null = null
   private unsubscribe: (() => void) | null = null
   private unwatch: (() => void) | null = null
-  private keys = new Set<string>()
-  private stick: { id: number; origin: Vec; current: Vec } | null = null
+  private input: RushInput | null = null
   private raf = 0
   private last = 0
   private accumulator = 0
@@ -61,7 +61,7 @@ export class RushGame {
     this.canvas.setAttribute('role', 'application')
     this.canvas.setAttribute(
       'aria-label',
-      '零点突围。WASD或方向键移动，空格冲刺；手机按住空地拖动方向，自动开火',
+      '零点突围。WASD移动，鼠标方向瞄准，空格或右键冲刺，E机体技能；触屏轻推空地移动，自动瞄准',
     )
     stage.appendChild(this.canvas)
     this.app.stage.addChild(this.scene.view)
@@ -84,18 +84,10 @@ export class RushGame {
       this.scene.event(event, this.store.state.player)
       this.sound.event(event)
       this.impact(event)
-      if (event.type === 'level' || event.type === 'run-end') this.cancelInput()
+      if (event.type === 'level' || event.type === 'run-end' || event.type === 'wave-clear') this.cancelInput()
     })
     this.unwatch = this.store.subscribe(this.wake)
-    this.canvas.addEventListener('pointerdown', this.pointerDown)
-    this.canvas.addEventListener('pointermove', this.pointerMove)
-    this.canvas.addEventListener('pointerup', this.pointerUp)
-    this.canvas.addEventListener('pointercancel', this.pointerUp)
-    this.canvas.addEventListener('contextmenu', this.contextMenu)
-    this.canvas.addEventListener('blur', this.cancelKeys)
-    window.addEventListener('keydown', this.keyDown)
-    window.addEventListener('keyup', this.keyUp)
-    window.addEventListener('blur', this.cancelInput)
+    this.input = new RushInput(this.store, this.canvas, this.scene, () => this.sound.unlock())
     window.addEventListener('click', this.unlock, { passive: true })
     window.addEventListener('pagehide', this.save)
     document.addEventListener('visibilitychange', this.visibility)
@@ -112,7 +104,7 @@ export class RushGame {
   // 整备舱不跑战斗 RAF，开局由模型发布唤醒
   private wake = () => {
     if (this.disposed || document.hidden || this.inFrame || this.raf) return
-    if (this.store.state.phase === 'menu') {
+    if (this.store.state.phase === 'menu' || this.store.state.phase === 'shop') {
       this.sound.suspend()
       return
     }
@@ -130,8 +122,7 @@ export class RushGame {
     this.last = now
     const active = this.store.state.phase === 'playing' && !this.store.state.paused
     if (this.presentation.sync(this.store.state)) this.accumulator = 0
-    if (!active) this.cancelInput()
-    else this.store.setMove(this.direction())
+    this.input?.update(active)
     const frozen = Math.min(dt, this.impactTime)
     this.impactTime = active ? Math.max(0, this.impactTime - dt) : 0
     this.accumulator += active ? dt - frozen : 0
@@ -154,7 +145,6 @@ export class RushGame {
       renderDt,
       active && renderDt === 0,
     )
-    this.scene.setStick(this.stick)
     this.scene.render(renderDt)
     this.sound.update()
     const player = this.scene.worldToScreen(this.presentation.state.player)
@@ -163,24 +153,8 @@ export class RushGame {
     this.app.renderer.render(this.app.stage)
     this.frames++
     this.inFrame = false
-    if (this.store.state.phase === 'menu') this.sound.suspend()
+    if (this.store.state.phase === 'menu' || this.store.state.phase === 'shop') this.sound.suspend()
     else this.raf = requestAnimationFrame(this.tick)
-  }
-
-  private direction() {
-    let x =
-      Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) -
-      Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft'))
-    let y =
-      Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) -
-      Number(this.keys.has('KeyW') || this.keys.has('ArrowUp'))
-    if (!x && !y && this.stick) {
-      x = (this.stick.current.x - this.stick.origin.x) / 52
-      y = (this.stick.current.y - this.stick.origin.y) / 52
-      if (Math.hypot(x, y) < 0.08) return { x: 0, y: 0 }
-    }
-    const length = Math.max(1, Math.hypot(x, y))
-    return { x: x / length, y: y / length }
   }
 
   // 重要命中的短停顿
@@ -199,75 +173,8 @@ export class RushGame {
     this.lastImpact = now
   }
 
-  private point(event: PointerEvent) {
-    const rect = this.canvas!.getBoundingClientRect()
-    return { x: event.clientX - rect.left, y: event.clientY - rect.top }
-  }
-  private pointerDown = (event: PointerEvent) => {
-    if (
-      event.button !== 0 ||
-      this.stick ||
-      this.store.state.paused ||
-      this.store.state.phase !== 'playing'
-    )
-      return
-    event.preventDefault()
-    this.sound.unlock()
-    this.canvas?.focus({ preventScroll: true })
-    const point = this.point(event)
-    this.stick = { id: event.pointerId, origin: point, current: point }
-    this.canvas?.setPointerCapture(event.pointerId)
-  }
-  private pointerMove = (event: PointerEvent) => {
-    if (this.stick?.id === event.pointerId) this.stick.current = this.point(event)
-  }
-  private pointerUp = (event: PointerEvent) => {
-    if (this.stick?.id !== event.pointerId) return
-    if (this.canvas?.hasPointerCapture(event.pointerId))
-      this.canvas.releasePointerCapture(event.pointerId)
-    this.stick = null
-    this.store.setMove(this.direction())
-  }
-  private keyDown = (event: KeyboardEvent) => {
-    const target = event.target instanceof HTMLElement ? event.target : null
-    if (target?.isContentEditable || target?.closest('input, textarea, [role="textbox"]')) return
-    if (this.store.state.phase === 'menu') return
-    if (event.repeat && (event.code === 'Escape' || event.code === 'Space')) return
-    if (event.code === 'Escape') {
-      event.preventDefault()
-      this.cancelInput()
-      this.store.setPaused(!this.store.state.paused)
-      if (!this.store.state.paused) this.canvas?.focus({ preventScroll: true })
-      return
-    }
-    if (target?.closest('button, [role="dialog"]')) return
-    if (this.store.state.paused || this.store.state.phase !== 'playing') return
-    if (event.code === 'Space') {
-      event.preventDefault()
-      this.sound.unlock()
-      this.store.setMove(this.direction())
-      this.store.dash()
-    } else if (/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(event.code)) {
-      event.preventDefault()
-      if (this.keys.has(event.code)) return
-      this.sound.unlock()
-      this.keys.add(event.code)
-    }
-  }
-  private keyUp = (event: KeyboardEvent) => {
-    if (this.keys.delete(event.code)) event.preventDefault()
-  }
-  private cancelKeys = () => this.keys.clear()
-  private cancelInput = () => {
-    this.keys.clear()
-    if (this.stick && this.canvas?.hasPointerCapture(this.stick.id))
-      this.canvas.releasePointerCapture(this.stick.id)
-    this.stick = null
-    this.store.setMove({ x: 0, y: 0 })
-    this.scene.setStick(null)
-  }
+  private cancelInput = () => this.input?.cancel()
   private unlock = () => this.sound.unlock()
-  private contextMenu = (event: Event) => event.preventDefault()
   private save = () => this.store.save()
   private visibility = () => {
     this.cancelInput()
@@ -294,15 +201,8 @@ export class RushGame {
     this.observer?.disconnect()
     this.unsubscribe?.()
     this.unwatch?.()
-    this.canvas?.removeEventListener('pointerdown', this.pointerDown)
-    this.canvas?.removeEventListener('pointermove', this.pointerMove)
-    this.canvas?.removeEventListener('pointerup', this.pointerUp)
-    this.canvas?.removeEventListener('pointercancel', this.pointerUp)
-    this.canvas?.removeEventListener('contextmenu', this.contextMenu)
-    this.canvas?.removeEventListener('blur', this.cancelKeys)
-    window.removeEventListener('keydown', this.keyDown)
-    window.removeEventListener('keyup', this.keyUp)
-    window.removeEventListener('blur', this.cancelInput)
+    this.input?.destroy()
+    this.input = null
     window.removeEventListener('click', this.unlock)
     window.removeEventListener('pagehide', this.save)
     document.removeEventListener('visibilitychange', this.visibility)

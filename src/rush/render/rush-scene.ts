@@ -7,6 +7,7 @@ import { RushEffects } from './rush-effects'
 import { RushFloor } from './rush-floor'
 import { RushProjectiles } from './rush-projectiles'
 import { RushMotion } from './rush-motion'
+import { RushReticle } from './rush-reticle'
 
 // 全屏弹幕追击场景
 export class RushScene {
@@ -20,6 +21,7 @@ export class RushScene {
   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
   private overlay = new Graphics()
   private stick = new Graphics()
+  private reticle = new RushReticle()
   private actors?: RushActors
   private frames: Texture[] = []
   private loading?: Promise<void>
@@ -32,7 +34,7 @@ export class RushScene {
 
   constructor(private getState: () => RushState) {
     this.view.eventMode = 'none'
-    this.view.addChild(this.world, this.overlay, this.stick)
+    this.view.addChild(this.world, this.overlay, this.stick, this.reticle.view)
   }
 
   async init() {
@@ -122,7 +124,7 @@ export class RushScene {
   resize(width: number, height: number) {
     this.camera.resize(width, height, this.getState())
     this.transform()
-    if (this.ready) this.floor.render(this.camera)
+    if (this.ready) this.floor.render()
   }
 
   render(dt: number) {
@@ -142,15 +144,16 @@ export class RushScene {
     if (state.phase === 'menu') return
     const active = state.phase === 'playing' && !state.paused
     const realDt = Math.min(0.1, Math.max(0, dt))
-    const effectsDt = state.paused || state.phase === 'choice' ? 0 : realDt
+    const effectsDt = state.paused || state.phase === 'choice' || state.phase === 'shop' ? 0 : realDt
     dt = active ? realDt : 0
     this.camera.update(state, effectsDt)
     this.transform()
-    this.floor.render(this.camera)
+    this.floor.render()
     this.projectiles.render(state)
     this.actors?.render(state, dt)
     this.effects.render(effectsDt)
     this.motion.render(effectsDt, this.reducedMotion.matches)
+    this.reticle.render(state, this.camera)
     this.hurt = Math.max(0, this.hurt - effectsDt)
     this.drawOverlay(state)
   }
@@ -230,6 +233,10 @@ export class RushScene {
       .stroke({ color: palette.teal, width: 2, alpha: 0.6 })
   }
 
+  setAim(point: Vec | null) {
+    this.reticle.set(point)
+  }
+
   destroy() {
     if (this.destroyed) return
     this.destroyed = true
@@ -241,6 +248,7 @@ export class RushScene {
     this.motion.destroy()
     this.overlay.destroy()
     this.stick.destroy()
+    this.reticle.destroy()
     this.view.destroy({ children: true })
     for (const texture of this.frames) texture.destroy(false)
     this.frames = []

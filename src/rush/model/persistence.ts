@@ -1,4 +1,4 @@
-import type { FrameId, RunSettlement, RushRecord } from '../types'
+import type { Difficulty, FrameId, RunSettlement, RushRecord } from '../types'
 import { saveKey } from './data'
 import { emptyMeta, metaUpgrades } from './meta/progression'
 
@@ -19,6 +19,8 @@ function readSettlement(value: unknown): RunSettlement | null {
   const waves = number(data.waves, 27)
   const bosses = number(data.bosses, 36)
   const victory = data.outcome === 'won' ? number(data.victory, 24) : 0
+  const difficulty = number(data.difficulty, 3) as Difficulty
+  const difficultyBonus = number(data.difficultyBonus, 143)
   return {
     outcome: data.outcome,
     base,
@@ -26,10 +28,12 @@ function readSettlement(value: unknown): RunSettlement | null {
     waves,
     bosses,
     victory,
-    coins: base + kills + waves + bosses + victory,
+    difficultyBonus,
+    coins: base + kills + waves + bosses + victory + difficultyBonus,
     killCount: number(data.killCount, 100_000),
     wave: Math.max(1, number(data.wave, 9)),
     seconds: number(data.seconds, 86_400),
+    difficulty,
   }
 }
 
@@ -48,6 +52,10 @@ export function readRecord(storage?: StoragePort): RushRecord {
     runs: 0,
     meta: emptyMeta(),
     lastRun: null,
+    difficulty: 0,
+    highestDifficulty: 0,
+    difficultyWins: [0, 0, 0, 0],
+    mouseAim: true,
   }
   try {
     const data = JSON.parse(storage?.getItem(saveKey) || 'null')
@@ -61,10 +69,17 @@ export function readRecord(storage?: StoragePort): RushRecord {
       Object.hasOwn(data, key),
     )
     const coins = number(data.coins)
+    const wins = number(data.wins)
+    const highestDifficulty = number(data.highestDifficulty ?? (wins > 0 ? 1 : 0), 3) as Difficulty
+    const difficultyWins = [0, 1, 2, 3].map((index) =>
+      number(
+        Array.isArray(data.difficultyWins) ? data.difficultyWins[index] : index === 0 ? wins : 0,
+      ),
+    ) as RushRecord['difficultyWins']
     return {
       bestTime: number(data.bestTime),
       bestKills: number(data.bestKills),
-      wins: number(data.wins),
+      wins,
       bossKills: number(data.bossKills),
       unlocked,
       selected: unlocked.includes(data.selected) ? data.selected : 'runner',
@@ -75,6 +90,10 @@ export function readRecord(storage?: StoragePort): RushRecord {
       runs: number(data.runs),
       meta,
       lastRun: readSettlement(data.lastRun),
+      highestDifficulty,
+      difficulty: number(data.difficulty, highestDifficulty) as Difficulty,
+      difficultyWins,
+      mouseAim: data.mouseAim !== false,
     }
   } catch {
     return blank

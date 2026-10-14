@@ -1,4 +1,5 @@
 import type { Foe, RushState, Vec } from '../types'
+import { arenaMargin, arenaView } from './arena'
 
 export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y)
 export const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
@@ -7,9 +8,12 @@ export const level = (s: RushState, id: keyof RushState['upgrades']) => s.upgrad
 export const playerGunOrigin = (p: Vec) => ({ x: p.x, y: p.y - 16 })
 
 export function visible(s: RushState, e: Vec, margin = 0) {
+  const view = arenaView(s.player, s.viewport, arenaMargin)
   return (
-    Math.abs(e.x - s.player.x) < s.viewport.x / 2 + margin &&
-    Math.abs(e.y - s.player.y) < s.viewport.y / 2 + margin
+    e.x > view.left - margin &&
+    e.x < view.right + margin &&
+    e.y > view.top - margin &&
+    e.y < view.bottom + margin
   )
 }
 

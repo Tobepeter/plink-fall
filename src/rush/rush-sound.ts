@@ -13,7 +13,7 @@ export class RushSound {
   private beat = 0
   constructor(private getState: () => RushState) {}
   unlock() {
-    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
+    if (document.hidden || this.getState().record.muted || ['menu', 'shop'].includes(this.getState().phase)) return
     try {
       const Constructor =
         window.AudioContext ??
@@ -38,7 +38,7 @@ export class RushSound {
     }
   }
   resume() {
-    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
+    if (document.hidden || this.getState().record.muted || ['menu', 'shop'].includes(this.getState().phase)) return
     if (this.output) this.output.gain.value = 0.18
     if (this.context?.state === 'suspended') {
       void this.context.resume().catch(() => {})
@@ -46,7 +46,7 @@ export class RushSound {
     }
   }
   suspend() {
-    if (this.getState().phase === 'menu') this.stopVoices()
+    if (this.getState().phase === 'menu' || this.getState().phase === 'shop') this.stopVoices()
     if (this.output) this.output.gain.value = 0
     if (this.context?.state === 'running') void this.context.suspend().catch(() => {})
   }
@@ -54,7 +54,7 @@ export class RushSound {
     const s = this.getState()
     if (this.output)
       this.output.gain.value =
-        document.hidden || s.record.muted || s.paused || s.phase === 'menu' ? 0 : 0.18
+        document.hidden || s.record.muted || s.paused || s.phase === 'menu' || s.phase === 'shop' ? 0 : 0.18
     if (
       document.hidden ||
       s.record.muted ||
@@ -80,6 +80,8 @@ export class RushSound {
       document.hidden ||
       this.getState().record.muted ||
       this.getState().paused ||
+      this.getState().phase === 'menu' ||
+      this.getState().phase === 'shop' ||
       this.context?.state !== 'running'
     )
       return
@@ -110,6 +112,9 @@ export class RushSound {
     } else if (event.type === 'hurt' || event.type === 'explode') {
       this.crackle(now, 0.35, 500)
       this.tone(190, now, 0.17, 0.23, 'sawtooth', 50)
+    } else if (event.type === 'ability') {
+      this.tone(330, now, 0.16, 0.16, 'triangle', 880)
+      this.tone(660, now + 0.05, 0.2, 0.12, 'triangle', 1320)
     } else if (event.type === 'dash') {
       this.tone(500, now, 0.12, 0.18, 'sine', 100)
       this.crackle(now, 0.1, 2400)

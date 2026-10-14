@@ -3,6 +3,9 @@ import { distance, level, toward } from '../math'
 import type { Hooks } from '../math'
 import { foe } from '../state'
 import { metaStats } from '../meta/progression'
+import { frameCharge } from '../frames'
+import { difficultyStats } from '../campaign/difficulty'
+import { keepInArena } from '../arena'
 
 export function hurtPlayer(s: RushState, hooks: Hooks, source: Vec) {
   const p = s.player
@@ -12,6 +15,7 @@ export function hurtPlayer(s: RushState, hooks: Hooks, source: Vec) {
   const a = toward(source, p)
   p.x += Math.cos(a) * 22
   p.y += Math.sin(a) * 22
+  keepInArena(p, p.radius)
   s.combo = 0
   s.comboTimer = 0
   hooks.emit({ type: 'hurt', ...p, amount: p.hp })
@@ -29,13 +33,15 @@ export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
     const force = e.kind === 'brute' ? 1.5 : 3.5
     e.x += Math.cos(a) * force
     e.y += Math.sin(a) * force
+    keepInArena(e, e.radius)
   }
   hooks.emit({ type: 'hit', ...e, amount, kind: e.kind })
   if (e.hp > 0) return
   s.kills++
   s.combo++
   s.comboTimer = 1.6
-  s.charge = Math.min(100, s.charge + 7 + Math.min(s.combo, 10) * 0.5)
+  s.charge = Math.min(100, s.charge + frameCharge(s, 7 + Math.min(s.combo, 10) * 0.5))
+  s.scrap += Number(s.kills % 3 === 0) + (e.kind === 'boss' ? 6 : e.kind === 'brute' ? 1 : 0)
   hooks.emit({ type: 'kill', ...e, kind: e.kind, power: e.radius / 20 })
   const xp = e.kind === 'boss' ? 12 : e.kind === 'brute' ? 4 : e.kind === 'splitter' ? 2 : 1
   s.loot.push({
@@ -61,8 +67,8 @@ export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
     })
   if (e.kind === 'splitter' && s.enemies.length < 80) {
     for (let i = 0; i < 2; i++) {
-      const child = foe('chaser', { x: e.x + (i ? 22 : -22), y: e.y }, e.tier, hooks)
-      child.hp = child.maxHp = 2
+      const child = foe('chaser', { x: e.x + (i ? 22 : -22), y: e.y }, e.tier, hooks, s.difficulty)
+      child.hp = child.maxHp = 2 * difficultyStats(s.difficulty).hpMultiplier
       child.radius = 12
       s.enemies.push(child)
     }
@@ -108,6 +114,7 @@ export function blast(
     const force = Math.max(0, Math.min(48, radius - d + 12))
     e.x += Math.cos(a) * force
     e.y += Math.sin(a) * force
+    keepInArena(e, e.radius)
   }
   for (const shot of s.shots) {
     if (shot.side === 'enemy' && distance(point, shot) <= radius) shot.life = 0

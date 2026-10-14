@@ -58,6 +58,8 @@ export class RushActors {
     const p = state.player
     this.playerPoint = { x: p.x, y: p.y }
     const pose = this.gait.update(p, dt)
+    if (state.aim.mode === 'mouse' && state.aim.point && Math.abs(Math.cos(p.angle)) > 0.12)
+      pose.face = Math.cos(p.angle) < 0 ? -1 : 1
     this.player.render(p, pose)
     this.fire = Math.max(0, this.fire - dt)
     this.drawDash(state)

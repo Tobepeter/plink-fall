@@ -1,5 +1,6 @@
 import type { RushState, Vec } from '../types'
 import { clamp } from './palette'
+import { arena, arenaMargin, arenaView } from '../model/arena'
 
 // 死区跟随与有限屏内偏移
 export class RushCamera {
@@ -16,12 +17,17 @@ export class RushCamera {
   resize(width: number, height: number, state: RushState) {
     this.width = Math.max(1, width)
     this.height = Math.max(1, height)
-    this.zoom = clamp(Math.min(width / 390, height / 650), 0.8, 1.2)
+    this.zoom = Math.max(
+      clamp(Math.min(width / 390, height / 650), 0.8, 1.2),
+      width / (arena.width + arenaMargin * 2),
+      height / (arena.height + arenaMargin * 2),
+    )
     this.reset(state)
   }
 
   reset(state: RushState) {
     this.center = { x: state.player.x, y: state.player.y }
+    this.confine()
     this.trauma = 0
     this.project(0)
   }
@@ -41,6 +47,7 @@ export class RushCamera {
     const limitY = Math.min(96, size.y * 0.2)
     this.center.x = clamp(this.center.x, p.x - limitX, p.x + limitX)
     this.center.y = clamp(this.center.y, p.y - limitY, p.y + limitY)
+    this.confine()
     this.time += dt
     this.trauma = Math.max(0, this.trauma - dt * 4.6)
     this.project(this.motion.matches ? 0 : this.trauma ** 2 * 4)
@@ -49,6 +56,13 @@ export class RushCamera {
   private project(shake: number) {
     this.x = this.width / 2 - this.center.x * this.zoom + Math.sin(this.time * 51) * shake
     this.y = this.height / 2 - this.center.y * this.zoom + Math.sin(this.time * 67) * shake * 0.6
+  }
+
+  private confine() {
+    // 护栏外的有限留白保住靠墙角色轮廓，也避开顶部HUD
+    const view = arenaView(this.center, this.worldSize(), arenaMargin)
+    this.center.x = (view.left + view.right) / 2
+    this.center.y = (view.top + view.bottom) / 2
   }
 
   impact(power: number) {

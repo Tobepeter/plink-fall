@@ -4,9 +4,9 @@ import type { Hooks } from './math'
 import { blast, damageFoe } from './combat/damage'
 import { hasProtocol, interceptShots, linkArc, recallShots } from './combat/protocols'
 import { metaStats } from './meta/progression'
+import { frameBurstCount, frameDamage, frameDashCooldown, frameFireRate } from './frames'
 
-export const dashMaxCooldown = (s: RushState) =>
-  Math.max(0.85, 1.6 - level(s, 'haste') * 0.12) * metaStats(s.runMeta).cooldown
+export const dashMaxCooldown = (s: RushState) => frameDashCooldown(s)
 
 export class Weapons {
   private shotClock = 0.05
@@ -47,7 +47,7 @@ export class Weapons {
       vx: Math.cos(a) * speed,
       vy: Math.sin(a) * speed,
       radius: kind === 'rocket' ? 7 : 4,
-      damage: 1 + extraDamage,
+      damage: (1 + extraDamage) * frameDamage(s, kind),
       life: 1.4,
       age: 0,
       pierce: kind === 'shot' ? level(s, 'pierce') : 0,
@@ -115,11 +115,16 @@ export class Weapons {
     const target = locked || nearest(s, s.player)
     this.targetId = target?.id || 0
     const origin = playerGunOrigin(s.player)
-    if (target) s.player.angle = toward(origin, target)
-    if (target && this.shotClock <= 0) {
+    const manual = s.aim.mode === 'mouse' && s.record.mouseAim && s.aim.point !== null
+    if (manual) s.player.angle = toward(origin, s.aim.point!)
+    else if (target) s.player.angle = toward(origin, target)
+    if ((manual || target) && this.shotClock <= 0) {
       const a = s.player.angle
       const spread = level(s, 'split') || s.overdrive > 0
-      const count = spread ? 3 + Math.max(0, Math.floor((level(s, 'split') - 1) / 2)) * 2 : 1
+      const count = Math.max(
+        frameBurstCount(s),
+        spread ? 3 + Math.max(0, Math.floor((level(s, 'split') - 1) / 2)) * 2 : 1,
+      )
       for (let i = 0; i < count; i++)
         this.fire(
           origin,
@@ -129,10 +134,11 @@ export class Weapons {
         )
       this.shotClock +=
         (0.24 * metaStats(s.runMeta).cooldown) /
+        frameFireRate(s) /
         (1 + level(s, 'haste') * 0.23) /
         (s.overdrive > 0 ? 1.9 : 1)
     }
-    if (target && level(s, 'rocket') && this.rocketClock <= 0) {
+    if ((manual || target) && level(s, 'rocket') && this.rocketClock <= 0) {
       this.fire(origin, s.player.angle, 'rocket', 1)
       this.rocketClock = Math.max(0.5, 1.55 - level(s, 'rocket') * 0.13)
     }

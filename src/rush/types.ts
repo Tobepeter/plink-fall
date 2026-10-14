@@ -13,7 +13,15 @@ export type UpgradeId =
   | 'haste'
   | 'vital'
   | 'magnet'
-export type RushPhase = 'menu' | 'playing' | 'choice' | 'dead' | 'won'
+export type RushPhase = 'menu' | 'playing' | 'choice' | 'shop' | 'dead' | 'won'
+export type Difficulty = 0 | 1 | 2 | 3
+export type ShopItemId = UpgradeId | 'repair'
+export interface WaveShop {
+  wave: number
+  offers: ShopItemId[]
+  purchased: ShopItemId[]
+  rerolls: number
+}
 export type MetaUpgradeId = 'firepower' | 'armor' | 'capacitor' | 'magnet'
 export type MetaLevels = Record<MetaUpgradeId, number>
 export interface RewardParts {
@@ -22,6 +30,7 @@ export interface RewardParts {
   waves: number
   bosses: number
   victory: number
+  difficultyBonus: number
   coins: number
 }
 export interface RunSettlement extends RewardParts {
@@ -29,6 +38,7 @@ export interface RunSettlement extends RewardParts {
   killCount: number
   wave: number
   seconds: number
+  difficulty: Difficulty
 }
 export type ProtocolId = 'circuit' | 'frostburst' | 'returnfire'
 export interface WaveState {
@@ -129,6 +139,10 @@ export interface RushRecord {
   runs: number
   meta: MetaLevels
   lastRun: RunSettlement | null
+  difficulty: Difficulty
+  highestDifficulty: Difficulty
+  difficultyWins: [number, number, number, number]
+  mouseAim: boolean
 }
 export interface RushState {
   phase: RushPhase
@@ -162,6 +176,12 @@ export interface RushState {
   runMeta: MetaLevels
   settlement: RunSettlement | null
   notice: string
+  difficulty: Difficulty
+  scrap: number
+  shop: WaveShop | null
+  abilityCooldown: number
+  abilityActive: number
+  aim: { mode: 'mouse' | 'auto'; point: Vec | null }
 }
 export interface UpgradeDef {
   id: UpgradeId
@@ -192,6 +212,7 @@ export interface RushEvent extends Vec {
     | 'intercept'
     | 'counter'
     | 'protocol'
+    | 'ability'
   kind?: EnemyKind
   amount?: number
   power?: number
@@ -199,6 +220,7 @@ export interface RushEvent extends Vec {
   upgrade?: UpgradeId
   side?: 'player' | 'enemy'
   protocol?: ProtocolId
+  frame?: FrameId
 }
 export interface RushPort {
   state: RushState
@@ -213,6 +235,14 @@ export interface RushPort {
   setPaused(paused: boolean): void
   toggleSound(): void
   selectFrame(frame: FrameId): boolean
+  unlockFrame(frame: FrameId): boolean
+  selectDifficulty(difficulty: Difficulty): boolean
+  setMouseAim(enabled: boolean): void
+  setAim(point: Vec | null, mode?: 'mouse' | 'auto'): void
+  activateAbility(): boolean
+  buyUpgrade(id: ShopItemId): boolean
+  rerollShop(): boolean
+  continueWave(): boolean
   purchaseMeta(id: MetaUpgradeId): boolean
   openMenu(): void
   restart(frame?: FrameId): void

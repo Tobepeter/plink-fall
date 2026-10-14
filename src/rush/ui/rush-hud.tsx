@@ -4,6 +4,11 @@ import type { RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
 import { activeProtocols, protocolDefinitions } from '../model/combat/protocols'
 import { ControlGlyph, WeaponGlyph, time } from './weapon-glyph'
+import { RushAbility } from './campaign/rush-ability'
+import { RushRadar } from './campaign/rush-radar'
+import { RushScrap } from './campaign/rush-scrap'
+import { RushWaveTrack } from './campaign/rush-wave-track'
+import './campaign/rush-campaign-hud.css'
 
 // 波次读数与机械控制
 export function RushHud(props: { state: RushState; store: RushPort; ready: boolean }) {
@@ -65,11 +70,14 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
         <span className="rush-kills" aria-label={`击败 ${state.kills} 名敌人`}>
           <ControlGlyph id="target" />
           <b>{state.kills}</b>
+          <RushScrap />
+          <small aria-label={`本局零件 ${state.scrap}`}>{state.scrap}</small>
         </span>
       </div>
       <div className={`rush-clock${breather ? ' is-breather' : ''}`}>
         <span className="rush-wave-name">
-          第 {String(state.wave.index).padStart(2, '0')} 波 <i />
+          第 {String(state.wave.index).padStart(2, '0')} 波 <em>/ 9</em>
+          <i />
           {breather ? '休整' : state.wave.name}
         </span>
         <b className={state.wave.duration === 0 ? 'is-lockdown' : ''}>
@@ -89,6 +97,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
         >
           <i style={{ transform: `scaleX(${Math.min(1, state.xp / state.nextXp)})` }} />
         </i>
+        <RushWaveTrack state={state} />
       </div>
       <div className="rush-settings">
         <button
@@ -153,6 +162,8 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           })}
         </div>
       )}
+      {state.phase === 'playing' && <RushAbility state={state} store={store} />}
+      {state.phase === 'playing' && <RushRadar state={state} />}
       {state.phase === 'playing' && (
         <button
           className={`rush-dash${dashReady ? ' is-ready' : ''}${intercepted ? ' has-counter' : ''}`}
@@ -178,6 +189,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
       {state.phase === 'playing' && (
         <span className="rush-key-hint">
           <kbd>WASD</kbd> 移动 <kbd>SPACE</kbd> 截弹反击
+          <kbd>E</kbd> 机体技能
         </span>
       )}
     </div>

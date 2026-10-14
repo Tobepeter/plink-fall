@@ -3,6 +3,7 @@ import { clamp, distance, level, nearest, toward } from '../math'
 import type { Hooks } from '../math'
 import { blast, damageFoe, hurtPlayer } from './damage'
 import { frostBurst, linkArc } from './protocols'
+import { arenaBounds, keepInArena } from '../arena'
 
 function segmentDistance(point: Vec, a: Vec, b: Vec) {
   const dx = b.x - a.x,
@@ -60,6 +61,24 @@ export function advanceShots(s: RushState, hooks: Hooks, dt: number) {
     const prev = { x: shot.x, y: shot.y }
     shot.x += shot.vx * dt
     shot.y += shot.vy * dt
+    const bounds = arenaBounds(shot.radius)
+    const hitX = shot.x < bounds.left || shot.x > bounds.right
+    const hitY = shot.y < bounds.top || shot.y > bounds.bottom
+    if (hitX || hitY) {
+      if (shot.side === 'player' && shot.kind === 'shot' && shot.bounce > 0) {
+        shot.bounce--
+        if (hitX) shot.vx *= -1
+        if (hitY) shot.vy *= -1
+        // 夹坐标但保留反弹后的速度
+        const velocity = { x: shot.vx, y: shot.vy }
+        keepInArena(shot, shot.radius)
+        shot.vx = velocity.x
+        shot.vy = velocity.y
+      } else {
+        shot.life = 0
+        continue
+      }
+    }
     if (shot.side === 'enemy') {
       const d = segmentDistance(s.player, prev, shot)
       if (d < s.player.radius + shot.radius) {

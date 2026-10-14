@@ -48,6 +48,11 @@ export function RushResult(props: { state: RushState; store: RushPort; restart: 
               通关 <b>+{reward.victory}</b>
             </span>
           )}
+          {reward.difficultyBonus > 0 && (
+            <span>
+              升星 <b>+{reward.difficultyBonus}</b>
+            </span>
+          )}
         </div>
       )}
       <div className="rush-results">

@@ -3,12 +3,25 @@ import { enemyStats } from './data'
 import type { Hooks } from './math'
 import { createWave } from './campaign/waves'
 import { metaStats } from './meta/progression'
+import { frameStats } from './frames'
+import { difficultyStats } from './campaign/difficulty'
+import { clampToArena } from './arena'
 
-export function foe(kind: EnemyKind, point: Vec, tier: number, hooks: Hooks): Foe {
+export function foe(
+  kind: EnemyKind,
+  point: Vec,
+  tier: number,
+  hooks: Hooks,
+  difficulty: RushState['difficulty'] = 0,
+): Foe {
   const stats = enemyStats[kind]
-  const hp = stats.hp * (kind === 'boss' ? 1 + (tier - 1) * 0.9 : 1 + Math.max(0, tier - 1) * 0.22)
+  const hp =
+    stats.hp *
+    (kind === 'boss' ? 1 + (tier - 1) * 0.9 : 1 + Math.max(0, tier - 1) * 0.22) *
+    difficultyStats(difficulty).hpMultiplier
+  const spawn = clampToArena(point, stats.radius)
   return {
-    ...point,
+    ...spawn,
     id: hooks.id(),
     kind,
     vx: 0,
@@ -20,7 +33,7 @@ export function foe(kind: EnemyKind, point: Vec, tier: number, hooks: Hooks): Fo
     age: 0,
     cooldown: kind === 'shooter' ? 0.05 : kind === 'boss' ? 1.2 : 1.4,
     telegraph: 0,
-    target: { ...point },
+    target: { ...spawn },
     hurt: 0,
     slow: 0,
     tier,
@@ -34,14 +47,14 @@ export function createState(
   frame: FrameId,
   viewport: Vec,
 ): RushState {
-  const hp = (frame === 'warden' ? 5 : frame === 'spark' ? 3 : 4) + metaStats(record.meta).armor
+  const hp = frameStats[frame].hp + metaStats(record.meta).armor
   return {
     phase: 'playing',
     paused: false,
     runId,
     seed,
     clock: 0,
-    wave: createWave(1),
+    wave: createWave(1, record.difficulty),
     player: {
       x: 0,
       y: 0,
@@ -75,7 +88,7 @@ export function createState(
     bossesDefeated: 0,
     bossIndex: 0,
     nextBoss: 25,
-    upgrades: frame === 'spark' ? { chain: 1 } : {},
+    upgrades: { [frameStats[frame].startingSkill]: 1 },
     choices: [],
     move: { x: 0, y: 0 },
     viewport: { ...viewport },
@@ -83,6 +96,12 @@ export function createState(
     runMeta: { ...record.meta },
     settlement: null,
     notice: '移动躲避 · 自动开火',
+    difficulty: record.difficulty,
+    scrap: 0,
+    shop: null,
+    abilityCooldown: 0,
+    abilityActive: 0,
+    aim: { mode: 'auto', point: null },
   }
 }
 
@@ -98,6 +117,7 @@ export function initialEnemies(s: RushState, hooks: Hooks) {
         { x: Math.cos(a) * Math.min(radius, maxX), y: Math.sin(a) * Math.min(radius, maxY) },
         1,
         hooks,
+        s.difficulty,
       ),
     )
   }

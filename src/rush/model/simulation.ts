@@ -4,11 +4,12 @@ import { EnemyDirector } from './enemies'
 import { distance, level } from './math'
 import type { Hooks } from './math'
 import { Weapons } from './weapons'
-import { blast } from './combat/damage'
 import { advanceLoot } from './combat/loot'
 import { advanceShots } from './combat/projectiles'
+import { keepInArena } from './arena'
+import { frameChoices, frameStats } from './frames'
+import { applyUpgrade } from './progression'
 import {
-  activeProtocols,
   counterFire,
   interceptShots,
   protocolDefinitions,
@@ -35,13 +36,15 @@ export class Simulation {
     const dash = p.dashTime > 0
     p.dashTime = Math.max(0, p.dashTime - dt)
     const move = dash ? p.lastMove : s.move
-    const speed = dash ? 940 : p.frame === 'spark' ? 355 : p.frame === 'warden' ? 300 : 320
+    const speed = dash ? 940 : frameStats[p.frame].speed
     p.vx = move.x * speed
     p.vy = move.y * speed
     if (!dash && Math.hypot(move.x, move.y) > 0.05) p.lastMove = { ...move }
+    const previous = { x: p.x, y: p.y }
     p.x += p.vx * dt
     p.y += p.vy * dt
-    p.walk += Math.hypot(p.vx, p.vy) * dt
+    keepInArena(p, p.radius)
+    p.walk += Math.hypot(p.x - previous.x, p.y - previous.y)
     if (dash) {
       interceptShots(s, this.hooks, 80)
       if (
@@ -66,10 +69,12 @@ export class Simulation {
     const s = this.s
     if (s.phase !== 'playing' || s.xp < s.nextXp || s.clock < 3.3 || s.clock - this.lastChoice < 7)
       return
+    const choices = s.level === 1 ? frameChoices(s) : this.rollChoices()
+    if (!choices.length) return
     s.phase = 'choice'
     s.move = { x: 0, y: 0 }
     s.player.vx = s.player.vy = 0
-    s.choices = s.level === 1 ? ['ricochet', 'orbit', 'chain'] : this.rollChoices()
+    s.choices = choices
     this.lastChoice = s.clock
     this.hooks.emit({ type: 'level', ...s.player, amount: s.level + 1 })
   }
@@ -96,8 +101,8 @@ export class Simulation {
   choose(id: UpgradeId) {
     const s = this.s
     if (s.phase !== 'choice' || s.paused || !s.choices.includes(id)) return false
-    const previousProtocols = activeProtocols(s)
-    s.upgrades[id] = level(s, id) + 1
+    const def = upgrades.find((item) => item.id === id)
+    if (!def || level(s, id) >= def.maxLevel) return false
     s.xp -= s.nextXp
     s.level++
     s.nextXp = Math.round(4 + s.level * s.level * 0.9)
@@ -112,29 +117,11 @@ export class Simulation {
         distance(s.player, e) < 1 ? e.id * 2.4 : Math.atan2(e.y - s.player.y, e.x - s.player.x)
       e.x = s.player.x + Math.cos(a) * (110 + e.radius)
       e.y = s.player.y + Math.sin(a) * (110 + e.radius)
+      keepInArena(e, e.radius)
       e.slow = Math.max(e.slow, 0.4)
     }
-    if (id === 'vital') {
-      s.player.maxHp++
-      s.player.hp = Math.min(s.player.maxHp, s.player.hp + 2)
-      blast(s, this.hooks, s.player, 130, 3)
-    }
-    if (id === 'frost')
-      s.zones.push({
-        id: this.hooks.id(),
-        ...s.player,
-        kind: 'frost',
-        radius: 84,
-        life: 3,
-        duration: 3,
-        tick: 0,
-      })
+    applyUpgrade(s, this.hooks, id)
     this.weapons.syncSatellites()
-    this.hooks.emit({ type: 'upgrade', ...s.player, upgrade: id, amount: level(s, id) })
-    for (const protocol of activeProtocols(s)) {
-      if (!previousProtocols.includes(protocol))
-        this.hooks.emit({ type: 'protocol', ...s.player, protocol, amount: 1 })
-    }
     return true
   }
 
@@ -142,6 +129,8 @@ export class Simulation {
     const s = this.s
     if (s.phase !== 'playing' || s.paused) return
     s.clock += dt
+    s.abilityCooldown = Math.max(0, s.abilityCooldown - dt)
+    s.abilityActive = Math.max(0, s.abilityActive - dt)
     if (s.wave.elapsed > 3) s.notice = ''
     s.overdrive = Math.max(0, s.overdrive - dt)
     s.comboTimer = Math.max(0, s.comboTimer - dt)
@@ -154,13 +143,11 @@ export class Simulation {
     this.movement(dt)
     this.enemies.update(dt)
     if (s.phase !== 'playing') return
-    if (s.wave.phase === 'breather') {
-      this.progression()
-      return
-    }
+    if (s.wave.phase === 'breather') return
     this.weapons.update(dt)
     advanceShots(s, this.hooks, dt)
     advanceLoot(s, this.hooks, dt)
+    for (const item of s.loot) keepInArena(item, 8)
     this.progression()
   }
 }

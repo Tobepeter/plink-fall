@@ -3,6 +3,10 @@ import { visible } from '../math'
 import type { Hooks } from '../math'
 import { foe, initialEnemies } from '../state'
 import { createWave, isBossWave, waveDefinitions } from './waves'
+import { enemyStats } from '../data'
+import { enemySpawnPoint } from '../enemies/spawn'
+import { difficultyStats } from './difficulty'
+import { openWaveShop } from './shop'
 
 // 有限编队与波间喘息
 export class WaveDirector {
@@ -27,14 +31,8 @@ export class WaveDirector {
   }
 
   // 前侧与斜后方编队，保留安全距离和入场预警
-  edge(side = 1, spread = 0): Vec {
-    const s = this.s
-    const moving = Math.hypot(s.player.vx, s.player.vy) > 20
-    const heading = moving ? Math.atan2(s.player.vy, s.player.vx) : s.wave.index * 1.35
-    const a = heading + side * (0.9 + spread) + (this.hooks.random() - 0.5) * 0.18
-    const x = Math.max(150, Math.min(360, s.viewport.x / 2 - 32))
-    const y = Math.max(180, Math.min(330, s.viewport.y / 2 - 40))
-    return { x: s.player.x + Math.cos(a) * x, y: s.player.y + Math.sin(a) * y }
+  edge(side = 1, spread = 0, radius = 17): Vec {
+    return enemySpawnPoint(this.s, radius, side, spread, this.hooks.random)
   }
 
   recycle(e: Foe) {
@@ -42,7 +40,7 @@ export class WaveDirector {
     if ((e.kind === 'shooter' && e.telegraph > 0) || (e.kind === 'charger' && e.cooldown < 0))
       return
     if (visible(this.s, e, e.kind === 'boss' ? 140 : 75)) return
-    const point = this.edge(e.id % 2 ? 1 : -1, (e.id % 3) * 0.18)
+    const point = this.edge(e.id % 2 ? 1 : -1, (e.id % 3) * 0.18, e.radius)
     e.x = point.x
     e.y = point.y
     e.age = 0
@@ -54,10 +52,16 @@ export class WaveDirector {
 
   private add(kind: EnemyKind, side: number, index: number) {
     const s = this.s
-    const e = foe(kind, this.edge(side, index * 0.48), s.wave.act, this.hooks)
+    const e = foe(
+      kind,
+      this.edge(side, index * 0.48, enemyStats[kind].radius),
+      s.wave.act,
+      this.hooks,
+      s.difficulty,
+    )
     if (kind === 'boss') {
       // 普通升级也可稳定削减首 Boss，后两幕保留构筑差异
-      e.hp = e.maxHp = [108, 195, 300][s.wave.act - 1]
+      e.hp = e.maxHp = [108, 195, 300][s.wave.act - 1] * difficultyStats(s.difficulty).hpMultiplier
       s.bossIndex = s.wave.act
       s.nextBoss = Infinity
       this.hooks.emit({ type: 'boss', ...e, amount: s.wave.act })
@@ -94,6 +98,7 @@ export class WaveDirector {
       this.hooks.emit({ type: 'pickup', x: l.x, y: l.y, amount: l.value })
     }
     s.loot = []
+    openWaveShop(s, this.hooks)
     this.hooks.emit({ type: 'wave-clear', ...s.player, amount: s.wave.index })
   }
 
@@ -103,7 +108,7 @@ export class WaveDirector {
     s.wave.elapsed += dt
     if (s.wave.phase === 'breather') {
       if (s.wave.elapsed >= s.wave.duration) {
-        s.wave = createWave(s.wave.index + 1)
+        s.wave = createWave(s.wave.index + 1, s.difficulty)
         this.group = 0
         this.lastGroup = 0
         this.announced = false
@@ -133,7 +138,10 @@ export class WaveDirector {
       s.enemies.filter((e) => e.hp > 0).length <= 2 &&
       s.wave.elapsed - this.lastGroup >= 2.8
     if (this.group < 3 && (s.wave.elapsed >= due[this.group] || clearedPack)) {
-      const members = def.groups[this.group]
+      const members = [
+        ...def.groups[this.group],
+        ...Array<EnemyKind>(s.difficulty).fill(s.wave.act > 1 ? 'charger' : 'chaser'),
+      ]
       const sides = bossWave ? [this.group % 2 ? -1 : 1] : [1, -1]
       for (const side of sides)
         for (const [i, kind] of members.entries())

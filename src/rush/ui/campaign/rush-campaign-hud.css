@@ -1,0 +1,233 @@
+.rush-wave-track {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+  align-items: center;
+  height: 5px;
+}
+.rush-wave-track > i {
+  width: 8px;
+  height: 3px;
+  transform: skewX(-18deg);
+  background: #40544e;
+}
+.rush-wave-track > i.is-boss {
+  width: 5px;
+  height: 5px;
+  margin-inline: 1px;
+  transform: rotate(45deg);
+}
+.rush-wave-track > i.is-cleared {
+  background: var(--rush-mint);
+}
+.rush-wave-track > i.is-current {
+  background: var(--rush-brass);
+}
+.rush-wave-name > em {
+  color: #91ad9d;
+  font-style: normal;
+  font-size: 8px;
+  margin-left: -3px;
+}
+.rush-ability {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 72px;
+  height: 88px;
+  right: max(130px, calc(env(safe-area-inset-right) + 122px));
+  bottom: max(27px, calc(env(safe-area-inset-bottom) + 18px));
+  border: 0;
+  padding: 9px 0 0;
+  background: transparent;
+  color: #91aa9a;
+}
+.rush-ability-charge {
+  position: absolute;
+  inset: 0 3px auto;
+  width: 66px;
+  height: 66px;
+  fill: #182d2e;
+  stroke: #49675b;
+  stroke-width: 2;
+}
+.rush-ability-charge > path:last-child {
+  fill: none;
+  stroke: var(--rush-mint);
+  stroke-width: 3;
+  stroke-dasharray: 100;
+}
+.rush-ability > .rush-module {
+  position: relative;
+  opacity: 0.45;
+}
+.rush-ability > kbd {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  background: #1b302e;
+  color: #c4d2bf;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 3px;
+  line-height: 1;
+  border: 1px solid #637e69;
+  font-family: inherit;
+}
+.rush-ability > span:last-of-type {
+  position: absolute;
+  bottom: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.rush-ability > b {
+  position: absolute;
+  top: 19px;
+  left: 0;
+  right: 0;
+  font:
+    800 23px 'SFMono-Regular',
+    Consolas,
+    monospace;
+  color: var(--rush-ivory);
+  text-shadow: 0 2px 2px #0b1520;
+}
+.rush-ability.is-ready {
+  color: var(--rush-ivory);
+}
+.rush-ability.is-ready .rush-ability-charge {
+  fill: #335344;
+  stroke: #94bea2;
+}
+.rush-ability.is-ready > .rush-module {
+  opacity: 1;
+}
+.rush-ability.is-active .rush-ability-charge {
+  fill: #564c34;
+}
+.rush-ability > b.rush-ability-active {
+  top: 23px;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: inherit;
+  color: var(--rush-brass);
+  letter-spacing: 1px;
+}
+.rush-ability.is-active > .rush-module {
+  opacity: 1;
+}
+.rush-ability.is-ready:active {
+  transform: scale(0.95);
+}
+.rush-radar {
+  position: absolute;
+  left: max(22px, calc(env(safe-area-inset-left) + 10px));
+  bottom: max(51px, calc(env(safe-area-inset-bottom) + 42px));
+  width: 72px;
+  height: 65px;
+  color: #93b19b;
+}
+.rush-radar > svg {
+  width: 72px;
+  height: 54px;
+  display: block;
+}
+.rush-radar-bound {
+  fill: #15272ade;
+  stroke: #648a73;
+  stroke-width: 1;
+}
+.rush-radar-grid {
+  fill: none;
+  stroke: #426957;
+  stroke-width: 0.5;
+  opacity: 0.45;
+}
+.rush-radar circle.is-foe {
+  fill: #cf6d5f;
+  opacity: 0.8;
+}
+.rush-radar circle.is-boss {
+  fill: #edc274;
+}
+.rush-radar circle.is-player {
+  fill: #b4f1d1;
+  stroke: #0a1d24;
+  stroke-width: 0.6;
+}
+.rush-radar small {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: 2px;
+  text-align: center;
+}
+.rush-radar.near-edge {
+  color: var(--rush-brass);
+}
+.rush-radar.near-edge .rush-radar-bound {
+  stroke: var(--rush-brass);
+}
+.rush-hud .rush-protocols {
+  bottom: max(145px, calc(env(safe-area-inset-bottom) + 136px));
+}
+.rush-kills .rush-scrap {
+  width: 16px;
+  height: 16px;
+  margin-left: 7px;
+}
+.rush-kills > small {
+  font:
+    800 12px 'SFMono-Regular',
+    Consolas,
+    monospace;
+  color: var(--rush-mint);
+}
+@media (max-width: 600px) {
+  .rush-ability {
+    right: max(122px, calc(env(safe-area-inset-right) + 112px));
+    bottom: max(23px, calc(env(safe-area-inset-bottom) + 15px));
+  }
+  .rush-radar {
+    left: max(12px, calc(env(safe-area-inset-left) + 5px));
+    bottom: max(22px, calc(env(safe-area-inset-bottom) + 14px));
+  }
+  .rush-hud .rush-protocols {
+    bottom: max(123px, calc(env(safe-area-inset-bottom) + 113px));
+  }
+  .rush-wave-track {
+    gap: 3px;
+  }
+  .rush-wave-track > i {
+    width: 7px;
+  }
+  .rush-kills .rush-scrap {
+    width: 13px;
+    height: 13px;
+    margin-left: 5px;
+  }
+  .rush-kills > small {
+    font-size: 10px;
+  }
+}
+@media (pointer: coarse) {
+  .rush-ability > kbd {
+    display: none;
+  }
+}
+@media (max-height: 500px) {
+  .rush-ability {
+    bottom: max(15px, calc(env(safe-area-inset-bottom) + 8px));
+    right: max(122px, calc(env(safe-area-inset-right) + 112px));
+  }
+  .rush-radar {
+    bottom: max(45px, calc(env(safe-area-inset-bottom) + 36px));
+  }
+  .rush-hud .rush-protocols {
+    bottom: max(125px, calc(env(safe-area-inset-bottom) + 112px));
+  }
+}

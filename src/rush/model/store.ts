@@ -1,4 +1,13 @@
-import type { FrameId, MetaUpgradeId, RushEvent, RushPort, RushState, Vec } from '../types'
+import type {
+  Difficulty,
+  FrameId,
+  MetaUpgradeId,
+  RushEvent,
+  RushPort,
+  RushState,
+  ShopItemId,
+  Vec,
+} from '../types'
 import { clamp, makeRandom } from './math'
 import type { Hooks } from './math'
 import { readRecord, writeRecord } from './persistence'
@@ -6,11 +15,15 @@ import type { StoragePort } from './persistence'
 import { Simulation } from './simulation'
 import { createState } from './state'
 import { metaPrice, metaUpgrades, previewReward } from './meta/progression'
+import { frameStats } from './frames'
+import { activateAbility } from './combat/frame-skills'
+import { buyShopUpgrade, continueWave, rerollShop } from './campaign/shop'
 
 export class RushStore implements RushPort {
   state: RushState
   private snapshot: RushState
   private simulation: Simulation
+  private hooks!: Hooks
   private storage?: StoragePort
   private nextId = 0
   private snapshotClock = 0
@@ -42,7 +55,7 @@ export class RushStore implements RushPort {
 
   private makeSimulation() {
     const random = makeRandom(this.state.seed)
-    const hooks: Hooks = {
+    this.hooks = {
       id: () => ++this.nextId,
       random,
       emit: (event) => {
@@ -51,7 +64,7 @@ export class RushStore implements RushPort {
         if (event.type === 'boss-down') this.save()
       },
     }
-    return new Simulation(this.state, hooks)
+    return new Simulation(this.state, this.hooks)
   }
 
   subscribe = (fn: () => void) => {
@@ -110,6 +123,7 @@ export class RushStore implements RushPort {
     if (
       this.destroyed ||
       this.state.phase === 'menu' ||
+      this.state.phase === 'shop' ||
       this.state.phase === 'dead' ||
       this.state.phase === 'won'
     )
@@ -130,6 +144,80 @@ export class RushStore implements RushPort {
     if (this.destroyed || !this.state.record.unlocked.includes(frame)) return false
     this.state.record.selected = frame
     this.save()
+    this.publish()
+    return true
+  }
+
+  unlockFrame(frame: FrameId) {
+    const s = this.state
+    if (this.destroyed || s.phase !== 'menu' || s.record.unlocked.includes(frame)) return false
+    const cost = frameStats[frame]?.unlockCost
+    if (!cost || s.record.coins < cost) return false
+    s.record.coins -= cost
+    s.record.unlocked.push(frame)
+    this.save()
+    this.publish()
+    return true
+  }
+
+  selectDifficulty(difficulty: Difficulty) {
+    const s = this.state
+    if (
+      this.destroyed ||
+      !['menu', 'dead', 'won'].includes(s.phase) ||
+      !Number.isInteger(difficulty) ||
+      difficulty < 0 ||
+      difficulty > s.record.highestDifficulty
+    )
+      return false
+    s.record.difficulty = difficulty
+    if (s.phase === 'menu') s.difficulty = difficulty
+    this.save()
+    this.publish()
+    return true
+  }
+
+  setMouseAim(enabled: boolean) {
+    if (this.destroyed || typeof enabled !== 'boolean') return
+    this.state.record.mouseAim = enabled
+    this.state.aim = { mode: 'auto', point: null }
+    this.save()
+    this.publish()
+  }
+
+  setAim(point: Vec | null, mode: 'mouse' | 'auto' = point ? 'mouse' : 'auto') {
+    if (this.destroyed || (point && (!Number.isFinite(point.x) || !Number.isFinite(point.y))))
+      return
+    if (!this.state.record.mouseAim || mode !== 'mouse' || !point)
+      this.state.aim = { mode: 'auto', point: null }
+    else if (this.state.phase === 'playing' && !this.state.paused)
+      this.state.aim = {
+        mode: 'mouse',
+        point: { x: clamp(point.x, -10000, 10000), y: clamp(point.y, -10000, 10000) },
+      }
+  }
+
+  activateAbility() {
+    if (this.destroyed || !activateAbility(this.state, this.hooks)) return false
+    this.publish()
+    return true
+  }
+
+  buyUpgrade(id: ShopItemId) {
+    if (this.destroyed || !buyShopUpgrade(this.state, this.hooks, id)) return false
+    this.simulation.weapons.syncSatellites()
+    this.publish()
+    return true
+  }
+
+  rerollShop() {
+    if (this.destroyed || !rerollShop(this.state, this.hooks)) return false
+    this.publish()
+    return true
+  }
+
+  continueWave() {
+    if (this.destroyed || !continueWave(this.state)) return false
     this.publish()
     return true
   }
@@ -166,11 +254,22 @@ export class RushStore implements RushPort {
       killCount: s.kills,
       wave: s.wave.index,
       seconds: Math.floor(s.clock),
+      difficulty: s.difficulty,
     }
     s.record.coins = Math.min(1_000_000_000, s.record.coins + s.settlement.coins)
     s.record.totalCoins = Math.min(1_000_000_000, s.record.totalCoins + s.settlement.coins)
     s.record.runs = Math.min(1_000_000_000, s.record.runs + 1)
     s.record.lastRun = structuredClone(s.settlement)
+    if (s.phase === 'won') {
+      s.record.difficultyWins[s.difficulty] = Math.min(
+        1_000_000_000,
+        s.record.difficultyWins[s.difficulty] + 1,
+      )
+      s.record.highestDifficulty = Math.max(
+        s.record.highestDifficulty,
+        Math.min(3, s.difficulty + 1),
+      ) as Difficulty
+    }
     this.save()
   }
 
