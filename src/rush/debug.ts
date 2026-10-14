@@ -76,29 +76,41 @@ export function attachRushDebug(store: RushPort, game: RushGame) {
       const duration = Math.min(5000, Math.max(0, Number(milliseconds) || 0))
       const start = performance.now()
       return new Promise<object[]>((resolve) => {
+        let deadline = 0
         const stop = () => {
           if (recording) cancelAnimationFrame(recording.id)
+          window.clearTimeout(deadline)
           recording = null
           resolve(rows)
         }
         const sample = (now: number) => {
-          const state = store.state
-          const presented = scene.getState()
-          rows.push({
-            elapsed: now - start,
-            frame: game.frames,
-            clock: state.clock,
-            phase: state.phase,
-            paused: state.paused,
-            player: { ...state.player },
-            presentedPlayer: { ...presented.player },
-            screen: game.scene.worldToScreen(presented.player),
-            gait: game.scene.gaitSnapshot(),
-          })
+          try {
+            const state = store.state
+            const presented = scene.getState()
+            rows.push({
+              elapsed: now - start,
+              frame: game.frames,
+              clock: state.clock,
+              phase: state.phase,
+              paused: state.paused,
+              player: { ...state.player },
+              presentedPlayer: { ...presented.player },
+              screen: game.scene.worldToScreen(presented.player),
+              gait: game.scene.gaitSnapshot(),
+            })
+          } catch (error) {
+            rows.push({ error: String(error), elapsed: now - start })
+            stop()
+            return
+          }
           if (now - start >= duration || rows.length >= 600) stop()
           else if (recording) recording.id = requestAnimationFrame(sample)
         }
         recording = { id: requestAnimationFrame(sample), stop }
+        deadline = window.setTimeout(() => {
+          rows.push({ error: 'RAF sampling deadline exceeded', hidden: document.hidden })
+          stop()
+        }, duration + 1500)
       })
     },
     // 仅推进模型；实际渲染另用 trace 观察

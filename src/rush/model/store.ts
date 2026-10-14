@@ -1,10 +1,11 @@
-import type { FrameId, RushEvent, RushPort, RushState, Vec } from '../types'
+import type { FrameId, MetaUpgradeId, RushEvent, RushPort, RushState, Vec } from '../types'
 import { clamp, makeRandom } from './math'
 import type { Hooks } from './math'
 import { readRecord, writeRecord } from './persistence'
 import type { StoragePort } from './persistence'
 import { Simulation } from './simulation'
 import { createState } from './state'
+import { metaPrice, metaUpgrades, previewReward } from './meta/progression'
 
 export class RushStore implements RushPort {
   state: RushState
@@ -32,6 +33,9 @@ export class RushStore implements RushPort {
       record.selected,
       { x: 390, y: 700 },
     )
+    this.state.phase = record.visited ? 'menu' : 'playing'
+    record.visited = true
+    writeRecord(record, this.storage)
     this.simulation = this.makeSimulation()
     this.snapshot = structuredClone(this.state)
   }
@@ -42,8 +46,9 @@ export class RushStore implements RushPort {
       id: () => ++this.nextId,
       random,
       emit: (event) => {
+        if (event.type === 'run-end') this.settle()
         for (const fn of this.events) fn(event)
-        if (event.type === 'boss-down' || event.type === 'run-end') this.save()
+        if (event.type === 'boss-down') this.save()
       },
     }
     return new Simulation(this.state, hooks)
@@ -102,7 +107,13 @@ export class RushStore implements RushPort {
   }
 
   setPaused(paused: boolean) {
-    if (this.destroyed || this.state.phase === 'dead' || this.state.phase === 'won') return
+    if (
+      this.destroyed ||
+      this.state.phase === 'menu' ||
+      this.state.phase === 'dead' ||
+      this.state.phase === 'won'
+    )
+      return
     this.state.paused = paused
     this.state.move = { x: 0, y: 0 }
     this.publish()
@@ -123,11 +134,52 @@ export class RushStore implements RushPort {
     return true
   }
 
+  purchaseMeta(id: MetaUpgradeId) {
+    const s = this.state
+    if (this.destroyed || !['menu', 'dead', 'won'].includes(s.phase)) return false
+    const def = metaUpgrades.find((entry) => entry.id === id)
+    if (!def || s.record.meta[id] >= def.maxLevel) return false
+    const price = metaPrice(s.record, id)
+    if (price <= 0 || s.record.coins < price) return false
+    s.record.coins -= price
+    s.record.meta[id]++
+    this.save()
+    this.publish()
+    return true
+  }
+
+  openMenu() {
+    if (this.destroyed || (this.state.phase !== 'dead' && this.state.phase !== 'won')) return
+    this.state.phase = 'menu'
+    this.state.paused = false
+    this.state.move = { x: 0, y: 0 }
+    this.publish()
+  }
+
+  // 单局只到账一次，重载只读取上局结算
+  private settle() {
+    const s = this.state
+    if (s.settlement || (s.phase !== 'dead' && s.phase !== 'won')) return
+    s.settlement = {
+      ...previewReward(s),
+      outcome: s.phase,
+      killCount: s.kills,
+      wave: s.wave.index,
+      seconds: Math.floor(s.clock),
+    }
+    s.record.coins = Math.min(1_000_000_000, s.record.coins + s.settlement.coins)
+    s.record.totalCoins = Math.min(1_000_000_000, s.record.totalCoins + s.settlement.coins)
+    s.record.runs = Math.min(1_000_000_000, s.record.runs + 1)
+    s.record.lastRun = structuredClone(s.settlement)
+    this.save()
+  }
+
   restart(frame: FrameId = this.state.record.selected) {
     if (this.destroyed || !this.state.record.unlocked.includes(frame)) return
     this.save()
     const record = this.state.record
     record.selected = frame
+    writeRecord(record, this.storage)
     this.state = createState(
       record,
       this.state.runId + 1,
@@ -142,8 +194,10 @@ export class RushStore implements RushPort {
 
   save() {
     const s = this.state
-    s.record.bestTime = Math.max(s.record.bestTime, s.clock)
-    s.record.bestKills = Math.max(s.record.bestKills, s.kills)
+    if (s.phase !== 'menu') {
+      s.record.bestTime = Math.max(s.record.bestTime, s.clock)
+      s.record.bestKills = Math.max(s.record.bestKills, s.kills)
+    }
     writeRecord(s.record, this.storage)
   }
 

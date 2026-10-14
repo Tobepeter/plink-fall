@@ -2,6 +2,7 @@ import type { EnemyKind, Foe, FrameId, RushRecord, RushState, Vec } from '../typ
 import { enemyStats } from './data'
 import type { Hooks } from './math'
 import { createWave } from './campaign/waves'
+import { metaStats } from './meta/progression'
 
 export function foe(kind: EnemyKind, point: Vec, tier: number, hooks: Hooks): Foe {
   const stats = enemyStats[kind]
@@ -33,7 +34,7 @@ export function createState(
   frame: FrameId,
   viewport: Vec,
 ): RushState {
-  const hp = frame === 'warden' ? 5 : frame === 'spark' ? 3 : 4
+  const hp = (frame === 'warden' ? 5 : frame === 'spark' ? 3 : 4) + metaStats(record.meta).armor
   return {
     phase: 'playing',
     paused: false,
@@ -79,6 +80,8 @@ export function createState(
     move: { x: 0, y: 0 },
     viewport: { ...viewport },
     record,
+    runMeta: { ...record.meta },
+    settlement: null,
     notice: '移动躲避 · 自动开火',
   }
 }

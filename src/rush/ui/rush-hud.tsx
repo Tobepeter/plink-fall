@@ -56,7 +56,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           aria-valuenow={state.player.hp}
         >
           <ControlGlyph id="armor" />
-          <span className="rush-health-cells">
+          <span className={`rush-health-cells${state.player.maxHp > 6 ? ' is-dense' : ''}`}>
             {Array.from({ length: state.player.maxHp }, (_, index) => (
               <i className={index < state.player.hp ? 'is-filled' : ''} key={index} />
             ))}

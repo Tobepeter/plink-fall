@@ -1,0 +1,201 @@
+.rush-hangar {
+  text-align: center;
+}
+.rush-hangar-caption > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--rush-mint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+.rush-hangar-caption > span::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  background: var(--rush-mint);
+  box-shadow: 0 0 10px #8ce6c255;
+}
+.rush-hangar-caption h1 {
+  margin: 10px 0 0;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+.rush-hangar-stage {
+  position: relative;
+  height: clamp(180px, 31vh, 290px);
+  margin: 9px auto 0;
+  width: min(100%, 350px);
+}
+.rush-hangar-radar {
+  position: absolute;
+  width: 215px;
+  height: 215px;
+  left: 50%;
+  top: 47%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #8ce6c21a;
+  border-radius: 50%;
+}
+.rush-hangar-radar > i {
+  position: absolute;
+  inset: 15px;
+  border: 1px dashed #8ce6c220;
+  border-radius: 50%;
+}
+.rush-hangar-radar > i:nth-child(2) {
+  inset: 38px;
+  border-style: solid;
+  opacity: 0.5;
+}
+.rush-hangar-radar > i:nth-child(3) {
+  inset: -10px;
+  border: 2px solid transparent;
+  border-top-color: #8ce6c24a;
+  border-bottom-color: #8ce6c24a;
+  animation: rush-hangar-orbit 13s linear infinite;
+}
+.rush-hangar-axis {
+  position: absolute;
+  top: 38%;
+  height: 70px;
+  width: 12px;
+  border-block: 1px solid #8ce6c271;
+  opacity: 0.7;
+}
+.rush-hangar-axis.is-left {
+  left: 30px;
+  border-left: 1px solid #8ce6c24a;
+}
+.rush-hangar-axis.is-right {
+  right: 30px;
+  border-right: 1px solid #8ce6c24a;
+}
+.rush-hangar-hero {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+}
+.rush-hangar-hero .rush-frame-glyph {
+  --frame-width: 148px;
+  width: 148px;
+  height: 155px;
+}
+.rush-hangar-hero .rush-frame-glyph > span {
+  filter: drop-shadow(0 9px 2px #050f1480);
+}
+.rush-hangar-hero .rush-frame-glyph > i {
+  display: none;
+}
+.rush-hangar-platform {
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  width: 225px;
+  height: 42px;
+  transform: translateX(-50%);
+  background: #101e25;
+  border-radius: 50%;
+  box-shadow:
+    0 8px #0b1720,
+    0 10px 0 1px #385649;
+}
+.rush-hangar-platform > i {
+  position: absolute;
+  inset: 5px 17px;
+  border: 1px solid #8ce6c276;
+  border-radius: 50%;
+}
+.rush-hangar-platform > i:nth-child(2) {
+  inset: 11px 36px;
+  border-color: var(--hangar-color);
+  box-shadow: 0 0 14px #8ce6c21c;
+}
+.rush-hangar-platform > i:nth-child(3) {
+  width: 22px;
+  height: 3px;
+  inset: auto;
+  bottom: -8px;
+  left: 102px;
+  background: var(--hangar-color);
+  border: 0;
+  box-shadow: 0 0 8px #8ce6c233;
+}
+.rush-hangar-serial {
+  position: absolute;
+  right: 20px;
+  bottom: 22%;
+  color: #a0b8a2;
+  font:
+    600 11px 'SFMono-Regular',
+    Consolas,
+    monospace;
+  letter-spacing: 2px;
+}
+.rush-hangar-name {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 11px;
+  margin: 2px 0 16px;
+}
+.rush-hangar-name b {
+  font-size: 17px;
+  letter-spacing: 2px;
+}
+.rush-hangar-name span {
+  color: #99b0a3;
+  font-size: 10px;
+}
+.rush-hangar .rush-frames {
+  justify-content: center;
+  gap: 15px;
+  margin: 0;
+}
+.rush-hangar .rush-frame {
+  width: 94px;
+  min-height: 103px;
+  padding-bottom: 8px;
+}
+.rush-hangar .rush-frames .rush-frame-glyph {
+  --frame-width: 42px;
+  width: 42px;
+  height: 44px;
+}
+.rush-hangar .rush-frames .rush-frame-glyph > i {
+  left: 17px;
+  bottom: 0;
+  width: 6px;
+  height: 6px;
+}
+.rush-hangar .rush-frames .rush-frame-glyph.is-warden > i {
+  width: 11px;
+  left: 14px;
+}
+.rush-hangar .rush-frames .rush-frame-glyph.is-spark > i {
+  width: 4px;
+  height: 9px;
+}
+.rush-hangar .rush-frame > b {
+  font-size: 11px;
+  margin-top: 4px;
+}
+.rush-hangar .rush-frame > small {
+  font-size: 8px;
+  min-height: 23px;
+  margin-top: 4px;
+}
+.rush-hangar .rush-frame.is-selected::after {
+  left: 17px;
+  right: 17px;
+  height: 2px;
+}
+@keyframes rush-hangar-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}

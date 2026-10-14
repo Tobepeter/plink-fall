@@ -14,6 +14,7 @@ export class RushGame {
   private shell: HTMLElement | null = null
   private observer: ResizeObserver | null = null
   private unsubscribe: (() => void) | null = null
+  private unwatch: (() => void) | null = null
   private keys = new Set<string>()
   private stick: { id: number; origin: Vec; current: Vec } | null = null
   private raf = 0
@@ -23,6 +24,7 @@ export class RushGame {
   private lastImpact = 0
   private initialized = false
   private disposed = false
+  private inFrame = false
   frames = 0
 
   constructor(readonly store: RushPort) {
@@ -84,6 +86,7 @@ export class RushGame {
       this.impact(event)
       if (event.type === 'level' || event.type === 'run-end') this.cancelInput()
     })
+    this.unwatch = this.store.subscribe(this.wake)
     this.canvas.addEventListener('pointerdown', this.pointerDown)
     this.canvas.addEventListener('pointermove', this.pointerMove)
     this.canvas.addEventListener('pointerup', this.pointerUp)
@@ -97,13 +100,32 @@ export class RushGame {
     window.addEventListener('pagehide', this.save)
     document.addEventListener('visibilitychange', this.visibility)
     this.last = performance.now()
-    if (!document.hidden && document.activeElement === document.body)
+    if (
+      !document.hidden &&
+      this.store.state.phase !== 'menu' &&
+      document.activeElement === document.body
+    )
       this.canvas.focus({ preventScroll: true })
-    if (!document.hidden) this.raf = requestAnimationFrame(this.tick)
+    this.wake()
+  }
+
+  // 整备舱不跑战斗 RAF，开局由模型发布唤醒
+  private wake = () => {
+    if (this.disposed || document.hidden || this.inFrame || this.raf) return
+    if (this.store.state.phase === 'menu') {
+      this.sound.suspend()
+      return
+    }
+    this.last = performance.now()
+    this.accumulator = 0
+    this.impactTime = 0
+    this.raf = requestAnimationFrame(this.tick)
   }
 
   private tick = (now: number) => {
     if (this.disposed || document.hidden) return
+    this.raf = 0
+    this.inFrame = true
     const dt = Math.min(0.12, Math.max(0, (now - this.last) / 1000))
     this.last = now
     const active = this.store.state.phase === 'playing' && !this.store.state.paused
@@ -140,7 +162,9 @@ export class RushGame {
     this.shell?.style.setProperty('--rush-player-y', player.y + 'px')
     this.app.renderer.render(this.app.stage)
     this.frames++
-    this.raf = requestAnimationFrame(this.tick)
+    this.inFrame = false
+    if (this.store.state.phase === 'menu') this.sound.suspend()
+    else this.raf = requestAnimationFrame(this.tick)
   }
 
   private direction() {
@@ -207,6 +231,7 @@ export class RushGame {
   private keyDown = (event: KeyboardEvent) => {
     const target = event.target instanceof HTMLElement ? event.target : null
     if (target?.isContentEditable || target?.closest('input, textarea, [role="textbox"]')) return
+    if (this.store.state.phase === 'menu') return
     if (event.repeat && (event.code === 'Escape' || event.code === 'Space')) return
     if (event.code === 'Escape') {
       event.preventDefault()
@@ -247,6 +272,7 @@ export class RushGame {
   private visibility = () => {
     this.cancelInput()
     cancelAnimationFrame(this.raf)
+    this.raf = 0
     if (document.hidden) {
       this.presentation.freeze(this.store.state)
       this.store.save()
@@ -257,7 +283,7 @@ export class RushGame {
     this.last = performance.now()
     this.accumulator = 0
     this.impactTime = 0
-    this.raf = requestAnimationFrame(this.tick)
+    this.wake()
   }
 
   destroy() {
@@ -267,6 +293,7 @@ export class RushGame {
     cancelAnimationFrame(this.raf)
     this.observer?.disconnect()
     this.unsubscribe?.()
+    this.unwatch?.()
     this.canvas?.removeEventListener('pointerdown', this.pointerDown)
     this.canvas?.removeEventListener('pointermove', this.pointerMove)
     this.canvas?.removeEventListener('pointerup', this.pointerUp)

@@ -26,6 +26,7 @@ export class RushScene {
   private ready = false
   private destroyed = false
   private runId = -1
+  private phase: RushState['phase'] | null = null
   private hurt = 0
   private pending: RushEvent[] = []
 
@@ -127,15 +128,18 @@ export class RushScene {
   render(dt: number) {
     if (!this.ready || this.destroyed) return
     const state = this.getState()
-    if (state.runId !== this.runId) {
+    if (state.runId !== this.runId || (state.phase === 'menu' && this.phase !== 'menu')) {
       this.runId = state.runId
       this.actors?.reset()
       this.effects.reset()
       this.motion.reset()
-      this.motion.launch()
+      if (state.phase === 'playing') this.motion.launch()
       this.camera.reset(state)
       this.hurt = 0
     }
+    this.phase = state.phase
+    this.view.visible = state.phase !== 'menu'
+    if (state.phase === 'menu') return
     const active = state.phase === 'playing' && !state.paused
     const realDt = Math.min(0.1, Math.max(0, dt))
     const effectsDt = state.paused || state.phase === 'choice' ? 0 : realDt

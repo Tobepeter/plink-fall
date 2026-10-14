@@ -3,8 +3,10 @@ import { distance, level, nearest, playerGunOrigin, toward, visible } from './ma
 import type { Hooks } from './math'
 import { blast, damageFoe } from './combat/damage'
 import { hasProtocol, interceptShots, linkArc, recallShots } from './combat/protocols'
+import { metaStats } from './meta/progression'
 
-export const dashMaxCooldown = (s: RushState) => Math.max(0.85, 1.6 - level(s, 'haste') * 0.12)
+export const dashMaxCooldown = (s: RushState) =>
+  Math.max(0.85, 1.6 - level(s, 'haste') * 0.12) * metaStats(s.runMeta).cooldown
 
 export class Weapons {
   private shotClock = 0.05
@@ -125,7 +127,10 @@ export class Weapons {
           'shot',
           level(s, 'pierce') * 0.08 + Math.floor(level(s, 'split') / 2) * 0.2,
         )
-      this.shotClock += 0.24 / (1 + level(s, 'haste') * 0.23) / (s.overdrive > 0 ? 1.9 : 1)
+      this.shotClock +=
+        (0.24 * metaStats(s.runMeta).cooldown) /
+        (1 + level(s, 'haste') * 0.23) /
+        (s.overdrive > 0 ? 1.9 : 1)
     }
     if (target && level(s, 'rocket') && this.rocketClock <= 0) {
       this.fire(origin, s.player.angle, 'rocket', 1)

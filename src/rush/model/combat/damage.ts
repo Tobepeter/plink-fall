@@ -2,6 +2,7 @@ import type { Foe, RushState, Vec } from '../../types'
 import { distance, level, toward } from '../math'
 import type { Hooks } from '../math'
 import { foe } from '../state'
+import { metaStats } from '../meta/progression'
 
 export function hurtPlayer(s: RushState, hooks: Hooks, source: Vec) {
   const p = s.player
@@ -19,7 +20,8 @@ export function hurtPlayer(s: RushState, hooks: Hooks, source: Vec) {
 }
 
 export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
-  if (e.hp <= 0) return
+  if (e.hp <= 0 || s.phase === 'menu' || s.phase === 'dead' || s.phase === 'won') return
+  amount *= metaStats(s.runMeta).damage
   e.hp = Math.max(0, e.hp - amount)
   e.hurt = 0.12
   if (e.kind !== 'boss') {
@@ -77,7 +79,7 @@ export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
 }
 
 export function endRun(s: RushState, hooks: Hooks, won: boolean) {
-  if (s.phase === 'dead' || s.phase === 'won') return
+  if (s.phase !== 'playing' && s.phase !== 'choice') return
   s.phase = won ? 'won' : 'dead'
   s.move = { x: 0, y: 0 }
   s.record.bestTime = Math.max(s.record.bestTime, s.clock)

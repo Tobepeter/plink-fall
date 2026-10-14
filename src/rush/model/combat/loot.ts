@@ -1,9 +1,10 @@
 import type { RushState } from '../../types'
 import { distance, level, toward } from '../math'
 import type { Hooks } from '../math'
+import { metaStats } from '../meta/progression'
 
 export function advanceLoot(s: RushState, hooks: Hooks, dt: number) {
-  const attraction = 185 + level(s, 'magnet') * 115
+  const attraction = 185 + level(s, 'magnet') * 115 + metaStats(s.runMeta).pickup
   for (const l of s.loot) {
     l.age += dt
     const d = distance(l, s.player)

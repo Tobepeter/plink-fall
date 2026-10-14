@@ -5,6 +5,7 @@ export class RushSound {
   private context: AudioContext | null = null
   private output: GainNode | null = null
   private noise: AudioBuffer | null = null
+  private voices = new Map<AudioScheduledSourceNode, () => void>()
   private lastShot = 0
   private lastHit = 0
   private lastCut = 0
@@ -12,7 +13,7 @@ export class RushSound {
   private beat = 0
   constructor(private getState: () => RushState) {}
   unlock() {
-    if (document.hidden || this.getState().record.muted) return
+    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
     try {
       const Constructor =
         window.AudioContext ??
@@ -37,7 +38,7 @@ export class RushSound {
     }
   }
   resume() {
-    if (document.hidden || this.getState().record.muted) return
+    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
     if (this.output) this.output.gain.value = 0.18
     if (this.context?.state === 'suspended') {
       void this.context.resume().catch(() => {})
@@ -45,13 +46,15 @@ export class RushSound {
     }
   }
   suspend() {
+    if (this.getState().phase === 'menu') this.stopVoices()
     if (this.output) this.output.gain.value = 0
     if (this.context?.state === 'running') void this.context.suspend().catch(() => {})
   }
   update() {
     const s = this.getState()
     if (this.output)
-      this.output.gain.value = document.hidden || s.record.muted || s.paused ? 0 : 0.18
+      this.output.gain.value =
+        document.hidden || s.record.muted || s.paused || s.phase === 'menu' ? 0 : 0.18
     if (
       document.hidden ||
       s.record.muted ||
@@ -100,9 +103,7 @@ export class RushSound {
       this.tone(950, now + 0.025, 0.08, 0.1, 'triangle', 510)
     } else if (event.type === 'protocol' && event.amount === 1) {
       const notes = [523, 659, 784, 1047]
-      notes.forEach((note, i) =>
-        this.tone(note, now + i * 0.045, 0.13, 0.14, 'triangle'),
-      )
+      notes.forEach((note, i) => this.tone(note, now + i * 0.045, 0.13, 0.14, 'triangle'))
     } else if (event.type === 'wave-clear') {
       this.tone(392, now, 0.18, 0.12, 'triangle')
       this.tone(523, now + 0.075, 0.18, 0.1, 'triangle')
@@ -145,10 +146,7 @@ export class RushSound {
     gain.gain.linearRampToValueAtTime(volume, time + 0.004)
     gain.gain.exponentialRampToValueAtTime(0.001, time + duration)
     oscillator.connect(gain).connect(this.output)
-    oscillator.onended = () => {
-      oscillator.disconnect()
-      gain.disconnect()
-    }
+    this.trackVoice(oscillator, [gain])
     oscillator.start(time)
     oscillator.stop(time + duration + 0.015)
   }
@@ -163,15 +161,34 @@ export class RushSound {
     gain.gain.setValueAtTime(volume, time)
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.09)
     source.connect(filter).connect(gain).connect(this.output)
-    source.onended = () => {
-      source.disconnect()
-      filter.disconnect()
-      gain.disconnect()
-    }
+    this.trackVoice(source, [filter, gain])
     source.start(time)
     source.stop(time + 0.12)
   }
+  private trackVoice(source: AudioScheduledSourceNode, nodes: AudioNode[]) {
+    const cleanup = () => {
+      if (!this.voices.delete(source)) return
+      source.onended = null
+      source.disconnect()
+      for (const node of nodes) node.disconnect()
+    }
+    this.voices.set(source, cleanup)
+    source.onended = cleanup
+  }
+  // 整备前清掉已排程音符，不让旧结算声在新局恢复
+  private stopVoices() {
+    for (const [source, cleanup] of [...this.voices]) {
+      source.onended = null
+      try {
+        source.stop()
+      } catch {
+        /* 已停止的音源仍需断开 */
+      }
+      cleanup()
+    }
+  }
   destroy() {
+    this.stopVoices()
     if (this.context) void this.context.close().catch(() => {})
     this.context = null
     this.output = null

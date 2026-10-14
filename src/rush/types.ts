@@ -13,7 +13,23 @@ export type UpgradeId =
   | 'haste'
   | 'vital'
   | 'magnet'
-export type RushPhase = 'playing' | 'choice' | 'dead' | 'won'
+export type RushPhase = 'menu' | 'playing' | 'choice' | 'dead' | 'won'
+export type MetaUpgradeId = 'firepower' | 'armor' | 'capacitor' | 'magnet'
+export type MetaLevels = Record<MetaUpgradeId, number>
+export interface RewardParts {
+  base: number
+  kills: number
+  waves: number
+  bosses: number
+  victory: number
+  coins: number
+}
+export interface RunSettlement extends RewardParts {
+  outcome: 'dead' | 'won'
+  killCount: number
+  wave: number
+  seconds: number
+}
 export type ProtocolId = 'circuit' | 'frostburst' | 'returnfire'
 export interface WaveState {
   index: number
@@ -107,6 +123,12 @@ export interface RushRecord {
   unlocked: FrameId[]
   selected: FrameId
   muted: boolean
+  visited: boolean
+  coins: number
+  totalCoins: number
+  runs: number
+  meta: MetaLevels
+  lastRun: RunSettlement | null
 }
 export interface RushState {
   phase: RushPhase
@@ -137,6 +159,8 @@ export interface RushState {
   move: Vec
   viewport: Vec
   record: RushRecord
+  runMeta: MetaLevels
+  settlement: RunSettlement | null
   notice: string
 }
 export interface UpgradeDef {
@@ -189,6 +213,8 @@ export interface RushPort {
   setPaused(paused: boolean): void
   toggleSound(): void
   selectFrame(frame: FrameId): boolean
+  purchaseMeta(id: MetaUpgradeId): boolean
+  openMenu(): void
   restart(frame?: FrameId): void
   save(): void
   destroy(): void
