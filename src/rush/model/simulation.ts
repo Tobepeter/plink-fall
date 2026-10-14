@@ -9,11 +9,7 @@ import { advanceShots } from './combat/projectiles'
 import { keepInArena } from './arena'
 import { frameChoices, frameStats } from './frames'
 import { applyUpgrade } from './progression'
-import {
-  counterFire,
-  interceptShots,
-  protocolDefinitions,
-} from './combat/protocols'
+import { counterFire, interceptShots, protocolDefinitions } from './combat/protocols'
 
 export class Simulation {
   readonly enemies: EnemyDirector
@@ -67,13 +63,17 @@ export class Simulation {
 
   private progression() {
     const s = this.s
-    if (s.phase !== 'playing' || s.xp < s.nextXp || s.clock < 3.3 || s.clock - this.lastChoice < 7)
+    if (
+      s.phase !== 'playing' ||
+      s.choices.length > 0 ||
+      s.xp < s.nextXp ||
+      s.clock < 3.3 ||
+      s.clock - this.lastChoice < 7
+    )
       return
-    const choices = s.level === 1 ? frameChoices(s) : this.rollChoices()
+    const first = s.level === 1 ? frameChoices(s) : []
+    const choices = first.length ? first : this.rollChoices()
     if (!choices.length) return
-    s.phase = 'choice'
-    s.move = { x: 0, y: 0 }
-    s.player.vx = s.player.vy = 0
     s.choices = choices
     this.lastChoice = s.clock
     this.hooks.emit({ type: 'level', ...s.player, amount: s.level + 1 })
@@ -100,26 +100,16 @@ export class Simulation {
 
   choose(id: UpgradeId) {
     const s = this.s
-    if (s.phase !== 'choice' || s.paused || !s.choices.includes(id)) return false
+    if (s.phase !== 'playing' || s.paused || !s.choices.includes(id) || s.xp < s.nextXp)
+      return false
     const def = upgrades.find((item) => item.id === id)
     if (!def || level(s, id) >= def.maxLevel) return false
     s.xp -= s.nextXp
     s.level++
     s.nextXp = Math.round(4 + s.level * s.level * 0.9)
-    s.phase = 'playing'
     s.choices = []
-    s.move = { x: 0, y: 0 }
-    s.player.invulnerable = Math.max(s.player.invulnerable, 0.6)
-    s.shots = s.shots.filter((shot) => shot.side === 'player' || distance(s.player, shot) > 180)
-    for (const e of s.enemies) {
-      if (e.hp <= 0 || distance(s.player, e) >= 110 + e.radius) continue
-      const a =
-        distance(s.player, e) < 1 ? e.id * 2.4 : Math.atan2(e.y - s.player.y, e.x - s.player.x)
-      e.x = s.player.x + Math.cos(a) * (110 + e.radius)
-      e.y = s.player.y + Math.sin(a) * (110 + e.radius)
-      keepInArena(e, e.radius)
-      e.slow = Math.max(e.slow, 0.4)
-    }
+    this.lastChoice = s.clock
+    s.player.invulnerable = Math.max(s.player.invulnerable, 0.25)
     applyUpgrade(s, this.hooks, id)
     this.weapons.syncSatellites()
     return true
@@ -143,7 +133,6 @@ export class Simulation {
     this.movement(dt)
     this.enemies.update(dt)
     if (s.phase !== 'playing') return
-    if (s.wave.phase === 'breather') return
     this.weapons.update(dt)
     advanceShots(s, this.hooks, dt)
     advanceLoot(s, this.hooks, dt)

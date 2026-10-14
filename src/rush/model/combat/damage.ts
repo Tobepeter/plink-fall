@@ -41,7 +41,6 @@ export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
   s.combo++
   s.comboTimer = 1.6
   s.charge = Math.min(100, s.charge + frameCharge(s, 7 + Math.min(s.combo, 10) * 0.5))
-  s.scrap += Number(s.kills % 3 === 0) + (e.kind === 'boss' ? 6 : e.kind === 'brute' ? 1 : 0)
   hooks.emit({ type: 'kill', ...e, kind: e.kind, power: e.radius / 20 })
   const xp = e.kind === 'boss' ? 12 : e.kind === 'brute' ? 4 : e.kind === 'splitter' ? 2 : 1
   s.loot.push({
@@ -85,9 +84,10 @@ export function damageFoe(s: RushState, hooks: Hooks, e: Foe, amount: number) {
 }
 
 export function endRun(s: RushState, hooks: Hooks, won: boolean) {
-  if (s.phase !== 'playing' && s.phase !== 'choice') return
+  if (s.phase !== 'playing') return
   s.phase = won ? 'won' : 'dead'
   s.move = { x: 0, y: 0 }
+  s.choices = []
   s.record.bestTime = Math.max(s.record.bestTime, s.clock)
   s.record.bestKills = Math.max(s.record.bestKills, s.kills)
   if (won) {

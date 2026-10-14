@@ -153,7 +153,7 @@ export class Weapons {
   dash() {
     const s = this.s
     const p = s.player
-    if (s.phase !== 'playing' || s.paused || s.wave.phase !== 'combat' || p.dashCooldown > 0)
+    if (s.phase !== 'playing' || s.paused || p.dashCooldown > 0)
       return false
     p.dashTime = 0.2
     p.dashCooldown = dashMaxCooldown(s)

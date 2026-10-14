@@ -17,6 +17,9 @@
   margin-inline: 1px;
   transform: rotate(45deg);
 }
+.rush-wave-track > i.is-boss:not(:last-child) {
+  margin-right: 5px;
+}
 .rush-wave-track > i.is-cleared {
   background: var(--rush-mint);
 }
@@ -28,6 +31,32 @@
   font-style: normal;
   font-size: 8px;
   margin-left: -3px;
+}
+.rush-wave-name {
+  animation: rush-appear 0.12s ease-out;
+}
+.rush-wave-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #8fa99b;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.rush-wave-next > b {
+  color: var(--rush-brass);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.rush-wave-next.is-incoming {
+  color: var(--rush-mint);
+}
+.rush-hud .rush-overdrive {
+  top: max(124px, calc(env(safe-area-inset-top) + 113px));
+}
+.rush-hud .rush-boss ~ .rush-overdrive {
+  top: max(153px, calc(env(safe-area-inset-top) + 142px));
 }
 .rush-ability {
   position: absolute;
@@ -175,18 +204,6 @@
 .rush-hud .rush-protocols {
   bottom: max(145px, calc(env(safe-area-inset-bottom) + 136px));
 }
-.rush-kills .rush-scrap {
-  width: 16px;
-  height: 16px;
-  margin-left: 7px;
-}
-.rush-kills > small {
-  font:
-    800 12px 'SFMono-Regular',
-    Consolas,
-    monospace;
-  color: var(--rush-mint);
-}
 @media (max-width: 600px) {
   .rush-ability {
     right: max(122px, calc(env(safe-area-inset-right) + 112px));
@@ -205,13 +222,9 @@
   .rush-wave-track > i {
     width: 7px;
   }
-  .rush-kills .rush-scrap {
-    width: 13px;
-    height: 13px;
-    margin-left: 5px;
-  }
-  .rush-kills > small {
-    font-size: 10px;
+  .rush-wave-next {
+    font-size: 8px;
+    gap: 4px;
   }
 }
 @media (pointer: coarse) {
@@ -220,6 +233,9 @@
   }
 }
 @media (max-height: 500px) {
+  .rush-hud .rush-boss {
+    top: 104px;
+  }
   .rush-ability {
     bottom: max(15px, calc(env(safe-area-inset-bottom) + 8px));
     right: max(122px, calc(env(safe-area-inset-right) + 112px));

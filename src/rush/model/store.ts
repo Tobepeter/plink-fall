@@ -5,7 +5,6 @@ import type {
   RushEvent,
   RushPort,
   RushState,
-  ShopItemId,
   Vec,
 } from '../types'
 import { clamp, makeRandom } from './math'
@@ -17,7 +16,6 @@ import { createState } from './state'
 import { metaPrice, metaUpgrades, previewReward } from './meta/progression'
 import { frameStats } from './frames'
 import { activateAbility } from './combat/frame-skills'
-import { buyShopUpgrade, continueWave, rerollShop } from './campaign/shop'
 
 export class RushStore implements RushPort {
   state: RushState
@@ -123,7 +121,6 @@ export class RushStore implements RushPort {
     if (
       this.destroyed ||
       this.state.phase === 'menu' ||
-      this.state.phase === 'shop' ||
       this.state.phase === 'dead' ||
       this.state.phase === 'won'
     )
@@ -180,6 +177,7 @@ export class RushStore implements RushPort {
   setMouseAim(enabled: boolean) {
     if (this.destroyed || typeof enabled !== 'boolean') return
     this.state.record.mouseAim = enabled
+    this.state.record.aimVersion = 1
     this.state.aim = { mode: 'auto', point: null }
     this.save()
     this.publish()
@@ -203,25 +201,6 @@ export class RushStore implements RushPort {
     return true
   }
 
-  buyUpgrade(id: ShopItemId) {
-    if (this.destroyed || !buyShopUpgrade(this.state, this.hooks, id)) return false
-    this.simulation.weapons.syncSatellites()
-    this.publish()
-    return true
-  }
-
-  rerollShop() {
-    if (this.destroyed || !rerollShop(this.state, this.hooks)) return false
-    this.publish()
-    return true
-  }
-
-  continueWave() {
-    if (this.destroyed || !continueWave(this.state)) return false
-    this.publish()
-    return true
-  }
-
   purchaseMeta(id: MetaUpgradeId) {
     const s = this.state
     if (this.destroyed || !['menu', 'dead', 'won'].includes(s.phase)) return false
@@ -241,6 +220,7 @@ export class RushStore implements RushPort {
     this.state.phase = 'menu'
     this.state.paused = false
     this.state.move = { x: 0, y: 0 }
+    this.state.choices = []
     this.publish()
   }
 

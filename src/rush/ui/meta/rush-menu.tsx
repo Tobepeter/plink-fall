@@ -61,8 +61,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
       <div className="rush-menu-body">
         <div className="rush-hangar">
           <div className="rush-hangar-caption">
-            <span>机体已就绪</span>
-            <h1>再一次，冲破封锁</h1>
+            <h1>选择机体</h1>
           </div>
           <div
             className={`rush-hangar-stage is-${frame.id}`}
@@ -104,7 +103,6 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
         <div className="rush-workbench">
           <div className="rush-workbench-title">
             <span>永久强化</span>
-            <small>装进机体，下局更强</small>
             <i />
           </div>
           <div className="rush-meta-upgrades" aria-label="永久强化">
@@ -164,11 +162,11 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
             {purchase
               ? `${metaUpgrades.find((item) => item.id === purchase.id)!.name}提升至 ${purchase.level} 级`
               : record.lastRun
-                ? `上次带回 ${record.lastRun.coins} 金币，倒下也会变强`
-                : '击败敌人 · 带回金币 · 强化再战'}
+                ? `上局 +${record.lastRun.coins} 金币`
+                : ''}
           </p>
           <div className="rush-menu-difficulty" aria-label="选择封锁星级">
-            <span>封锁强度</span>
+            <span>难度</span>
             <div className="rush-star-options">
               {difficultyDefinitions.map((item) => (
                 <button
@@ -187,8 +185,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
             <small>金币 ×{difficulty.rewardMultiplier}</small>
           </div>
           <p className="rush-difficulty-hint">
-            {difficulty.name} ·{' '}
-            {record.highestDifficulty === 3 ? '全部星级已解锁' : '通关当前星级开启下一星'}
+            {record.highestDifficulty === 3 ? '星级已全部解锁' : '通关解锁下一星'}
           </p>
           <div className="rush-menu-records" aria-label="累计战绩">
             <span>
@@ -207,15 +204,11 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
         </div>
       </div>
       <footer className="rush-menu-bottom">
-        <span>
-          <i /> 九波封锁 · 三次首领战
-        </span>
         <button className="rush-start" onClick={props.start}>
           <ControlGlyph id="play" />
           <b>开始突围</b>
           <span>→</span>
         </button>
-        <small>自动射击 · 移动 / 冲刺 / 机体技能</small>
       </footer>
     </section>
   )

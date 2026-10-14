@@ -5,7 +5,7 @@ import { upgrades } from './data'
 import { blast } from './combat/damage'
 import { activeProtocols } from './combat/protocols'
 
-// 经验选装与零件强化共用同一真实技能升级
+// 经验选装与真实技能升级
 export function applyUpgrade(s: RushState, hooks: Hooks, id: UpgradeId) {
   const def = upgrades.find((item) => item.id === id)
   if (!def || level(s, id) >= def.maxLevel) return false

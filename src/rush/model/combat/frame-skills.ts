@@ -6,8 +6,7 @@ import { blast, damageFoe } from './damage'
 
 // 独立主动技能，保留原冲刺
 export function activateAbility(s: RushState, hooks: Hooks) {
-  if (s.phase !== 'playing' || s.paused || s.wave.phase !== 'combat' || s.abilityCooldown > 0)
-    return false
+  if (s.phase !== 'playing' || s.paused || s.abilityCooldown > 0) return false
   const def = frameStats[s.player.frame]
   s.abilityCooldown = def.abilityCooldown
   s.abilityActive = def.abilityDuration

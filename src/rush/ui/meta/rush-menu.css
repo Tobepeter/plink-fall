@@ -172,3 +172,65 @@
 .rush-start:active {
   transform: translateY(1px);
 }
+.rush-menu .rush-menu-bottom {
+  justify-content: center;
+}
+.rush-menu .rush-start {
+  width: min(100%, 360px);
+  min-height: 76px;
+}
+.rush-menu .rush-start > b {
+  font-size: 25px;
+  letter-spacing: 3px;
+}
+.rush-menu .rush-start > .rush-control-glyph {
+  width: 27px;
+  height: 27px;
+}
+.rush-menu .rush-hangar-caption h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #afcbb5;
+}
+.rush-menu .rush-menu-brand {
+  font-size: 22px;
+}
+.rush-menu .rush-workbench-title > span {
+  font-size: 16px;
+}
+.rush-menu .rush-meta-name b {
+  font-size: 14px;
+}
+.rush-menu-feedback:empty {
+  display: none;
+}
+@media (max-width: 650px) {
+  .rush-menu .rush-start {
+    min-height: 64px;
+  }
+  .rush-menu .rush-start > b {
+    font-size: 23px;
+  }
+  .rush-menu .rush-menu-brand {
+    font-size: 16px;
+  }
+  .rush-menu .rush-meta-name b {
+    font-size: 12px;
+  }
+  .rush-menu .rush-hangar-caption h1 {
+    font-size: 13px;
+  }
+}
+@media (min-width: 651px) and (max-height: 620px) {
+  .rush-menu .rush-start {
+    min-height: 60px;
+  }
+  .rush-menu .rush-start > b {
+    font-size: 22px;
+  }
+  .rush-menu .rush-menu-brand {
+    font-size: 19px;
+  }
+}

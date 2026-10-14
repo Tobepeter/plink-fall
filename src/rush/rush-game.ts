@@ -61,7 +61,7 @@ export class RushGame {
     this.canvas.setAttribute('role', 'application')
     this.canvas.setAttribute(
       'aria-label',
-      '零点突围。WASD移动，鼠标方向瞄准，空格或右键冲刺，E机体技能；触屏轻推空地移动，自动瞄准',
+      '零点突围。默认自动瞄准。WASD移动，空格或右键冲刺，E机体技能；PC可在设置开启鼠标方向瞄准，触屏轻推空地移动',
     )
     stage.appendChild(this.canvas)
     this.app.stage.addChild(this.scene.view)
@@ -84,7 +84,7 @@ export class RushGame {
       this.scene.event(event, this.store.state.player)
       this.sound.event(event)
       this.impact(event)
-      if (event.type === 'level' || event.type === 'run-end' || event.type === 'wave-clear') this.cancelInput()
+      if (event.type === 'run-end') this.cancelInput()
     })
     this.unwatch = this.store.subscribe(this.wake)
     this.input = new RushInput(this.store, this.canvas, this.scene, () => this.sound.unlock())
@@ -104,7 +104,7 @@ export class RushGame {
   // 整备舱不跑战斗 RAF，开局由模型发布唤醒
   private wake = () => {
     if (this.disposed || document.hidden || this.inFrame || this.raf) return
-    if (this.store.state.phase === 'menu' || this.store.state.phase === 'shop') {
+    if (this.store.state.phase === 'menu') {
       this.sound.suspend()
       return
     }
@@ -153,7 +153,7 @@ export class RushGame {
     this.app.renderer.render(this.app.stage)
     this.frames++
     this.inFrame = false
-    if (this.store.state.phase === 'menu' || this.store.state.phase === 'shop') this.sound.suspend()
+    if (this.store.state.phase === 'menu') this.sound.suspend()
     else this.raf = requestAnimationFrame(this.tick)
   }
 

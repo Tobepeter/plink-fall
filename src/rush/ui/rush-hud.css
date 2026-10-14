@@ -177,60 +177,6 @@
 .rush-boss ~ .rush-overdrive {
   top: max(153px, calc(env(safe-area-inset-top) + 135px));
 }
-.rush-wave-banner {
-  position: absolute;
-  left: 50%;
-  top: 26%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  white-space: nowrap;
-  color: var(--rush-ivory);
-  animation: rush-wave-flash 1.4s ease-out both;
-}
-.rush-wave-banner > b {
-  font-size: 22px;
-  letter-spacing: 3px;
-}
-.rush-wave-banner > span {
-  color: var(--rush-mint);
-  font-size: 12px;
-  font-weight: 800;
-}
-.rush-wave-banner > i {
-  width: 28px;
-  height: 4px;
-  background: var(--rush-red);
-  transform: skew(-25deg);
-  animation: rush-wave-strike 0.25s ease-out both;
-}
-.rush-breather {
-  position: absolute;
-  top: max(110px, calc(env(safe-area-inset-top) + 100px));
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  white-space: nowrap;
-  color: var(--rush-mint);
-  font-size: 11px;
-  font-weight: 800;
-}
-.rush-breather > b {
-  font-variant-numeric: tabular-nums;
-  color: var(--rush-brass);
-}
-.rush-breather > small {
-  color: #afc0b9;
-  font-size: 10px;
-}
-.rush-breather > i {
-  width: 24px;
-  height: 1px;
-  background: #679488;
-}
 .rush-protocols {
   position: absolute;
   left: max(21px, calc(env(safe-area-inset-left) + 9px));
@@ -266,16 +212,6 @@
   background: #3a6f5b;
   transform: rotate(45deg);
   animation: rush-protocol-latch 0.32s ease-out both;
-}
-@keyframes rush-wave-strike {
-  from {
-    scale: 0.15 1;
-    opacity: 0;
-  }
-  to {
-    scale: 1 1;
-    opacity: 1;
-  }
 }
 @keyframes rush-protocol-seat {
   from {
@@ -319,21 +255,6 @@
 }
 .rush-shell.is-paused .rush-hud {
   z-index: 8;
-}
-@keyframes rush-wave-flash {
-  0% {
-    opacity: 0;
-    translate: 0 7px;
-  }
-  15%,
-  62% {
-    opacity: 1;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 0;
-    translate: 0 -3px;
-  }
 }
 @media (max-width: 600px) {
   .rush-vitals {
@@ -384,30 +305,13 @@
     gap: 4px;
     left: max(12px, calc(env(safe-area-inset-left) + 5px));
   }
-  .rush-wave-banner {
-    gap: 8px;
-    top: 25%;
-  }
-  .rush-wave-banner > b {
-    font-size: 19px;
-    letter-spacing: 2px;
-  }
-  .rush-wave-banner > i {
-    width: 18px;
-  }
 }
 @media (max-height: 500px) {
   .rush-clock {
     top: max(9px, env(safe-area-inset-top));
   }
-  .rush-wave-banner {
-    top: 30%;
-  }
   .rush-boss {
     top: 87px;
-  }
-  .rush-breather {
-    top: 90px;
   }
 }
 @media (max-width: 380px) {

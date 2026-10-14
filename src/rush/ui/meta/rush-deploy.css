@@ -292,7 +292,7 @@
   }
 }
 @media (pointer: coarse) {
-  .rush-aim-toggle,
+  .rush-shell .rush-aim-toggle,
   .rush-hangar-name kbd {
     display: none;
   }

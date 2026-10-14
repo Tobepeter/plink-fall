@@ -49,7 +49,7 @@
   }
 }
 @media (pointer: coarse) {
-  .rush-pause-aim {
+  .rush-shell .rush-pause-aim {
     display: none;
   }
 }

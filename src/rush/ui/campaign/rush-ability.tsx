@@ -7,11 +7,7 @@ export function RushAbility(props: { state: RushState; store: RushPort }) {
   const { state, store } = props
   const frame = frameStats[state.player.frame]
   const active = state.abilityActive > 0
-  const ready =
-    state.phase === 'playing' &&
-    state.wave.phase === 'combat' &&
-    !state.paused &&
-    state.abilityCooldown <= 0
+  const ready = state.phase === 'playing' && !state.paused && state.abilityCooldown <= 0
   const useAbility = () => {
     if (!store.activateAbility()) return
     document.querySelector<HTMLCanvasElement>('.rush-stage canvas')?.focus({ preventScroll: true })

@@ -3,10 +3,10 @@ import type { CSSProperties } from 'react'
 import type { RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
 import { activeProtocols, protocolDefinitions } from '../model/combat/protocols'
+import { waveDefinitions } from '../model/campaign/waves'
 import { ControlGlyph, WeaponGlyph, time } from './weapon-glyph'
 import { RushAbility } from './campaign/rush-ability'
 import { RushRadar } from './campaign/rush-radar'
-import { RushScrap } from './campaign/rush-scrap'
 import { RushWaveTrack } from './campaign/rush-wave-track'
 import './campaign/rush-campaign-hud.css'
 
@@ -34,7 +34,9 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
   }, [counter])
   const intercepted = counter && counter.runId === state.runId
   const breather = state.wave.phase === 'breather'
-  const remaining = Math.max(0, Math.ceil(state.wave.duration - state.wave.elapsed))
+  const remainingSeconds = Math.max(0, state.wave.duration - state.wave.elapsed)
+  const remaining = Math.ceil(remainingSeconds)
+  const nextWave = waveDefinitions[state.wave.index]
   const protocols = activeProtocols(state)
   const focusCanvas = () =>
     document.querySelector<HTMLCanvasElement>('.rush-stage canvas')?.focus({ preventScroll: true })
@@ -70,21 +72,19 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
         <span className="rush-kills" aria-label={`击败 ${state.kills} 名敌人`}>
           <ControlGlyph id="target" />
           <b>{state.kills}</b>
-          <RushScrap />
-          <small aria-label={`本局零件 ${state.scrap}`}>{state.scrap}</small>
         </span>
       </div>
       <div className={`rush-clock${breather ? ' is-breather' : ''}`}>
-        <span className="rush-wave-name">
+        <span className="rush-wave-name" key={state.wave.index}>
           第 {String(state.wave.index).padStart(2, '0')} 波 <em>/ 9</em>
           <i />
-          {breather ? '休整' : state.wave.name}
+          {breather ? '已完成' : state.wave.name}
         </span>
         <b className={state.wave.duration === 0 ? 'is-lockdown' : ''}>
-          {breather ? `${remaining}s` : state.wave.duration === 0 ? '击破封锁' : time(remaining)}
+          {breather ? time(state.clock) : state.wave.duration === 0 ? '击破封锁' : time(remaining)}
         </b>
         <span className="rush-level">
-          等级 {state.level} <i />
+          第 {state.wave.act} / 3 幕 <i /> 等级 {state.level} <i />
           {time(state.clock)}
         </span>
         <i
@@ -98,6 +98,16 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           <i style={{ transform: `scaleX(${Math.min(1, state.xp / state.nextXp)})` }} />
         </i>
         <RushWaveTrack state={state} />
+        <span className={`rush-wave-next${breather ? ' is-incoming' : ''}`}>
+          {nextWave ? (
+            <>
+              下波 · {nextWave.name}
+              {breather && <b>{remainingSeconds.toFixed(1)}s</b>}
+            </>
+          ) : (
+            '最终封锁'
+          )}
+        </span>
       </div>
       <div className="rush-settings">
         <button
@@ -117,22 +127,6 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           <ControlGlyph id={state.record.muted ? 'muted' : 'sound'} />
         </button>
       </div>
-      {playing && state.wave.elapsed < 1.4 && !breather && (
-        <span className="rush-wave-banner" key={state.wave.index}>
-          <i />
-          <b>{state.wave.name}</b>
-          <span>第 {state.wave.index} 波</span>
-          <i />
-        </span>
-      )}
-      {playing && breather && (
-        <span className="rush-breather">
-          <i />
-          补给回收 <b>{remaining}</b>
-          <small>秒后接敌</small>
-          <i />
-        </span>
-      )}
       {boss && (
         <div className="rush-boss">
           <span>封锁者 {boss.tier}</span>
@@ -186,7 +180,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           {intercepted && <b className="rush-counter-count">反击 ×{counter.amount}</b>}
         </button>
       )}
-      {state.phase === 'playing' && (
+      {state.phase === 'playing' && state.clock < 9 && state.choices.length === 0 && (
         <span className="rush-key-hint">
           <kbd>WASD</kbd> 移动 <kbd>SPACE</kbd> 截弹反击
           <kbd>E</kbd> 机体技能

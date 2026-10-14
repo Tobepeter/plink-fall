@@ -6,7 +6,6 @@ import { createWave, isBossWave, waveDefinitions } from './waves'
 import { enemyStats } from '../data'
 import { enemySpawnPoint } from '../enemies/spawn'
 import { difficultyStats } from './difficulty'
-import { openWaveShop } from './shop'
 
 // 有限编队与波间喘息
 export class WaveDirector {
@@ -82,23 +81,10 @@ export class WaveDirector {
     const s = this.s
     s.wave.phase = 'breather'
     s.wave.elapsed = 0
-    s.wave.duration = 2.5
+    s.wave.duration = 0.6
     s.enemies = []
-    s.shots = []
-    s.zones = []
+    s.shots = s.shots.filter((shot) => shot.side === 'player')
     this.pending = []
-    s.player.invulnerable = Math.max(s.player.invulnerable, 1.2)
-    s.player.dashTime = 0
-    s.player.intercepted = 0
-    s.player.dashCooldown = 0
-    s.player.hp = Math.min(s.player.maxHp, s.player.hp + 1)
-    for (const l of s.loot) {
-      if (l.kind === 'xp') s.xp += l.value
-      if (l.kind === 'heal') s.player.hp = Math.min(s.player.maxHp, s.player.hp + l.value)
-      this.hooks.emit({ type: 'pickup', x: l.x, y: l.y, amount: l.value })
-    }
-    s.loot = []
-    openWaveShop(s, this.hooks)
     this.hooks.emit({ type: 'wave-clear', ...s.player, amount: s.wave.index })
   }
 

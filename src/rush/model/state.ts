@@ -97,8 +97,6 @@ export function createState(
     settlement: null,
     notice: '移动躲避 · 自动开火',
     difficulty: record.difficulty,
-    scrap: 0,
-    shop: null,
     abilityCooldown: 0,
     abilityActive: 0,
     aim: { mode: 'auto', point: null },

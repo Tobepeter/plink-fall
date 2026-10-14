@@ -37,9 +37,6 @@ body.rush-mode #root {
 .rush-shell button:disabled {
   cursor: default;
 }
-.rush-shell.is-choosing .rush-clock {
-  visibility: hidden;
-}
 .rush-stage {
   position: absolute;
   inset: 0;

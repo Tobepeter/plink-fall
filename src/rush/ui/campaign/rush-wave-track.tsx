@@ -5,7 +5,10 @@ export function RushWaveTrack(props: { state: RushState }) {
   const s = props.state
   const completed = s.phase === 'won' ? 9 : s.wave.index - 1 + Number(s.wave.phase === 'breather')
   return (
-    <span className="rush-wave-track" aria-label={`九波战线，已完成 ${completed} 波`}>
+    <span
+      className="rush-wave-track"
+      aria-label={`九波战线，第 ${s.wave.act} / 3 幕，已完成 ${completed} 波`}
+    >
       {Array.from({ length: 9 }, (_, index) => (
         <i
           key={index}

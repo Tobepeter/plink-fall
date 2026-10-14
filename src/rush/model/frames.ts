@@ -1,6 +1,7 @@
 import type { FrameId, RushState, Shot, UpgradeId } from '../types'
 import { level } from './math'
 import { metaStats } from './meta/progression'
+import { upgrades } from './data'
 
 export const frameStats: Record<
   FrameId,
@@ -60,7 +61,10 @@ export const frameStats: Record<
 }
 
 export function frameChoices(s: RushState): UpgradeId[] {
-  const bias = frameStats[s.player.frame].bias.filter((id) => level(s, id) < 5)
+  const bias = frameStats[s.player.frame].bias.filter((id) => {
+    const def = upgrades.find((item) => item.id === id)
+    return def && level(s, id) < def.maxLevel
+  })
   return [
     ...bias.filter((id) => level(s, id) > 0),
     ...bias.filter((id) => level(s, id) === 0),

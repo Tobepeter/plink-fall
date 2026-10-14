@@ -55,7 +55,8 @@ export function readRecord(storage?: StoragePort): RushRecord {
     difficulty: 0,
     highestDifficulty: 0,
     difficultyWins: [0, 0, 0, 0],
-    mouseAim: true,
+    mouseAim: false,
+    aimVersion: 1,
   }
   try {
     const data = JSON.parse(storage?.getItem(saveKey) || 'null')
@@ -93,7 +94,8 @@ export function readRecord(storage?: StoragePort): RushRecord {
       highestDifficulty,
       difficulty: number(data.difficulty, highestDifficulty) as Difficulty,
       difficultyWins,
-      mouseAim: data.mouseAim !== false,
+      mouseAim: data.aimVersion === 1 && data.mouseAim === true,
+      aimVersion: 1,
     }
   } catch {
     return blank

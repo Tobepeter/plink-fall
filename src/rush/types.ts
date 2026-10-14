@@ -13,15 +13,8 @@ export type UpgradeId =
   | 'haste'
   | 'vital'
   | 'magnet'
-export type RushPhase = 'menu' | 'playing' | 'choice' | 'shop' | 'dead' | 'won'
+export type RushPhase = 'menu' | 'playing' | 'dead' | 'won'
 export type Difficulty = 0 | 1 | 2 | 3
-export type ShopItemId = UpgradeId | 'repair'
-export interface WaveShop {
-  wave: number
-  offers: ShopItemId[]
-  purchased: ShopItemId[]
-  rerolls: number
-}
 export type MetaUpgradeId = 'firepower' | 'armor' | 'capacitor' | 'magnet'
 export type MetaLevels = Record<MetaUpgradeId, number>
 export interface RewardParts {
@@ -143,6 +136,7 @@ export interface RushRecord {
   highestDifficulty: Difficulty
   difficultyWins: [number, number, number, number]
   mouseAim: boolean
+  aimVersion: 1
 }
 export interface RushState {
   phase: RushPhase
@@ -177,8 +171,6 @@ export interface RushState {
   settlement: RunSettlement | null
   notice: string
   difficulty: Difficulty
-  scrap: number
-  shop: WaveShop | null
   abilityCooldown: number
   abilityActive: number
   aim: { mode: 'mouse' | 'auto'; point: Vec | null }
@@ -240,9 +232,6 @@ export interface RushPort {
   setMouseAim(enabled: boolean): void
   setAim(point: Vec | null, mode?: 'mouse' | 'auto'): void
   activateAbility(): boolean
-  buyUpgrade(id: ShopItemId): boolean
-  rerollShop(): boolean
-  continueWave(): boolean
   purchaseMeta(id: MetaUpgradeId): boolean
   openMenu(): void
   restart(frame?: FrameId): void

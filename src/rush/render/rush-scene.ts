@@ -144,7 +144,7 @@ export class RushScene {
     if (state.phase === 'menu') return
     const active = state.phase === 'playing' && !state.paused
     const realDt = Math.min(0.1, Math.max(0, dt))
-    const effectsDt = state.paused || state.phase === 'choice' || state.phase === 'shop' ? 0 : realDt
+    const effectsDt = state.paused ? 0 : realDt
     dt = active ? realDt : 0
     this.camera.update(state, effectsDt)
     this.transform()

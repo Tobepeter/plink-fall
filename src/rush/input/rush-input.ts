@@ -103,13 +103,22 @@ export class RushInput {
     const state = this.store.state
     const target = event.target instanceof HTMLElement ? event.target : null
     if (target?.isContentEditable || target?.closest('input, textarea, [role="textbox"]')) return
-    if (state.phase === 'menu' || state.phase === 'shop') return
-    if (event.repeat && ['Escape', 'Space', 'KeyE'].includes(event.code)) return
-    if (event.code === 'Escape' && (state.phase === 'playing' || state.phase === 'choice')) {
+    if (state.phase === 'menu') return
+    if (event.repeat && ['Escape', 'Space', 'KeyE', 'Digit1', 'Digit2', 'Digit3'].includes(event.code)) return
+    if (event.code === 'Escape' && state.phase === 'playing') {
       event.preventDefault()
       this.cancel()
       this.store.setPaused(!state.paused)
       if (!this.store.state.paused) this.canvas.focus({ preventScroll: true })
+      return
+    }
+    if (!state.paused && state.phase === 'playing' && /^Digit[123]$/.test(event.code)) {
+      const choice = state.choices[Number(event.code.slice(-1)) - 1]
+      if (choice) {
+        event.preventDefault()
+        this.unlock()
+        if (this.store.choose(choice)) this.canvas.focus({ preventScroll: true })
+      }
       return
     }
     if (target?.closest('button, [role="dialog"]') || state.paused || state.phase !== 'playing') return
