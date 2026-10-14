@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js'
 import type { RushEvent, RushPort, Vec } from './types'
 import { RushScene } from './render/rush-scene'
+import { RushPresentation } from './render/rush-presentation'
 import { RushSound } from './rush-sound'
 
 // 全屏战斗与单指方向输入
@@ -8,6 +9,7 @@ export class RushGame {
   private app = new Application()
   readonly scene: RushScene
   private sound: RushSound
+  readonly presentation: RushPresentation
   private canvas: HTMLCanvasElement | null = null
   private shell: HTMLElement | null = null
   private observer: ResizeObserver | null = null
@@ -24,7 +26,8 @@ export class RushGame {
   frames = 0
 
   constructor(readonly store: RushPort) {
-    this.scene = new RushScene(() => store.state)
+    this.presentation = new RushPresentation(store.state)
+    this.scene = new RushScene(() => this.presentation.state)
     this.sound = new RushSound(() => store.state)
   }
 
@@ -67,6 +70,7 @@ export class RushGame {
         height = Math.max(1, stage.clientHeight)
       this.app.renderer.resolution = Math.min(devicePixelRatio || 1, 2)
       this.app.renderer.resize(width, height)
+      this.presentation.reset(this.store.state)
       this.scene.resize(width, height)
       const size = this.scene.worldSize()
       this.store.setViewport(size.x, size.y)
@@ -75,7 +79,7 @@ export class RushGame {
     this.observer.observe(stage)
     resize()
     this.unsubscribe = this.store.onEvent((event) => {
-      this.scene.event(event)
+      this.scene.event(event, this.store.state.player)
       this.sound.event(event)
       this.impact(event)
       if (event.type === 'level' || event.type === 'run-end') this.cancelInput()
@@ -103,6 +107,7 @@ export class RushGame {
     const dt = Math.min(0.12, Math.max(0, (now - this.last) / 1000))
     this.last = now
     const active = this.store.state.phase === 'playing' && !this.store.state.paused
+    if (this.presentation.sync(this.store.state)) this.accumulator = 0
     if (!active) this.cancelInput()
     else this.store.setMove(this.direction())
     const frozen = Math.min(dt, this.impactTime)
@@ -110,7 +115,9 @@ export class RushGame {
     this.accumulator += active ? dt - frozen : 0
     let steps = 0
     while (this.accumulator >= 1 / 60 && steps++ < 8) {
+      this.presentation.beforeStep(this.store.state)
       this.store.update(1 / 60)
+      this.presentation.afterStep(this.store.state)
       this.accumulator -= 1 / 60
       if (this.impactTime > 0) {
         this.accumulator = 0
@@ -118,10 +125,17 @@ export class RushGame {
       }
     }
     if (steps >= 8) this.accumulator = 0
+    const renderDt = active ? (this.impactTime ? 0 : dt - frozen) : dt
+    this.presentation.render(
+      this.store.state,
+      this.accumulator * 60,
+      renderDt,
+      active && renderDt === 0,
+    )
     this.scene.setStick(this.stick)
-    this.scene.render(active ? (this.impactTime ? 0 : dt - frozen) : dt)
+    this.scene.render(renderDt)
     this.sound.update()
-    const player = this.scene.worldToScreen(this.store.state.player)
+    const player = this.scene.worldToScreen(this.presentation.state.player)
     this.shell?.style.setProperty('--rush-player-x', player.x + 'px')
     this.shell?.style.setProperty('--rush-player-y', player.y + 'px')
     this.app.renderer.render(this.app.stage)
@@ -234,6 +248,7 @@ export class RushGame {
     this.cancelInput()
     cancelAnimationFrame(this.raf)
     if (document.hidden) {
+      this.presentation.freeze(this.store.state)
       this.store.save()
       this.sound.suspend()
       return

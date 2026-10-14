@@ -36,6 +36,7 @@ function RushRuntime() {
     if (!stage) return
     const game = new RushGame(store)
     let active = true
+    let detachDebug: (() => void) | undefined
     void game
       .init(stage)
       .then(async () => {
@@ -43,7 +44,7 @@ function RushRuntime() {
         setReady(true)
         if (import.meta.env.DEV) {
           const { attachRushDebug } = await import('./debug')
-          if (active) attachRushDebug(store, game)
+          if (active) detachDebug = attachRushDebug(store, game)
         }
       })
       .catch((err: unknown) => {
@@ -54,8 +55,8 @@ function RushRuntime() {
       })
     return () => {
       active = false
+      detachDebug?.()
       game.destroy()
-      if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).__RUSH_DEBUG__
     }
   }, [stage, store])
   useEffect(() => () => store.destroy(), [store])

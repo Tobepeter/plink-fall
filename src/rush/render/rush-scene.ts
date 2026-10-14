@@ -170,7 +170,7 @@ export class RushScene {
       .fill({ color: palette.red, alpha: Math.min(0.4, alpha) })
   }
 
-  event(event: RushEvent) {
+  event(event: RushEvent, actualPlayer?: Vec) {
     if (this.destroyed) return
     if (!this.ready) {
       if (this.pending.length < 30) this.pending.push(event)
@@ -178,7 +178,7 @@ export class RushScene {
     }
     this.effects.event(event)
     this.motion.event(event)
-    this.actors?.event(event)
+    this.actors?.event(event, actualPlayer)
     if (event.type === 'hurt') {
       this.camera.impact(0.6)
       this.hurt = 0.3

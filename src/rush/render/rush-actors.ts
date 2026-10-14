@@ -3,6 +3,7 @@ import type { Texture } from 'pixi.js'
 import type { EnemyKind, Foe, RushEvent, RushState, Vec } from '../types'
 import { clamp, foeColors, palette } from './palette'
 import { RushGait } from './rush-gait'
+import { RushRunner } from './actors/rush-runner'
 
 const frameIndex: Record<EnemyKind, number> = {
   chaser: 1,
@@ -20,7 +21,8 @@ export class RushActors {
   private telegraphs = new Graphics()
   private bodies = new Container()
   private equipment = new Graphics()
-  private player = new Sprite()
+  private aura = new Graphics()
+  private player: RushRunner
   private weapon = new Sprite()
   private foes = new Map<number, Sprite>()
   private fire = 0
@@ -28,7 +30,6 @@ export class RushActors {
   private steps = new Graphics()
   private gait = new RushGait()
   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
-  private playerScale = 1
   private playerPoint: Vec = { x: 0, y: 0 }
 
   constructor(
@@ -41,6 +42,7 @@ export class RushActors {
     this.view.addChild(
       this.telegraphs,
       this.shadows,
+      this.aura,
       this.steps,
       this.dashLines,
       this.bodies,
@@ -48,30 +50,15 @@ export class RushActors {
       this.equipment,
     )
     this.bodies.sortableChildren = true
-    this.playerScale = 52 / Math.max(...[0, 7, 8].map((i) => textures[i].height))
-    this.player.zIndex = 100000
-    this.bodies.addChild(this.player)
+    this.player = new RushRunner(textures[0]!)
+    this.bodies.addChild(this.player.view)
   }
 
   render(state: RushState, dt: number) {
     const p = state.player
     this.playerPoint = { x: p.x, y: p.y }
     const pose = this.gait.update(p, dt)
-    const frame = pose.frame
-    this.player.texture = this.textures[frame]
-    // 相同头盔轴、脚基线与量尺；独立裁图不改变步态尺寸
-    const headAxis = frame === 0 ? 141 : frame === 7 ? 130 : 131
-    this.player.anchor.set(headAxis / this.player.texture.width, 1)
-    const scale = this.playerScale
-    const reduced = this.reducedMotion.matches
-    this.player.scale.set(
-      scale * pose.face * (reduced ? 1 : pose.scaleX),
-      scale * (reduced ? 1 : pose.scaleY),
-    )
-    this.player.position.set(p.x, p.y + 14 - (reduced ? 0 : pose.lift))
-    this.player.rotation = reduced ? 0 : pose.lean
-    this.player.alpha = 1
-    this.player.tint = 0xffffff
+    this.player.render(p, pose)
     this.fire = Math.max(0, this.fire - dt)
     this.drawDash(state)
     this.drawSteps(state)
@@ -112,6 +99,8 @@ export class RushActors {
     const g = this.shadows.clear()
     const p = state.player
     g.ellipse(p.x, p.y + 9, 15, 6).fill({ color: palette.ink, alpha: 0.65 })
+    // 标识置于腿后，前景环不遮鞋和接地点
+    g.ellipse(p.x, p.y + 8, 17, 7).stroke({ color: palette.teal, width: 1, alpha: 0.22 })
     g.circle(p.x, p.y, p.radius + 5).stroke({ color: palette.teal, width: 1.5, alpha: 0.32 })
     for (const foe of state.enemies) {
       g.ellipse(foe.x, foe.y + foe.radius * 0.55, foe.radius * 0.95, foe.radius * 0.38).fill({
@@ -223,13 +212,14 @@ export class RushActors {
   private drawEquipment(state: RushState) {
     const p = state.player
     const g = this.equipment.clear()
-    g.ellipse(p.x, p.y + 8, 17, 7).stroke({ color: palette.teal, width: 1.8, alpha: 0.72 })
+    const aura = this.aura.clear()
     const overdrive = state.overdrive > 0
     const progress = clamp(overdrive ? state.overdrive / 3 : state.charge / 100, 0, 1)
     if (progress > 0.01) {
       const start = -Math.PI / 2
       const radius = 22
-      g.moveTo(p.x + Math.cos(start) * radius, p.y + Math.sin(start) * radius)
+      aura
+        .moveTo(p.x + Math.cos(start) * radius, p.y + Math.sin(start) * radius)
         .arc(p.x, p.y, radius, start, start + progress * Math.PI * 2)
         .stroke({ color: overdrive ? palette.amber : palette.teal, width: 2, alpha: 0.82 })
     }
@@ -254,23 +244,20 @@ export class RushActors {
     }
   }
 
-  event(event: RushEvent) {
+  event(event: RushEvent, actualPlayer: Vec = this.playerPoint) {
     if (event.type !== 'shot' || event.side === 'enemy') return
-    if (Math.hypot(event.x - this.playerPoint.x, event.y - this.playerPoint.y) < 32)
-      this.fire = 0.055
+    if (Math.hypot(event.x - actualPlayer.x, event.y - actualPlayer.y) < 32) this.fire = 0.055
   }
 
   gaitSnapshot() {
-    const frames = [this.textures[0], this.textures[7], this.textures[8]]
-    const players = this.bodies.children.filter(
-      (child) => child instanceof Sprite && frames.includes(child.texture),
-    )
+    const runner = this.player.snapshot()
     return {
-      pose: { ...this.gait.pose },
+      pose: { ...this.gait.pose, feet: this.gait.pose.feet.map((foot) => ({ ...foot })) },
       contacts: this.gait.contacts.map((contact) => ({ ...contact })),
-      playerCopies: players.length,
-      playerAlpha: this.player.alpha,
-      bodyScale: { x: this.player.scale.x, y: this.player.scale.y },
+      playerCopies: this.bodies.children.filter((child) => child === this.player.view).length,
+      playerAlpha: runner.alpha,
+      bodyScale: runner.scale,
+      runner,
       gunPivot: { x: this.weapon.x, y: this.weapon.y },
     }
   }
@@ -286,6 +273,7 @@ export class RushActors {
 
   destroy() {
     this.reset()
+    this.player.destroy()
     this.view.destroy({ children: true })
   }
 }

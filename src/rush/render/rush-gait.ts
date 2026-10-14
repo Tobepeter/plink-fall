@@ -7,43 +7,64 @@ interface FootContact {
   side: number
 }
 
-// 距离相位、接地过渡与收步
+export interface RunnerFoot {
+  x: number
+  lift: number
+  planted: boolean
+}
+
+// 距离步态、交替接地与停止收步
 export class RushGait {
-  readonly pose = { frame: 0, face: 1, lean: 0, lift: 0, scaleX: 1, scaleY: 1, weight: 0 }
+  readonly pose = {
+    face: 1,
+    weight: 0,
+    phase: 0,
+    feet: [
+      { x: 5, lift: 0, planted: true },
+      { x: -5, lift: 0, planted: true },
+    ] as [RunnerFoot, RunnerFoot],
+  }
   contacts: FootContact[] = []
   private distance = 0
   private lastWalk: number | null = null
   private phase = 0
-  private lean = 0
 
   update(player: Runner, dt: number) {
-    if (dt <= 0) return this.pose
+    if (dt <= 0 || !Number.isFinite(dt)) return this.pose
     const speed = Math.hypot(player.vx, player.vy)
-    const moving = speed > 10 && player.dashTime <= 0
+    const moving = speed > 10 && speed <= 400 && player.dashTime <= 0
     const travel = this.lastWalk === null ? 0 : Math.max(0, player.walk - this.lastWalk)
     this.lastWalk = player.walk
     const before = Math.floor(this.distance / 72)
     if (moving) {
-      this.distance += Math.min(travel, 400 * dt)
+      this.distance += travel
       this.phase = (this.distance / 144) % 1
-    } else if (player.dashTime <= 0) {
-      // 停步先落至最近接地姿，不强制瞬切第一帧
+    } else if (player.dashTime <= 0 && speed <= 400) {
       const rest = Math.round(this.phase * 2) / 2
       this.phase += (rest - this.phase) * (1 - Math.exp(-dt * 20))
       this.distance = this.phase * 144
     }
-    const weight = moving ? 1 : 0
-    this.pose.weight += (weight - this.pose.weight) * (1 - Math.exp(-dt * (moving ? 17 : 20)))
+    this.pose.weight += ((moving ? 1 : 0) - this.pose.weight) * (1 - Math.exp(-dt * 20))
     if (Math.abs(player.vx) > 24) this.pose.face = player.vx < 0 ? -1 : 1
-    const targetLean = speed > 10 ? (player.vx / speed) * this.pose.weight * 0.026 : 0
-    this.lean += (targetLean - this.lean) * (1 - Math.exp(-dt * 14))
-    const flight = (1 - Math.cos(this.phase * Math.PI * 4)) * 0.5
-    this.pose.frame =
-      player.dashTime > 0 ? 0 : [0, 7, 8, 7][Math.floor((this.phase + 0.125) * 4) % 4]
-    this.pose.lean = this.lean
-    this.pose.lift = flight * this.pose.weight * 0.65
-    this.pose.scaleX = 1 + (1 - flight) * this.pose.weight * 0.004
-    this.pose.scaleY = 1 - (1 - flight) * this.pose.weight * 0.004
+    this.pose.phase = this.phase
+    for (let i = 0; i < 2; i++) {
+      const foot = this.pose.feet[i]!
+      const cycle = (this.phase + i * 0.5) % 1
+      const planted = cycle < 0.5
+      const swing = (cycle - 0.5) * 2
+      const smooth = swing * swing * (3 - 2 * swing)
+      const x = planted ? 11 * (1 - 4 * cycle) : -11 + 22 * smooth
+      const lift = planted ? 0 : Math.sin(swing * Math.PI) * 8
+      const rest = i === 0 ? 5 : -5
+      foot.x = rest + (x - rest) * this.pose.weight
+      foot.lift = lift * this.pose.weight
+      foot.planted = planted || this.pose.weight < 0.05
+      if (player.dashTime > 0 || speed > 400) {
+        foot.x = i === 0 ? 9 : -9
+        foot.lift = i === 0 ? 6 : 3
+        foot.planted = false
+      }
+    }
     for (const contact of this.contacts) contact.life -= dt
     this.contacts = this.contacts.filter((contact) => contact.life > 0)
     if (moving && Math.floor(this.distance / 72) > before) {
@@ -62,19 +83,14 @@ export class RushGait {
   }
 
   reset() {
-    Object.assign(this.pose, {
-      frame: 0,
-      face: 1,
-      lean: 0,
-      lift: 0,
-      scaleX: 1,
-      scaleY: 1,
-      weight: 0,
-    })
+    this.pose.face = 1
+    this.pose.weight = 0
+    this.pose.phase = 0
+    Object.assign(this.pose.feet[0], { x: 5, lift: 0, planted: true })
+    Object.assign(this.pose.feet[1], { x: -5, lift: 0, planted: true })
     this.contacts = []
     this.distance = 0
     this.lastWalk = null
     this.phase = 0
-    this.lean = 0
   }
 }
