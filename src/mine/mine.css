@@ -1,0 +1,132 @@
+/* 游戏占满视口，安全区只约束 HUD */
+html:has(> body.mine-mode), body.mine-mode { overflow: hidden; touch-action: none; background: #c9b78c; }
+body.mine-mode #root { padding: 0; background: #c9b78c; }
+.mine-shell { position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate; color: #f4e5bd; font-family: 'Trebuchet MS', system-ui, -apple-system, 'PingFang SC', sans-serif; pointer-events: none; --mine-outline: #163844; }
+.mine-shell * { box-sizing: border-box; }
+:where(.mine-shell) button { font: inherit; color: inherit; pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.mine-shell button:disabled { cursor: default; }
+.mine-shell button:focus-visible { outline: 2px solid #f4e5bd; outline-offset: 5px; }
+.mine-stage { position: absolute; inset: 0; pointer-events: auto; touch-action: none; }
+.mine-stage canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+
+/* 无条框 HUD */
+.mine-hud { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: calc(15px + env(safe-area-inset-left)); z-index: 5; width: 160px; text-shadow: 0 1px 2px #163844, 0 0 7px #163844cc; }
+.mine-resources { display: flex; gap: 14px; align-items: center; height: 23px; }
+.mine-resources > span { display: flex; align-items: center; gap: 5px; }
+.mine-resources b { font-variant-numeric: tabular-nums; }
+.mine-coins { font-size: 18px; }
+.mine-coins svg { color: #f5cc81; filter: drop-shadow(0 1px 2px #163844); }
+.mine-cores { font-size: 12px; color: #cdf0d5; }
+.mine-cores svg { filter: drop-shadow(0 1px 2px #163844); }
+.mine-goal { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; margin-top: 5px; font-size: 10px; }
+.mine-goal > span { font-weight: 600; }
+.mine-goal b { font-variant-numeric: tabular-nums; font-weight: 700; }
+.mine-goal small { font-size: 9px; opacity: .7; }
+.mine-goal > i { width: 100%; height: 2px; border-radius: 2px; background: #16384450; box-shadow: 0 1px 2px #16384460; overflow: hidden; margin-top: 1px; }
+.mine-goal > i > span { display: block; height: 100%; background: #f5cc81; border-radius: inherit; transition: width .2s ease; }
+.mine-settings { position: absolute; top: calc(9px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); display: flex; gap: 2px; z-index: 5; }
+.mine-icon-control { width: 44px; height: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 50%; filter: drop-shadow(0 1px 2px #163844); }
+.mine-icon-control:hover:not(:disabled) { background: #16384418; }
+.mine-icon-control:disabled { opacity: .35; }
+.mine-probe-status { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top)); transform: translateX(-50%); display: flex; gap: 12px; align-items: center; font-size: 11px; color: #e8e8c1; text-shadow: 0 1px 3px #163844; z-index: 4; }
+.mine-probe-status > span { display: inline-flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; }
+.mine-probe-status small { font-size: 9px; opacity: .6; }
+.mine-probe-status.is-hot > span:last-child { color: #ffba90; }
+
+/* 指令依附场景，不提供页面操作栏 */
+.mine-flight-controls { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom)); right: calc(15px + env(safe-area-inset-right)); display: flex; gap: 10px; align-items: flex-end; z-index: 5; }
+.mine-corner-control { min-width: 46px; min-height: 53px; padding: 2px 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 0; background: transparent; border-radius: 50%; text-shadow: 0 1px 3px #163844; transition: transform .15s ease; }
+.mine-corner-control > svg { filter: drop-shadow(0 1px 2px #163844); }
+.mine-corner-control > span { font-size: 10px; font-weight: 700; }
+.mine-corner-control:active:not(:disabled) { transform: scale(.94); }
+.mine-corner-control:disabled { opacity: .45; }
+.mine-corner-control.is-active { color: #d8f2ce; }
+.mine-corner-control.is-active > svg { filter: drop-shadow(0 0 5px #80bfa4); }
+.mine-recall { color: #f5c687; }
+.mine-base-control { position: absolute; left: calc(var(--mine-base-x, 50%) + 99px); top: calc(var(--mine-base-y, 22%) - 17px); z-index: 6; }
+.mine-travel-control { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom)); left: calc(15px + env(safe-area-inset-left)); color: #e9cd82; z-index: 5; animation: mine-beacon 2s ease-in-out infinite; }
+.mine-specimens { position: absolute; left: var(--mine-base-x, 50%); top: calc(var(--mine-base-y, 22%) + 53px); transform: translateX(-50%); display: flex; gap: 5px; color: #567667; z-index: 4; }
+.mine-specimens .is-found { color: #e7db91; fill: #ddb875; filter: drop-shadow(0 0 3px #d9b26d); }
+.mine-guide { position: absolute; bottom: calc(93px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px #163844, 0 0 10px #163844bc; animation: mine-guide-in .5s ease both; z-index: 4; }
+.mine-resume { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 80px; height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border: 0; background: #16384422; border-radius: 50%; font-weight: 700; text-shadow: 0 1px 3px #163844; z-index: 12; }
+.mine-resume span { font-size: 12px; }
+
+/* 三件真实装备，保留矿场全景 */
+.mine-loot { position: absolute; left: 50%; top: 54%; transform: translateX(-50%); width: min(650px, calc(100% - 30px)); z-index: 10; text-align: center; animation: mine-loot-in .3s ease both; }
+.mine-loot::before { content: ''; position: absolute; z-index: -1; inset: -20px -70px -30px; border-radius: 50%; background: radial-gradient(ellipse, #163844a8 0%, #16384482 30%, #1638444d 58%, #16384400 75%); pointer-events: none; }
+.mine-loot-title { font-size: 15px; font-weight: 800; letter-spacing: .025em; text-shadow: 0 1px 3px #163844, 0 0 9px #163844c0; }
+.mine-loot-row { display: flex; justify-content: center; gap: clamp(10px, 5vw, 40px); margin-top: 12px; }
+.mine-tool-choice { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; padding: 0 2px 8px; flex: 1; min-width: 0; max-width: 160px; transition: transform .18s ease; text-shadow: 0 1px 2px #163844, 0 0 5px #163844; }
+.mine-tool-choice:hover { transform: translateY(-5px); }
+.mine-tool-choice:active { transform: translateY(-2px) scale(.97); }
+.mine-tool-display { position: relative; width: clamp(72px, 12vw, 108px); height: clamp(72px, 12vw, 108px); display: grid; place-items: center; }
+.mine-tool-halo { position: absolute; left: 4%; right: 4%; bottom: 5%; height: 25%; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--tool-color) 65%, transparent); background: radial-gradient(ellipse, color-mix(in srgb, var(--tool-color) 38%, transparent) 0%, transparent 68%); box-shadow: 0 0 18px color-mix(in srgb, var(--tool-color) 32%, transparent); }
+.mine-tool-sprite { width: 100%; height: 100%; overflow: hidden; position: relative; display: block; filter: drop-shadow(0 5px 2px #16384470); }
+.mine-tool-sprite img { position: absolute; left: 0; top: 0; width: 200%; height: 200%; max-width: none; pointer-events: none; }
+.mine-tool-choice[data-tool='pierce'] .mine-tool-sprite { transform: rotate(-11deg) scale(1.05); }
+.mine-tool-choice[data-tool='chain'] .mine-tool-sprite { transform: rotate(10deg) scale(.98); }
+.mine-chain-arcs { position: absolute; inset: 0; pointer-events: none; color: #ffdf86; filter: drop-shadow(0 0 5px #f1b44a) drop-shadow(0 1px 1px #163844); }
+.mine-chain-arcs > svg { width: 24px; height: 24px; position: absolute; stroke-width: 2.4; }
+.mine-chain-arcs > svg:nth-child(1) { top: 12%; left: 31%; transform: rotate(-21deg); }
+.mine-chain-arcs > svg:nth-child(2) { top: 36%; right: -2%; transform: rotate(18deg); }
+.mine-chain-arcs > svg:nth-child(3) { bottom: 8%; left: 38%; transform: rotate(-12deg); }
+.mine-tool-mark { position: absolute; right: 4px; bottom: 8px; color: #f4e5bd; background: #163844c0; width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; filter: drop-shadow(0 1px 2px #16384450); }
+.mine-tool-choice > strong { font-size: 16px; font-weight: 800; margin-top: 0; letter-spacing: .025em; }
+.mine-tool-hint { font-size: 11px; margin-top: 5px; color: #e9e1ba; white-space: nowrap; }
+.mine-tool-level { font-size: 9px; opacity: .65; margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+/* 永久改装围绕基地摆放设备，无页签或列表 */
+.mine-workshop { position: absolute; left: var(--mine-base-x, 50%); top: clamp(85px, calc(var(--mine-base-y, 22%) + 87px), calc(100% - 175px)); transform: translateX(-50%); width: min(310px, calc(100% - 32px)); z-index: 11; animation: mine-loot-in .2s ease; }
+.mine-workshop-close { position: absolute; right: -9px; top: -35px; }
+.mine-workshop-devices { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.mine-workshop-device { width: 90px; min-height: 132px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; border: 0; background: transparent; text-shadow: 0 1px 3px #163844; }
+.mine-meta-glyph { width: 54px; height: 54px; color: #def0c8; display: grid; place-items: center; filter: drop-shadow(0 2px 3px #163844); }
+.mine-workshop-device > strong { font-size: 12px; font-weight: 800; }
+.mine-meta-level { font-size: 9px; opacity: .7; }
+.mine-meta-cost { display: flex; gap: 7px; font-size: 10px; margin-top: 4px; font-weight: 700; }
+.mine-meta-cost > span { display: inline-flex; gap: 2px; align-items: center; }
+.mine-meta-cost > span:last-child { color: #cfe5bf; }
+.mine-workshop-device:disabled { opacity: .5; }
+.mine-workshop-device:hover:not(:disabled) .mine-meta-glyph { transform: translateY(-3px); }
+.mine-meta-max { display: flex; align-items: center; gap: 2px; font-size: 10px; margin-top: 4px; }
+
+/* 收获与极少量异常提示 */
+.mine-offline { position: absolute; left: 50%; bottom: calc(23px + env(safe-area-inset-bottom)); transform: translateX(-50%); min-height: 44px; padding: 0 15px; border: 0; border-radius: 22px; background: #16384480; display: flex; align-items: center; justify-content: center; gap: 8px; text-shadow: 0 1px 2px #163844; z-index: 9; }
+.mine-offline b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.mine-offline > svg:first-child { color: #f1cd80; }
+.mine-offline > svg:last-child { color: #cde2b7; }
+.mine-notice { position: absolute; left: 50%; bottom: calc(95px + env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: calc(100% - 40px); font-size: 11px; text-align: center; text-shadow: 0 1px 3px #163844; opacity: 0; transition: opacity .2s ease; z-index: 15; }
+.mine-notice.is-visible { opacity: 1; }
+.mine-loading, .mine-error { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 11px; font-size: 13px; text-shadow: 0 1px 3px #163844; z-index: 15; white-space: nowrap; }
+.mine-loading svg { animation: mine-spin 2s linear infinite; }
+.mine-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+@keyframes mine-spin { to { transform: rotate(360deg); } }
+@keyframes mine-beacon { 50% { filter: drop-shadow(0 0 6px #ebc772); } }
+@keyframes mine-guide-in { from { opacity: 0; transform: translate(-50%, 5px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes mine-loot-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 580px) {
+  .mine-probe-status { top: auto; bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .mine-tool-hint { font-size: 10px; }
+  .mine-tool-choice > strong { font-size: 14px; }
+  .mine-loot-row { gap: 8px; }
+  .mine-tool-mark { width: 22px; height: 22px; right: 1px; bottom: 5px; }
+}
+@media (max-width: 360px) {
+  .mine-hud { width: 139px; left: calc(12px + env(safe-area-inset-left)); }
+  .mine-settings { right: calc(8px + env(safe-area-inset-right)); }
+  .mine-tool-choice > strong { font-size: 13px; }
+  .mine-tool-hint { font-size: 9px; }
+}
+@media (max-height: 500px) {
+  .mine-loot { top: 50%; }
+  .mine-loot-row { margin-top: 3px; }
+  .mine-tool-display { width: 74px; height: 68px; }
+  .mine-tool-choice > strong { font-size: 14px; }
+  .mine-tool-hint { margin-top: 3px; font-size: 10px; }
+  .mine-tool-level { margin-top: 3px; }
+  .mine-loot-title { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mine-shell * { animation: none !important; transition: none !important; }
+}

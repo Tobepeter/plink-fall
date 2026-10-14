@@ -3,9 +3,10 @@ import { createRoot } from 'react-dom/client'
 
 async function boot() {
   const root = document.getElementById('root')!
-  if (new URLSearchParams(location.search).get('type') === 'codex-forge') {
-    const { bootForge } = await import('./forge/boot-forge')
-    bootForge(root)
+  const mode = new URLSearchParams(location.search).get('type')
+  if (mode === 'codex-forge' || mode === 'codex-mine') {
+    const { bootMine } = await import('./mine/boot-mine')
+    bootMine(root)
     return
   }
   const [{ Game }, { App }] = await Promise.all([import('@/game/core/Game'), import('@/ui/App')])

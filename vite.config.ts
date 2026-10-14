@@ -5,7 +5,12 @@ import path from 'node:path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { watch: { ignored: ['**/.temp/**'] } },
+  server: {
+    host: '127.0.0.1',
+    port: 5198,
+    strictPort: true,
+    watch: { ignored: ['**/.temp/**'] },
+  },
   build: {
     chunkSizeWarningLimit: 800,
     rolldownOptions: {
