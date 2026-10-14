@@ -39,8 +39,8 @@ export class RushScene {
 
   private async load() {
     const [atlas, modules] = await Promise.all([
-      Assets.load<Texture>('/rush/actors-v3.png'),
-      Assets.load<Texture>('/rush/modules-v2.png'),
+      Assets.load<Texture>('/rush/actors-v3.webp'),
+      Assets.load<Texture>('/rush/modules-v2.webp'),
     ])
     if (this.destroyed) return
     for (let i = 0; i < 9; i++) this.frames.push(this.extract(atlas, i))

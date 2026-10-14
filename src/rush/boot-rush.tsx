@@ -15,7 +15,7 @@ export function bootRush(root: HTMLElement) {
     const preload = document.createElement('link')
     preload.rel = 'preload'
     preload.as = 'image'
-    preload.href = '/rush/modules-v2.png'
+    preload.href = '/rush/modules-v2.webp'
     preload.dataset.rushModules = ''
     document.head.appendChild(preload)
   }

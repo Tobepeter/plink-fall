@@ -87,7 +87,7 @@
   display: block;
   position: absolute;
   inset: 0;
-  background-image: url('/rush/actors-v3.png');
+  background-image: url('/rush/actors-v3.webp');
   background-size: calc(var(--frame-width) * 5.6679) calc(var(--frame-width) * 3.7786);
   background-position: calc(var(--frame-width) * -0.5646) calc(var(--frame-width) * -0.1993);
   filter: drop-shadow(0 3px 1px #060d18);

@@ -3,7 +3,7 @@
   width: var(--module-size, 68px);
   height: var(--module-size, 68px);
   flex-shrink: 0;
-  background-image: url('/rush/modules-v2.png');
+  background-image: url('/rush/modules-v2.webp');
   background-size: 300% 400%;
   background-repeat: no-repeat;
   filter: drop-shadow(0 3px 1px #060d18);
