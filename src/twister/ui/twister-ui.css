@@ -1,0 +1,199 @@
+/* 卷城界面：明亮休闲，白色胶囊 + 立体按钮 + 黄油体大字 */
+@font-face {
+  font-family: 'TwisterDisplay';
+  src: url('/twister/display.woff2') format('woff2');
+  font-display: swap;
+}
+
+.tw-ui {
+  --ink: #1e2a3a;
+  --sky: #4fb3ea;
+  --sun: #ffb238;
+  --hot: #ff6a4d;
+  --leaf: #4fc27a;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+.tw-ui .pe {
+  pointer-events: auto;
+}
+.tw-display {
+  font-family: 'TwisterDisplay', 'PingFang SC', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.tw-outline {
+  color: #fff;
+  -webkit-text-stroke: 6px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 6px 0 rgba(30, 42, 58, 0.35);
+}
+.tw-pill {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  box-shadow:
+    0 3px 0 rgba(30, 42, 58, 0.18),
+    0 6px 16px rgba(30, 42, 58, 0.12);
+}
+.tw-card {
+  background: #fff;
+  border-radius: 22px;
+  box-shadow:
+    0 5px 0 rgba(30, 42, 58, 0.2),
+    0 12px 30px rgba(30, 42, 58, 0.18);
+}
+.tw-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 18px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--sky);
+  box-shadow:
+    0 5px 0 #2a7fb0,
+    0 10px 20px rgba(30, 42, 58, 0.2);
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tw-btn:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 #2a7fb0,
+    0 4px 10px rgba(30, 42, 58, 0.2);
+}
+.tw-btn.hot {
+  background: linear-gradient(#ff8a4d, #ff5e3a);
+  box-shadow:
+    0 6px 0 #c23d22,
+    0 12px 24px rgba(255, 94, 58, 0.35);
+}
+.tw-btn.hot:active {
+  box-shadow:
+    0 2px 0 #c23d22,
+    0 4px 10px rgba(255, 94, 58, 0.3);
+}
+.tw-btn.ghost {
+  color: var(--ink);
+  background: #fff;
+  box-shadow:
+    0 5px 0 rgba(30, 42, 58, 0.2),
+    0 10px 20px rgba(30, 42, 58, 0.12);
+}
+.tw-btn:disabled {
+  filter: grayscale(0.8);
+  opacity: 0.55;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes tw-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-4deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotate(1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes tw-banner {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  15%,
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+@keyframes tw-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes tw-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes tw-drag {
+  0%,
+  100% {
+    transform: translate(-30px, 0);
+  }
+  50% {
+    transform: translate(30px, -10px);
+  }
+}
+@keyframes tw-blink {
+  50% {
+    opacity: 0.45;
+  }
+}
+.tw-popin {
+  animation: tw-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.tw-banner {
+  animation: tw-banner 2.6s ease-out both;
+}
+.tw-toast {
+  animation: tw-toast 2.2s ease-out both;
+}
+.tw-bob {
+  animation: tw-bob 2s ease-in-out infinite;
+}
+.tw-drag {
+  animation: tw-drag 1.6s ease-in-out infinite;
+}
+.tw-hurry {
+  animation: tw-blink 0.5s steps(2) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tw-popin,
+  .tw-banner,
+  .tw-toast,
+  .tw-bob,
+  .tw-drag,
+  .tw-hurry {
+    animation-duration: 0.01s;
+    animation-iteration-count: 1;
+  }
+}

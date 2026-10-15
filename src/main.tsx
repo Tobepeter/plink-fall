@@ -8,6 +8,11 @@ async function boot() {
     bootRush(root)
     return
   }
+  if (mode === 'claude-twister') {
+    const { bootTwister } = await import('./twister/boot-twister')
+    bootTwister(root)
+    return
+  }
   if (mode === 'claude-drift') {
     const { bootDrift } = await import('./drift/boot-drift')
     bootDrift(root)
