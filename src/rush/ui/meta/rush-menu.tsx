@@ -32,7 +32,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
   const [page, setPage] = useState<RushMenuPage>('home')
   const menu = useRef<HTMLElement>(null)
   const origin = useRef<RushMenuPage>('home')
-  const previous = useRef<RushMenuPage>('home')
+  const previous = useRef<RushMenuPage | null>(null)
   const home = () => setPage('home')
   const open = (next: RushMenuPage) => {
     origin.current = next
@@ -52,8 +52,13 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
 
   useLayoutEffect(() => {
     if (previous.current === page) return
+    const initial = previous.current === null
     previous.current = page
-    const selector = page === 'home' ? `[data-menu-entry="${origin.current}"]` : '.rush-menu-back'
+    const selector = initial
+      ? '.rush-start'
+      : page === 'home'
+        ? `[data-menu-entry="${origin.current}"]`
+        : '.rush-menu-back'
     menu.current?.querySelector<HTMLButtonElement>(selector)?.focus({ preventScroll: true })
   }, [page])
 

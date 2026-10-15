@@ -100,15 +100,23 @@ export function RushPause(props: { state: RushState; store: RushPort; resume: ()
           <RushLoadout state={props.state} />
         )}
       </div>
-      <button
-        className="rush-pause-resume"
-        ref={resumeButton}
-        onClick={props.resume}
-        aria-label="继续突围"
-      >
-        <ControlGlyph id="play" />
-        <b>继续突围</b>
-      </button>
+      <footer className="rush-pause-actions">
+        <button
+          className="rush-pause-resume"
+          ref={resumeButton}
+          onClick={props.resume}
+          aria-label="继续突围"
+        >
+          <ControlGlyph id="play" />
+          <b>继续突围</b>
+        </button>
+        <button className="rush-pause-home" onClick={() => props.store.abandonRun()}>
+          <GameGlyph id="home" size={25} />
+          <span>
+            返回首页<small>结束本局，不结算</small>
+          </span>
+        </button>
+      </footer>
     </section>
   )
 }

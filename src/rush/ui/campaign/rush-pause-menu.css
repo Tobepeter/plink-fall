@@ -1,17 +1,25 @@
 .rush-pause-menu {
+  --pause-block-space: 16px;
   position: absolute;
   z-index: 10;
-  left: 50%;
-  top: 50%;
-  display: flex;
-  flex-direction: column;
-  width: min(344px, calc(100% - 32px));
-  max-height: calc(100% - 40px);
-  transform: translate(-50%, -50%);
+  inset: max(var(--pause-block-space), env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(var(--pause-block-space), env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: 344px;
+  max-width: calc(
+    100% - max(16px, env(safe-area-inset-left)) - max(16px, env(safe-area-inset-right))
+  );
+  height: 620px;
+  max-height: calc(
+    100% - max(var(--pause-block-space), env(safe-area-inset-top)) -
+      max(var(--pause-block-space), env(safe-area-inset-bottom))
+  );
+  margin: auto;
   color: var(--rush-ivory);
 }
 .rush-pause-menu h2 {
-  flex-shrink: 0;
   margin: 0 0 16px;
   font-size: 26px;
   text-align: center;
@@ -21,7 +29,6 @@
 .rush-pause-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  flex-shrink: 0;
   gap: 6px;
   margin-bottom: 20px;
   border-bottom: 1px solid #36534a;
@@ -53,7 +60,8 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: #5c8573 transparent;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
+  scrollbar-gutter: stable;
 }
 .rush-pause-content:focus-visible {
   outline: 1px solid #8ce6c2;
@@ -109,8 +117,36 @@
 .rush-pause-mouse > .rush-aim-toggle {
   margin-left: auto;
 }
+.rush-pause-actions {
+  display: grid;
+  gap: 8px;
+}
+.rush-pause-home {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 12px;
+  border: 1px solid #8ce6c22e;
+  color: #c0d6c8;
+  background: transparent;
+}
+.rush-pause-home > span:last-child {
+  display: grid;
+  gap: 3px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.rush-pause-home small {
+  color: #9cb1a6;
+  font-size: 11px;
+  font-weight: 400;
+}
+.rush-pause-home:hover {
+  background: #8ce6c208;
+}
 .rush-pause-resume {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,7 +186,7 @@
 }
 @media (max-height: 420px) {
   .rush-pause-menu {
-    max-height: calc(100% - 24px);
+    --pause-block-space: 12px;
   }
   .rush-pause-menu h2 {
     margin-bottom: 6px;
@@ -171,5 +207,17 @@
   }
   .rush-pause-resume {
     min-height: 58px;
+  }
+  .rush-pause-resume > b {
+    font-size: 19px;
+  }
+  .rush-pause-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .rush-pause-home {
+    min-height: 58px;
+    gap: 8px;
+    padding-inline: 8px;
   }
 }

@@ -36,7 +36,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  min-height: 44px;
+  min-height: 48px;
   flex-shrink: 0;
 }
 .rush-menu-brand {

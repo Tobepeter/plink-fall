@@ -235,6 +235,7 @@ export interface RushPort {
   setAim(point: Vec | null, mode?: 'mouse' | 'auto'): void
   activateAbility(): boolean
   purchaseMeta(id: MetaUpgradeId): boolean
+  abandonRun(): boolean
   openMenu(): void
   restart(frame?: FrameId): void
   save(): void

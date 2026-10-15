@@ -215,6 +215,23 @@ export class RushStore implements RushPort {
     return true
   }
 
+  // 主动离局不结算
+  abandonRun() {
+    const s = this.state
+    if (this.destroyed || s.phase !== 'playing' || !s.paused) return false
+    this.save()
+    s.phase = 'menu'
+    s.paused = false
+    s.move = { x: 0, y: 0 }
+    s.aim = { mode: 'auto', point: null }
+    s.choices = []
+    s.choiceRemaining = 0
+    s.choiceRecommended = null
+    s.settlement = null
+    this.publish()
+    return true
+  }
+
   openMenu() {
     if (this.destroyed || (this.state.phase !== 'dead' && this.state.phase !== 'won')) return
     this.state.phase = 'menu'
