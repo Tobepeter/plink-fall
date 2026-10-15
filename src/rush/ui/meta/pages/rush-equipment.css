@@ -1,0 +1,184 @@
+.rush-frame-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(30px, 6vw, 80px);
+  min-height: 100%;
+  width: min(100%, 980px);
+}
+.rush-frame-preview .rush-hangar-stage {
+  height: clamp(190px, 35vh, 310px);
+}
+.rush-frame-roster {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.rush-frame-roster > button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 76px;
+  min-height: 90px;
+  padding: 7px 8px;
+  border: 0;
+  border-bottom: 2px solid #8ce6c220;
+  background: transparent;
+  color: #a5bea9;
+}
+.rush-frame-roster > button.is-preview {
+  border-bottom-color: var(--rush-mint);
+  color: var(--rush-ivory);
+  background: linear-gradient(transparent, #8ce6c215);
+}
+.rush-frame-roster .rush-frame-glyph {
+  --frame-width: 44px;
+  width: 44px;
+  height: 46px;
+}
+.rush-frame-roster .rush-frame-glyph > i {
+  display: none;
+}
+.rush-frame-roster b {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.rush-frame-roster button > svg {
+  position: absolute;
+  right: 4px;
+  top: 8px;
+  width: 13px;
+  height: 13px;
+  color: var(--rush-brass);
+}
+.rush-frame-spec {
+  width: 100%;
+  max-width: 390px;
+  margin-inline: auto;
+}
+.rush-frame-spec > h2 {
+  margin: 0 0 14px;
+  font-size: 30px;
+  letter-spacing: 3px;
+}
+.rush-frame-metrics {
+  display: flex;
+  gap: 24px;
+  color: #bad2bd;
+  margin-bottom: 28px;
+}
+.rush-frame-metrics > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font:
+    800 18px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-frame-metrics svg {
+  width: 19px;
+  height: 19px;
+  color: #98bca6;
+}
+.rush-frame-metrics small {
+  font:
+    12px system-ui,
+    sans-serif;
+}
+.rush-frame-ability {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-block: 20px;
+  border-block: 1px solid #8ce6c22e;
+}
+.rush-frame-ability > .rush-module {
+  flex-shrink: 0;
+}
+.rush-frame-ability h3 {
+  margin: 0 0 7px;
+  font-size: 18px;
+}
+.rush-frame-ability p {
+  margin: 0 0 7px;
+  color: #c6dac2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.rush-frame-ability small {
+  font-size: 12px;
+  color: #9fbaa4;
+}
+.rush-frame-tradeoff {
+  margin: 15px 0 24px;
+  color: #c8b992;
+  font-size: 12px;
+}
+@media (max-width: 650px) {
+  .rush-frame-page {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    min-height: auto;
+  }
+  .rush-frame-preview .rush-hangar-stage {
+    height: clamp(170px, 27vh, 245px);
+  }
+  .rush-frame-preview .rush-hangar-hero .rush-frame-glyph {
+    --frame-width: clamp(120px, 20vh, 165px);
+  }
+  .rush-frame-roster {
+    margin-top: 6px;
+  }
+  .rush-frame-roster > button {
+    min-height: 82px;
+  }
+  .rush-frame-spec > h2 {
+    font-size: 27px;
+    margin-bottom: 10px;
+  }
+  .rush-frame-metrics {
+    margin-bottom: 18px;
+  }
+  .rush-frame-ability {
+    padding-block: 14px;
+  }
+  .rush-frame-tradeoff {
+    margin-block: 12px 18px;
+  }
+}
+@media (min-width: 651px) and (max-height: 480px) {
+  .rush-frame-page {
+    align-items: start;
+    gap: 40px;
+  }
+  .rush-frame-preview .rush-hangar-stage {
+    height: 178px;
+  }
+  .rush-frame-preview .rush-hangar-hero .rush-frame-glyph {
+    --frame-width: 116px;
+  }
+  .rush-frame-roster {
+    margin-top: 0;
+  }
+  .rush-frame-roster > button {
+    min-height: 78px;
+  }
+  .rush-frame-spec > h2 {
+    font-size: 25px;
+    margin-bottom: 10px;
+  }
+  .rush-frame-metrics {
+    margin-bottom: 12px;
+  }
+  .rush-frame-ability {
+    padding-block: 10px;
+  }
+  .rush-frame-tradeoff {
+    margin-block: 10px 14px;
+  }
+}

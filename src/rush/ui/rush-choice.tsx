@@ -4,6 +4,7 @@ import { protocolDefinitions } from '../model/combat/protocols'
 import { upgradeHint } from '../model/combat/upgrade-hints'
 import type { RushPort, RushState, UpgradeId } from '../types'
 import { WeaponGlyph } from './weapon-glyph'
+import { Sparkles } from 'lucide-react'
 
 // 不打断战斗的三选军械槽
 export function RushChoice(props: { state: RushState; store: RushPort }) {
@@ -15,8 +16,9 @@ export function RushChoice(props: { state: RushState; store: RushPort }) {
   }
   return (
     <div className="rush-choice" aria-label="选择本次装配">
-      <span className="rush-choice-level">
-        ＋ <b>LV {state.level + 1}</b>
+      <span className="rush-choice-level" role="status">
+        <Sparkles size={14} aria-hidden="true" />
+        <b>可装配</b>
       </span>
       <div className="rush-weapons">
         {state.choices.map((id, index) => {
@@ -41,6 +43,7 @@ export function RushChoice(props: { state: RushState; store: RushPort }) {
             >
               <kbd className="rush-choice-key">{index + 1}</kbd>
               <span className="rush-weapon-device">
+                <i className="rush-weapon-aura" />
                 <i />
                 <WeaponGlyph id={id} size={72} />
                 <span className="rush-mount-pins">

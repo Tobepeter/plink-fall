@@ -1,4 +1,5 @@
 import type { RushPort, RushState } from '../../types'
+import type { PointerEvent } from 'react'
 import { frameStats } from '../../model/frames'
 import { WeaponGlyph } from '../weapon-glyph'
 
@@ -8,14 +9,20 @@ export function RushAbility(props: { state: RushState; store: RushPort }) {
   const frame = frameStats[state.player.frame]
   const active = state.abilityActive > 0
   const ready = state.phase === 'playing' && !state.paused && state.abilityCooldown <= 0
-  const useAbility = () => {
+  const activate = () => {
     if (!store.activateAbility()) return
     document.querySelector<HTMLCanvasElement>('.rush-stage canvas')?.focus({ preventScroll: true })
+  }
+  const pointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    if (event.pointerType !== 'mouse') activate()
   }
   return (
     <button
       className={`rush-ability${ready ? ' is-ready' : ''}${active ? ' is-active' : ''}`}
-      onClick={useAbility}
+      onClick={activate}
+      onPointerDown={pointerDown}
       disabled={!ready}
       aria-label={`机体技能：${frame.skillName}`}
     >

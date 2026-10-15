@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import type { CSSProperties } from 'react'
+import { Skull } from 'lucide-react'
+import type { CSSProperties, PointerEvent } from 'react'
 import type { RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
 import { activeProtocols, protocolDefinitions } from '../model/combat/protocols'
-import { waveDefinitions } from '../model/campaign/waves'
 import { ControlGlyph, WeaponGlyph, time } from './weapon-glyph'
 import { RushAbility } from './campaign/rush-ability'
 import { RushRadar } from './campaign/rush-radar'
@@ -14,7 +14,9 @@ import './campaign/rush-campaign-hud.css'
 export function RushHud(props: { state: RushState; store: RushPort; ready: boolean }) {
   const { state, store } = props
   const boss =
-    state.phase === 'playing' ? state.enemies.find((enemy) => enemy.kind === 'boss') : undefined
+    state.phase === 'playing'
+      ? state.enemies.find((enemy) => enemy.kind === 'boss' && enemy.hp > 0)
+      : undefined
   const playing = state.phase === 'playing' && !state.paused && props.ready
   const dashCooldown = dashMaxCooldown(state)
   const dashReady = playing && state.player.dashCooldown <= 0
@@ -36,23 +38,23 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
   const breather = state.wave.phase === 'breather'
   const remainingSeconds = Math.max(0, state.wave.duration - state.wave.elapsed)
   const remaining = Math.ceil(remainingSeconds)
-  const nextWave = waveDefinitions[state.wave.index]
   const protocols = activeProtocols(state)
   const focusCanvas = () =>
     document.querySelector<HTMLCanvasElement>('.rush-stage canvas')?.focus({ preventScroll: true })
   const dash = () => {
     if (store.dash()) focusCanvas()
   }
-  const sound = () => {
-    store.toggleSound()
-    focusCanvas()
+  const dashPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    if (event.pointerType !== 'mouse') dash()
   }
   const pause = () => {
     store.setPaused(!store.state.paused)
     if (!store.state.paused) focusCanvas()
   }
   return (
-    <div className="rush-hud">
+    <div className="rush-hud" inert={state.paused}>
       <div className="rush-vitals">
         <div
           className={`rush-health${state.player.hp <= 1 ? ' is-low' : ''}`}
@@ -75,73 +77,77 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
         </span>
       </div>
       <div className={`rush-clock${breather ? ' is-breather' : ''}`}>
-        <span className="rush-wave-name" key={state.wave.index}>
-          第 {String(state.wave.index).padStart(2, '0')} 波 <em>/ 9</em>
-          <i />
-          {breather ? '已完成' : state.wave.name}
+        <span className="rush-wave-name" aria-label={`第 ${state.wave.index} / 9 波`}>
+          <b>{String(state.wave.index).padStart(2, '0')}</b>
+          <em>/ 09</em>
         </span>
-        <b className={state.wave.duration === 0 ? 'is-lockdown' : ''}>
-          {breather ? time(state.clock) : state.wave.duration === 0 ? '击破封锁' : time(remaining)}
+        <b
+          className={state.wave.duration === 0 ? 'is-boss-wave' : ''}
+          aria-label={state.wave.duration === 0 ? '首领战' : '本波剩余时间'}
+        >
+          {state.wave.duration === 0 ? (
+            <Skull aria-hidden="true" />
+          ) : breather ? (
+            remainingSeconds.toFixed(1)
+          ) : (
+            time(remaining)
+          )}
         </b>
         <span className="rush-level">
-          第 {state.wave.act} / 3 幕 <i /> 等级 {state.level} <i />
-          {time(state.clock)}
+          <b>LV {state.level}</b>
+          <i
+            className="rush-xp"
+            role="progressbar"
+            aria-label="升级经验"
+            aria-valuemin={0}
+            aria-valuemax={state.nextXp}
+            aria-valuenow={state.xp}
+          >
+            <i style={{ transform: `scaleX(${Math.min(1, state.xp / state.nextXp)})` }} />
+          </i>
         </span>
-        <i
-          className="rush-xp"
-          role="progressbar"
-          aria-label="升级经验"
-          aria-valuemin={0}
-          aria-valuemax={state.nextXp}
-          aria-valuenow={state.xp}
-        >
-          <i style={{ transform: `scaleX(${Math.min(1, state.xp / state.nextXp)})` }} />
-        </i>
         <RushWaveTrack state={state} />
-        <span className={`rush-wave-next${breather ? ' is-incoming' : ''}`}>
-          {nextWave ? (
-            <>
-              下波 · {nextWave.name}
-              {breather && <b>{remainingSeconds.toFixed(1)}s</b>}
-            </>
-          ) : (
-            '最终封锁'
-          )}
-        </span>
       </div>
       <div className="rush-settings">
         <button
           className="rush-icon"
           onClick={pause}
+          onPointerDown={(event) => event.preventDefault()}
           disabled={!props.ready || state.phase === 'dead' || state.phase === 'won'}
           aria-label={state.paused ? '继续战斗' : '暂停战斗'}
         >
           <ControlGlyph id={state.paused ? 'play' : 'pause'} />
         </button>
-        <button
-          className="rush-icon"
-          onClick={sound}
-          aria-label={state.record.muted ? '开启声音' : '关闭声音'}
-          aria-pressed={!state.record.muted}
-        >
-          <ControlGlyph id={state.record.muted ? 'muted' : 'sound'} />
-        </button>
       </div>
-      {boss && (
-        <div className="rush-boss">
-          <span>封锁者 {boss.tier}</span>
-          <i>
-            <i style={{ transform: `scaleX(${Math.max(0, boss.hp / boss.maxHp)})` }} />
-          </i>
-        </div>
-      )}
-      {state.phase === 'playing' && state.overdrive > 0 && (
-        <span className="rush-overdrive">
-          火力超载
-          <i />
-          <b>{state.overdrive.toFixed(1)}</b>
-        </span>
-      )}
+      <div className="rush-alerts">
+        {playing && !breather && state.wave.elapsed < 0.9 && (
+          <span className="rush-wave-notice" key={`${state.runId}-${state.wave.index}`}>
+            {state.wave.name}
+          </span>
+        )}
+        {boss && (
+          <div
+            className="rush-boss"
+            role="meter"
+            aria-label={state.wave.name}
+            aria-valuemin={0}
+            aria-valuemax={boss.maxHp}
+            aria-valuenow={boss.hp}
+          >
+            <span>{state.wave.name}</span>
+            <i>
+              <i style={{ transform: `scaleX(${Math.max(0, boss.hp / boss.maxHp)})` }} />
+            </i>
+          </div>
+        )}
+        {state.phase === 'playing' && state.overdrive > 0 && (
+          <span className="rush-overdrive">
+            火力超载
+            <i />
+            <b>{state.overdrive.toFixed(1)}</b>
+          </span>
+        )}
+      </div>
       {protocols.length > 0 && (
         <div className="rush-protocols" aria-label="已接入协议">
           {protocols.map((id) => {
@@ -162,6 +168,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
         <button
           className={`rush-dash${dashReady ? ' is-ready' : ''}${intercepted ? ' has-counter' : ''}`}
           onClick={dash}
+          onPointerDown={dashPointerDown}
           disabled={!dashReady}
           aria-label={dashReady ? '冲刺截弹' : '冲刺冷却中'}
           style={

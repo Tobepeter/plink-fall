@@ -7,7 +7,12 @@ export function RushWaveTrack(props: { state: RushState }) {
   return (
     <span
       className="rush-wave-track"
-      aria-label={`九波战线，第 ${s.wave.act} / 3 幕，已完成 ${completed} 波`}
+      role="progressbar"
+      aria-label="九波战线"
+      aria-valuemin={0}
+      aria-valuemax={9}
+      aria-valuenow={completed}
+      aria-valuetext={`第 ${s.wave.index} 波，已完成 ${completed} 波`}
     >
       {Array.from({ length: 9 }, (_, index) => (
         <i

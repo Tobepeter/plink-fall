@@ -29,18 +29,18 @@ export class RushInput {
     if (!active) this.cancel()
     else this.store.setMove(this.direction())
     const manual = this.pointerType === 'mouse' && this.store.state.record.mouseAim
-    const point = manual && this.mouse
-      ? this.scene.screenToWorld(this.mouse.x, this.mouse.y)
-      : null
+    const point = manual && this.mouse ? this.scene.screenToWorld(this.mouse.x, this.mouse.y) : null
     this.store.setAim(point, manual ? 'mouse' : 'auto')
     this.scene.setAim(active && manual ? this.mouse : null)
     this.scene.setStick(active ? this.stick : null)
   }
 
   private direction(): Vec {
-    let x = Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) -
+    let x =
+      Number(this.keys.has('KeyD') || this.keys.has('ArrowRight')) -
       Number(this.keys.has('KeyA') || this.keys.has('ArrowLeft'))
-    let y = Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) -
+    let y =
+      Number(this.keys.has('KeyS') || this.keys.has('ArrowDown')) -
       Number(this.keys.has('KeyW') || this.keys.has('ArrowUp'))
     if (!x && !y && this.stick) {
       x = (this.stick.current.x - this.stick.origin.x) / 52
@@ -61,9 +61,10 @@ export class RushInput {
       this.pointerType = 'mouse'
       const point = this.point(event)
       const rect = this.canvas.getBoundingClientRect()
-      this.mouse = point.x >= 0 && point.y >= 0 && point.x <= rect.width && point.y <= rect.height
-        ? point
-        : null
+      this.mouse =
+        point.x >= 0 && point.y >= 0 && point.x <= rect.width && point.y <= rect.height
+          ? point
+          : null
     } else if (this.stick?.id === event.pointerId) this.stick.current = this.point(event)
   }
 
@@ -94,7 +95,8 @@ export class RushInput {
 
   private pointerUp = (event: PointerEvent) => {
     if (this.stick?.id !== event.pointerId) return
-    if (this.canvas.hasPointerCapture(event.pointerId)) this.canvas.releasePointerCapture(event.pointerId)
+    if (this.canvas.hasPointerCapture(event.pointerId))
+      this.canvas.releasePointerCapture(event.pointerId)
     this.stick = null
     this.store.setMove(this.direction())
   }
@@ -104,12 +106,19 @@ export class RushInput {
     const target = event.target instanceof HTMLElement ? event.target : null
     if (target?.isContentEditable || target?.closest('input, textarea, [role="textbox"]')) return
     if (state.phase === 'menu') return
-    if (event.repeat && ['Escape', 'Space', 'KeyE', 'Digit1', 'Digit2', 'Digit3'].includes(event.code)) return
+    if (
+      event.repeat &&
+      ['Escape', 'Space', 'KeyE', 'Digit1', 'Digit2', 'Digit3'].includes(event.code)
+    )
+      return
     if (event.code === 'Escape' && state.phase === 'playing') {
       event.preventDefault()
       this.cancel()
       this.store.setPaused(!state.paused)
-      if (!this.store.state.paused) this.canvas.focus({ preventScroll: true })
+      if (!this.store.state.paused) {
+        this.canvas.focus({ preventScroll: true })
+        this.unlock()
+      }
       return
     }
     if (!state.paused && state.phase === 'playing' && /^Digit[123]$/.test(event.code)) {
@@ -121,7 +130,8 @@ export class RushInput {
       }
       return
     }
-    if (target?.closest('button, [role="dialog"]') || state.paused || state.phase !== 'playing') return
+    if (target?.closest('button, [role="dialog"]') || state.paused || state.phase !== 'playing')
+      return
     if (event.code === 'Space' || event.code === 'KeyE') {
       event.preventDefault()
       this.unlock()
@@ -144,7 +154,8 @@ export class RushInput {
 
   cancel = () => {
     this.keys.clear()
-    if (this.stick && this.canvas.hasPointerCapture(this.stick.id)) this.canvas.releasePointerCapture(this.stick.id)
+    if (this.stick && this.canvas.hasPointerCapture(this.stick.id))
+      this.canvas.releasePointerCapture(this.stick.id)
     this.stick = null
     this.store.setMove({ x: 0, y: 0 })
     this.scene.setStick(null)

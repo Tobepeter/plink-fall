@@ -1,0 +1,121 @@
+.rush-pause-menu {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  top: 50%;
+  width: min(288px, calc(100% - 48px));
+  transform: translate(-50%, -50%);
+  color: var(--rush-ivory);
+}
+.rush-pause-menu h2 {
+  margin: 0 0 24px;
+  font-size: 26px;
+  text-align: center;
+  font-weight: 850;
+  letter-spacing: 6px;
+}
+.rush-pause-options {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+.rush-pause-option,
+.rush-pause-mouse {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 0 12px;
+  color: #d2e4d3;
+  background: #192e32;
+  border: 1px solid #46685f;
+  font-size: 15px;
+}
+.rush-pause-option > .rush-control-glyph {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+.rush-pause-option > .rush-control-glyph .is-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.rush-pause-option > i {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  width: 34px;
+  height: 18px;
+  padding: 2px;
+  background: #486158;
+  border-radius: 12px;
+}
+.rush-pause-option > i > b {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e6e8d3;
+}
+.rush-pause-option > i.is-on {
+  justify-content: flex-end;
+  background: #5cab8e;
+}
+.rush-pause-mouse > .rush-aim-toggle {
+  margin-left: auto;
+}
+.rush-pause-resume {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 68px;
+  padding: 0 14px;
+  border: 0;
+  color: #10272b;
+  background: var(--rush-mint);
+  box-shadow:
+    inset 0 3px #c8f0d9,
+    inset 0 -4px #438c74;
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
+}
+.rush-pause-resume > .rush-control-glyph {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+.rush-pause-resume > b {
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+@media (pointer: coarse) {
+  .rush-shell .rush-pause-mouse {
+    display: none;
+  }
+}
+@media (max-height: 420px) {
+  .rush-pause-menu h2 {
+    margin-bottom: 12px;
+    font-size: 21px;
+  }
+  .rush-pause-options {
+    margin-bottom: 14px;
+    gap: 5px;
+  }
+  .rush-pause-option,
+  .rush-pause-mouse {
+    min-height: 48px;
+  }
+  .rush-pause-resume {
+    min-height: 58px;
+  }
+}

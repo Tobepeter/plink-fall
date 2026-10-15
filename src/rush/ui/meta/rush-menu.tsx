@@ -1,215 +1,105 @@
-import { useState } from 'react'
-import type { CSSProperties } from 'react'
-import { frameDefinitions } from '../../model/data'
-import { frameStats } from '../../model/frames'
-import { difficultyDefinitions } from '../../model/campaign/difficulty'
-import { metaPrice, metaUpgrades } from '../../model/meta/progression'
-import type { MetaUpgradeId, RushPort, RushState } from '../../types'
-import { ControlGlyph, FrameGlyph, WeaponGlyph, time } from '../weapon-glyph'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { ArrowLeft, Settings } from 'lucide-react'
+import type { RushPort, RushState } from '../../types'
 import { RushCoin } from './rush-coin'
-import { RushFrames } from './rush-frames'
-import { RushAim } from '../campaign/rush-aim'
+import { RushHome } from './rush-home'
+import type { RushMenuPage } from './rush-home'
+import { RushFramePage } from './pages/rush-frame-page'
+import { RushUpgradePage } from './pages/rush-upgrade-page'
+import { RushDifficultyPage } from './pages/rush-difficulty-page'
+import { RushStatsPage } from './pages/rush-stats-page'
+import { RushSettingsPage } from './pages/rush-settings-page'
 import './rush-menu.css'
+import './rush-home.css'
 import './rush-hangar.css'
-import './rush-meta-upgrades.css'
-import './rush-menu-layout.css'
-import './rush-deploy.css'
+import './rush-aim.css'
+import './pages/rush-pages.css'
+import './pages/rush-equipment.css'
+import './pages/rush-upgrades.css'
+import './pages/rush-options.css'
 
-// 机体整备与永久成长
+const pageNames = {
+  home: '零点突围',
+  frames: '机体',
+  upgrades: '永久强化',
+  difficulty: '封锁难度',
+  stats: '战绩',
+  settings: '设置',
+}
+
+// 整备首页和主动进入的独立分屏
 export function RushMenu(props: { state: RushState; store: RushPort; start: () => void }) {
-  const { state, store } = props
-  const { record } = state
-  const frame = frameDefinitions.find((item) => item.id === record.selected)!
-  const stats = frameStats[frame.id]
-  const difficulty = difficultyDefinitions[record.difficulty]
-  const [purchase, setPurchase] = useState<{ id: MetaUpgradeId; level: number } | null>(null)
-  const purchaseUpgrade = (id: MetaUpgradeId) => {
-    if (store.purchaseMeta(id)) setPurchase({ id, level: store.state.record.meta[id] })
+  const [page, setPage] = useState<RushMenuPage>('home')
+  const menu = useRef<HTMLElement>(null)
+  const origin = useRef<RushMenuPage>('home')
+  const previous = useRef<RushMenuPage>('home')
+  const home = () => setPage('home')
+  const open = (next: RushMenuPage) => {
+    origin.current = next
+    setPage(next)
   }
-  const sound = () => store.toggleSound()
-  const glyphs = {
-    firepower: 'haste',
-    armor: 'vital',
-    capacitor: 'pulse',
-    magnet: 'magnet',
-  } as const
+
+  useEffect(() => {
+    if (page === 'home') return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setPage('home')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [page])
+
+  useLayoutEffect(() => {
+    if (previous.current === page) return
+    previous.current = page
+    const selector = page === 'home' ? `[data-menu-entry="${origin.current}"]` : '.rush-menu-back'
+    menu.current?.querySelector<HTMLButtonElement>(selector)?.focus({ preventScroll: true })
+  }, [page])
+
+  const { state, store } = props
   return (
-    <section className="rush-menu" aria-label="突围整备舱">
+    <section ref={menu} className="rush-menu" data-menu-page={page} aria-label="突围整备舱">
       <div className="rush-hangar-grid" aria-hidden="true" />
       <header className="rush-menu-top">
-        <div className="rush-menu-brand">
-          <i />
-          <span>
-            零点突围<small>ZERO HOUR</small>
-          </span>
-        </div>
-        <div className="rush-menu-wallet" aria-label={`金币余额 ${record.coins}`}>
-          <RushCoin />
-          <b>{record.coins}</b>
-          <small>金币</small>
-        </div>
-        <RushAim store={store} enabled={record.mouseAim} />
-        <button
-          className="rush-icon"
-          onClick={sound}
-          aria-label={record.muted ? '开启声音' : '关闭声音'}
-          aria-pressed={!record.muted}
-        >
-          <ControlGlyph id={record.muted ? 'muted' : 'sound'} />
-        </button>
-      </header>
-      <div className="rush-menu-body">
-        <div className="rush-hangar">
-          <div className="rush-hangar-caption">
-            <h1>选择机体</h1>
-          </div>
-          <div
-            className={`rush-hangar-stage is-${frame.id}`}
-            style={{ '--hangar-color': frame.color } as CSSProperties}
-            aria-hidden="true"
-          >
-            <div className="rush-hangar-radar">
-              <i />
-              <i />
-              <i />
-            </div>
-            <span className="rush-hangar-axis is-left" />
-            <span className="rush-hangar-axis is-right" />
-            <div className="rush-hangar-hero">
-              <FrameGlyph id={frame.id} />
-            </div>
-            <span className="rush-hangar-module">
-              <WeaponGlyph id={stats.startingSkill} size={55} />
-            </span>
-            <div className="rush-hangar-platform">
-              <i />
-              <i />
-              <i />
-            </div>
-            <span className="rush-hangar-serial">0{frameDefinitions.indexOf(frame) + 1}</span>
-          </div>
-          <div className="rush-hangar-name">
-            <b>{frame.name}</b>
-            <span>
-              {stats.skillName} <kbd>E</kbd>
-            </span>
-          </div>
-          <div className="rush-frame-identity">
-            <b>{stats.skillHint}</b>
-            <small>{stats.tradeoff}</small>
-          </div>
-          <RushFrames state={state} store={store} />
-        </div>
-        <div className="rush-workbench">
-          <div className="rush-workbench-title">
-            <span>永久强化</span>
+        {page === 'home' ? (
+          <div className="rush-menu-brand">
             <i />
-          </div>
-          <div className="rush-meta-upgrades" aria-label="永久强化">
-            {metaUpgrades.map((upgrade) => {
-              const level = record.meta[upgrade.id]
-              const maxed = level >= upgrade.maxLevel
-              const cost = metaPrice(record, upgrade.id)
-              const available = !maxed && record.coins >= cost
-              const bought = purchase?.id === upgrade.id && purchase.level === level
-              return (
-                <button
-                  key={upgrade.id}
-                  className={`rush-meta-upgrade${available ? ' is-affordable' : ''}${maxed ? ' is-maxed' : ''}`}
-                  style={{ '--meta-color': upgrade.color } as CSSProperties}
-                  disabled={!available}
-                  onClick={() => purchaseUpgrade(upgrade.id)}
-                  aria-label={`${upgrade.name}，等级 ${level}，${maxed ? '已满级' : `升级需要 ${cost} 金币`}`}
-                >
-                  <span className="rush-meta-device">
-                    <WeaponGlyph id={glyphs[upgrade.id]} size={59} />
-                  </span>
-                  <span className="rush-meta-details">
-                    <span className="rush-meta-name">
-                      <b>{upgrade.name}</b>
-                      <small>LV {level}</small>
-                    </span>
-                    <span className="rush-meta-effect">
-                      {maxed ? '当前' : '下阶'} · {upgrade.effect(maxed ? level : level + 1)}
-                    </span>
-                    <span className="rush-meta-ranks" aria-hidden="true">
-                      {Array.from({ length: upgrade.maxLevel }, (_, index) => (
-                        <i key={index} className={index < level ? 'is-filled' : ''} />
-                      ))}
-                    </span>
-                  </span>
-                  <span className="rush-meta-price">
-                    {maxed ? (
-                      <span>MAX</span>
-                    ) : (
-                      <>
-                        <RushCoin />
-                        <b>{cost}</b>
-                        <i>＋</i>
-                      </>
-                    )}
-                  </span>
-                  {bought && (
-                    <span className="rush-meta-installed" key={level}>
-                      强化已装载
-                    </span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-          <p className="rush-menu-feedback" role="status">
-            {purchase
-              ? `${metaUpgrades.find((item) => item.id === purchase.id)!.name}提升至 ${purchase.level} 级`
-              : record.lastRun
-                ? `上局 +${record.lastRun.coins} 金币`
-                : ''}
-          </p>
-          <div className="rush-menu-difficulty" aria-label="选择封锁星级">
-            <span>难度</span>
-            <div className="rush-star-options">
-              {difficultyDefinitions.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => store.selectDifficulty(item.id)}
-                  disabled={item.id > record.highestDifficulty}
-                  aria-label={`选择${item.id}星难度`}
-                  aria-pressed={record.difficulty === item.id}
-                  className={record.difficulty === item.id ? 'is-selected' : ''}
-                >
-                  <span>{item.id === 0 ? '○' : '★'}</span>
-                  <b>{item.id}</b>
-                </button>
-              ))}
-            </div>
-            <small>金币 ×{difficulty.rewardMultiplier}</small>
-          </div>
-          <p className="rush-difficulty-hint">
-            {record.highestDifficulty === 3 ? '星级已全部解锁' : '通关解锁下一星'}
-          </p>
-          <div className="rush-menu-records" aria-label="累计战绩">
             <span>
-              <b>{record.runs}</b>
-              <small>出击</small>
-            </span>
-            <span>
-              <b>{time(record.bestTime)}</b>
-              <small>最长存活</small>
-            </span>
-            <span>
-              <b>{record.bestKills}</b>
-              <small>最多击败</small>
+              零点突围<small>ZERO HOUR</small>
             </span>
           </div>
+        ) : (
+          <>
+            <button className="rush-menu-back" onClick={home} aria-label="返回首页">
+              <ArrowLeft aria-hidden="true" />
+            </button>
+            <h1 className="rush-menu-title">{pageNames[page]}</h1>
+          </>
+        )}
+        <div className="rush-menu-wallet" aria-label={`金币余额 ${state.record.coins}`}>
+          <RushCoin />
+          <b>{state.record.coins}</b>
         </div>
+        {page === 'home' && (
+          <button
+            className="rush-menu-gear"
+            data-menu-entry="settings"
+            onClick={() => open('settings')}
+            aria-label="打开设置"
+          >
+            <Settings aria-hidden="true" />
+          </button>
+        )}
+      </header>
+      <div className="rush-menu-content" key={page}>
+        {page === 'home' && <RushHome state={state} start={props.start} open={open} />}
+        {page === 'frames' && <RushFramePage state={state} store={store} done={home} />}
+        {page === 'upgrades' && <RushUpgradePage state={state} store={store} />}
+        {page === 'difficulty' && <RushDifficultyPage state={state} store={store} done={home} />}
+        {page === 'stats' && <RushStatsPage state={state} />}
+        {page === 'settings' && <RushSettingsPage state={state} store={store} />}
       </div>
-      <footer className="rush-menu-bottom">
-        <button className="rush-start" onClick={props.start}>
-          <ControlGlyph id="play" />
-          <b>开始突围</b>
-          <span>→</span>
-        </button>
-      </footer>
     </section>
   )
 }

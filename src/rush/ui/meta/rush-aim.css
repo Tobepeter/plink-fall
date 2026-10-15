@@ -1,0 +1,41 @@
+.rush-aim-toggle {
+  padding: 5px 8px 13px;
+  color: #8ea195;
+}
+.rush-aim-toggle > .rush-control-glyph {
+  width: 22px;
+  height: 22px;
+}
+.rush-aim-toggle > small {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  text-align: center;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.rush-aim-toggle > i {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
+  background: #5f7368;
+}
+.rush-aim-toggle.is-enabled {
+  color: var(--rush-mint);
+}
+.rush-aim-toggle.is-enabled > i {
+  background: var(--rush-mint);
+}
+.rush-key-hint kbd:nth-of-type(3) {
+  margin-left: 10px;
+}
+@media (pointer: coarse) {
+  .rush-shell .rush-aim-toggle,
+  .rush-menu .rush-setting.is-pointer {
+    display: none;
+  }
+}

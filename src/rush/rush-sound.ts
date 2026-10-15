@@ -13,7 +13,13 @@ export class RushSound {
   private beat = 0
   constructor(private getState: () => RushState) {}
   unlock() {
-    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
+    if (
+      document.hidden ||
+      this.getState().record.muted ||
+      this.getState().paused ||
+      this.getState().phase === 'menu'
+    )
+      return
     try {
       const Constructor =
         window.AudioContext ??
@@ -38,7 +44,13 @@ export class RushSound {
     }
   }
   resume() {
-    if (document.hidden || this.getState().record.muted || this.getState().phase === 'menu') return
+    if (
+      document.hidden ||
+      this.getState().record.muted ||
+      this.getState().paused ||
+      this.getState().phase === 'menu'
+    )
+      return
     if (this.output) this.output.gain.value = 0.18
     if (this.context?.state === 'suspended') {
       void this.context.resume().catch(() => {})

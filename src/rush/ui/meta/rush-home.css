@@ -1,0 +1,208 @@
+.rush-home {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  height: 100%;
+  min-height: 0;
+}
+.rush-home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: min(100%, 460px);
+}
+.rush-home-hero .rush-hangar-stage {
+  height: clamp(160px, 36vh, 340px);
+  flex-shrink: 1;
+}
+.rush-home-hero > h1 {
+  margin: 6px 0 3px;
+  font-size: 29px;
+  font-weight: 900;
+  line-height: 1.3;
+  letter-spacing: 4px;
+}
+.rush-home-skill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  color: #b5cdb7;
+  font-size: 12px;
+}
+.rush-home-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(100%, 384px);
+}
+.rush-difficulty-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 10px;
+  border: 0;
+  background: transparent;
+  color: #bad1bc;
+}
+.rush-difficulty-chip > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--rush-brass);
+}
+.rush-difficulty-chip > svg:last-child {
+  width: 14px;
+  color: #8eac99;
+}
+.rush-difficulty-chip > span {
+  font-size: 13px;
+}
+.rush-difficulty-chip > b {
+  color: var(--rush-brass);
+  font-size: 12px;
+}
+.rush-difficulty-chip:hover {
+  color: var(--rush-mint);
+}
+.rush-start {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px 24px;
+  border: 0;
+  background: #8ce6c2;
+  color: #152a29;
+  box-shadow:
+    inset 0 3px #c8f0d9,
+    inset 0 -5px #438c74;
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    4px 100%,
+    0 calc(100% - 4px),
+    0 12px
+  );
+}
+.rush-start > b {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+.rush-start > svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
+}
+.rush-start:hover {
+  background: #a6eecf;
+}
+.rush-start:active {
+  transform: translateY(2px);
+}
+.rush-start:focus-visible {
+  box-shadow:
+    inset 0 0 0 3px var(--rush-brass),
+    inset 0 -5px #438c74;
+}
+.rush-home-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 10px;
+}
+.rush-home-nav > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 78px;
+  padding: 10px 6px 4px;
+  border: 0;
+  border-top: 1px solid #8ce6c22b;
+  color: #c4dcc6;
+  background: linear-gradient(#8ce6c209, transparent 80%);
+}
+.rush-home-nav > button > svg {
+  width: 27px;
+  height: 27px;
+  stroke-width: 1.7;
+}
+.rush-home-nav > button > span {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.rush-home-nav > button:hover {
+  color: var(--rush-mint);
+  background: #8ce6c20d;
+}
+@media (max-width: 650px) {
+  .rush-start {
+    min-height: 68px;
+  }
+  .rush-start > b {
+    font-size: 24px;
+  }
+  .rush-home-nav {
+    gap: 14px;
+    margin-top: 6px;
+  }
+  .rush-home-nav > button {
+    min-height: 72px;
+  }
+  .rush-home-hero > h1 {
+    font-size: 27px;
+  }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .rush-home {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(20px, 5vw, 60px);
+  }
+  .rush-home-controls {
+    width: min(100%, 340px);
+  }
+  .rush-home-hero .rush-hangar-stage {
+    height: min(44vh, 240px);
+    min-height: 120px;
+  }
+  .rush-home-hero .rush-hangar-hero .rush-frame-glyph {
+    --frame-width: clamp(88px, 30vh, 144px);
+  }
+  .rush-home-hero .rush-hangar-radar {
+    width: min(76%, 42vh, 200px);
+  }
+  .rush-home-hero > h1 {
+    font-size: 25px;
+  }
+  .rush-start {
+    min-height: 68px;
+  }
+  .rush-start > b {
+    font-size: 24px;
+  }
+  .rush-home-nav {
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .rush-home-nav > button {
+    min-height: 72px;
+  }
+}

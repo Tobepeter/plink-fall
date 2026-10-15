@@ -94,42 +94,6 @@ body.rush-mode #root {
   gap: 14px;
   white-space: nowrap;
 }
-.rush-resume {
-  position: absolute;
-  z-index: 7;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: 135px;
-  min-height: 122px;
-  border: 0;
-  background: transparent;
-  color: var(--rush-ivory);
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  text-shadow: 0 2px #06121d;
-}
-.rush-resume > svg {
-  width: 57px;
-  height: 57px;
-  padding: 11px;
-  box-sizing: content-box;
-  background: #2d4940;
-  border: 2px solid var(--rush-mint);
-  clip-path: polygon(
-    14px 0,
-    100% 0,
-    100% calc(100% - 14px),
-    calc(100% - 14px) 100%,
-    0 100%,
-    0 14px
-  );
-}
 .rush-shell.is-paused::after {
   content: '';
   position: absolute;

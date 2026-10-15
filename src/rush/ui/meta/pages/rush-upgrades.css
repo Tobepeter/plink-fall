@@ -1,0 +1,133 @@
+.rush-upgrade-page {
+  padding-top: clamp(10px, 4vh, 40px);
+}
+.rush-upgrade-rack {
+  display: flex;
+  flex-direction: column;
+}
+.rush-upgrade-slot {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 22px;
+  min-height: 124px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #8ce6c22b;
+}
+.rush-upgrade-info h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.rush-upgrade-info h2 > small {
+  color: var(--meta-color);
+  font:
+    800 12px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-upgrade-info > span,
+.rush-upgrade-info > strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.rush-upgrade-info > .rush-upgrade-current {
+  color: #a2bca7;
+  font-size: 12px;
+}
+.rush-upgrade-info > strong {
+  color: #c9dfc9;
+  font-weight: 650;
+}
+.rush-upgrade-info > .rush-meta-ranks {
+  display: flex;
+  gap: 4px;
+  margin-top: 7px;
+}
+.rush-meta-ranks > i {
+  width: 13px;
+  height: 3px;
+  background: #3b5548;
+}
+.rush-meta-ranks > i.is-filled {
+  background: var(--meta-color);
+}
+.rush-meta-upgrade {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 72px;
+  min-height: 66px;
+  padding: 7px 5px;
+  border: 1px solid #a7e0bc;
+  background: #8ce6c2;
+  color: #18362b;
+  box-shadow: inset 0 -3px #47896d;
+}
+.rush-meta-upgrade > svg {
+  width: 23px;
+  height: 23px;
+}
+.rush-meta-upgrade > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rush-meta-upgrade .rush-coin {
+  width: 20px;
+  height: 20px;
+}
+.rush-meta-upgrade b {
+  font:
+    800 16px 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-meta-upgrade:disabled {
+  background: #294237;
+  color: #c5cdb0;
+  border-color: #66816b;
+  box-shadow: inset 0 -3px #1e3028;
+}
+.rush-meta-upgrade:not(:disabled):hover {
+  background: #b3f0d0;
+}
+.rush-upgrade-slot.is-maxed .rush-meta-upgrade {
+  color: var(--rush-mint);
+  background: transparent;
+  border-color: #8ce6c23d;
+  box-shadow: none;
+}
+@media (max-width: 650px) {
+  .rush-upgrade-slot {
+    grid-template-columns: 46px minmax(0, 1fr) 62px;
+    gap: 12px;
+    min-height: 116px;
+    padding: 8px 0;
+  }
+  .rush-upgrade-slot > .rush-module {
+    width: 46px;
+    height: 46px;
+  }
+  .rush-upgrade-info h2 {
+    gap: 8px;
+    font-size: 15px;
+  }
+  .rush-upgrade-info > strong {
+    font-size: 12px;
+  }
+  .rush-meta-upgrade {
+    width: 62px;
+    min-height: 64px;
+  }
+}
+@media (min-width: 651px) and (max-height: 480px) {
+  .rush-upgrade-slot {
+    min-height: 102px;
+  }
+}

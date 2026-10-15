@@ -16,8 +16,8 @@
   position: absolute;
   display: flex;
   gap: 6px;
-  top: max(13px, calc(env(safe-area-inset-top) + 5px));
-  right: max(19px, calc(env(safe-area-inset-right) + 8px));
+  top: calc(var(--rush-hud-top) + 62px);
+  right: var(--rush-hud-right);
 }
 .rush-icon {
   position: relative;
@@ -66,8 +66,8 @@
 }
 .rush-dash {
   position: absolute;
-  right: max(25px, calc(env(safe-area-inset-right) + 16px));
-  bottom: max(25px, calc(env(safe-area-inset-bottom) + 16px));
+  right: var(--rush-hud-right);
+  bottom: var(--rush-control-bottom);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -110,7 +110,7 @@
   opacity: 0.55;
 }
 .rush-dash > span {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 850;
   letter-spacing: 0.5px;
   opacity: 0.6;
@@ -180,11 +180,6 @@
   }
 }
 @media (max-width: 600px) {
-  .rush-settings {
-    right: max(8px, calc(env(safe-area-inset-right) + 4px));
-    top: max(11px, calc(env(safe-area-inset-top) + 4px));
-    gap: 3px;
-  }
   .rush-icon {
     width: 44px;
     height: 44px;
@@ -192,19 +187,23 @@
   .rush-key-hint {
     display: none;
   }
-  .rush-dash {
-    right: max(19px, calc(env(safe-area-inset-right) + 10px));
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 15px));
-  }
 }
 @media (pointer: coarse) {
   .rush-key-hint {
     display: none;
   }
 }
-@media (max-height: 500px) {
+@media (max-width: 340px) {
   .rush-dash {
-    bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px));
-    right: max(20px, calc(env(safe-area-inset-right) + 12px));
+    width: 80px;
+    height: 80px;
+  }
+  .rush-dash-ring {
+    width: 80px;
+    height: 80px;
+  }
+  .rush-dash > .rush-control-glyph {
+    width: 32px;
+    height: 32px;
   }
 }

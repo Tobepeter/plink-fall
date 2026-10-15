@@ -7,12 +7,12 @@
   z-index: 8;
   display: flex;
   flex-direction: column;
-  gap: clamp(14px, 3vh, 28px);
-  padding: max(22px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right))
-    max(22px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
-  overflow: auto;
+  gap: 18px;
+  padding: max(24px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(32px, env(safe-area-inset-left));
+  overflow: hidden;
   box-sizing: border-box;
-  background: radial-gradient(ellipse at 30% 42%, #24483e 0, #152b2e 30%, #101b2a 65%);
+  background: radial-gradient(ellipse at 48% 39%, #24483e 0, #152b2e 32%, #101b2a 72%);
   isolation: isolate;
   animation: rush-appear 0.18s ease-out;
 }
@@ -28,15 +28,15 @@
   mask-image: linear-gradient(transparent, #000 38%, transparent);
 }
 .rush-menu-top,
-.rush-menu-body,
-.rush-menu-bottom {
+.rush-menu-content {
   width: min(100%, 1080px);
   margin-inline: auto;
 }
 .rush-menu-top {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
+  min-height: 44px;
   flex-shrink: 0;
 }
 .rush-menu-brand {
@@ -44,9 +44,9 @@
   align-items: center;
   gap: 11px;
   margin-right: auto;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: 3px;
-  font-size: 19px;
 }
 .rush-menu-brand > i {
   width: 16px;
@@ -58,26 +58,23 @@
 }
 .rush-menu-brand small {
   display: block;
-  margin-top: 4px;
-  color: #80a194;
-  font-size: 8px;
+  margin-top: 3px;
+  color: #9ab9a9;
+  font-size: 9px;
   letter-spacing: 4px;
 }
 .rush-menu-wallet {
   display: flex;
   align-items: center;
   gap: 7px;
+  margin-left: auto;
   color: var(--rush-brass);
 }
 .rush-menu-wallet b {
   font:
-    800 27px 'SFMono-Regular',
+    800 25px 'SFMono-Regular',
     Consolas,
     monospace;
-}
-.rush-menu-wallet small {
-  color: #a7b4a0;
-  font-size: 10px;
 }
 .rush-coin {
   width: 29px;
@@ -98,139 +95,137 @@
 .rush-coin path:last-child {
   fill: #765a38;
 }
-.rush-menu-body {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(35px, 8vw, 110px);
+.rush-menu-gear,
+.rush-menu-back {
+  display: inline-flex;
   align-items: center;
-}
-.rush-menu-bottom {
-  display: flex;
-  align-items: center;
-  gap: 22px;
+  justify-content: center;
   flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 1px solid #8ce6c235;
+  color: #c4ddc9;
+  background: #13272c;
 }
-.rush-menu-bottom > span,
-.rush-menu-bottom > small {
+.rush-menu-gear:hover,
+.rush-menu-back:hover {
+  color: var(--rush-mint);
+  background: #264139;
+}
+.rush-menu-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: 2px;
+}
+.rush-menu-content {
   flex: 1;
-  color: #91ad9c;
-  font-size: 10px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #557968 transparent;
+  animation: rush-menu-page-in 0.16s ease-out;
 }
-.rush-menu-bottom > small {
-  text-align: right;
+.rush-menu[data-menu-page='home'] .rush-menu-content {
+  overflow: hidden;
 }
-.rush-menu-bottom > span > i {
-  display: inline-block;
-  width: 4px;
-  height: 4px;
-  margin-right: 6px;
-  background: var(--rush-mint);
-}
-.rush-start {
-  position: relative;
+.rush-menu-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  width: 265px;
-  min-height: 61px;
-  border: 0;
+  gap: 18px;
+  min-width: 240px;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 20px;
+  border: 1px solid #b0efd0;
   background: #8ce6c2;
-  color: #152a29;
-  box-shadow:
-    inset 0 3px #c8f0d9,
-    inset 0 -4px #438c74;
-  clip-path: polygon(
-    12px 0,
-    calc(100% - 4px) 0,
-    100% 4px,
-    100% calc(100% - 12px),
-    calc(100% - 12px) 100%,
-    4px 100%,
-    0 calc(100% - 4px),
-    0 12px
-  );
+  color: #152c29;
+  box-shadow: inset 0 -4px #4c957b;
 }
-.rush-start > svg {
-  width: 23px;
-  height: 23px;
-  fill: currentColor;
-}
-.rush-start > b {
+.rush-menu-action > b {
   font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
 }
-.rush-start > span {
-  margin-left: 14px;
-  font-size: 24px;
+.rush-menu-action > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font:
+    800 20px 'SFMono-Regular',
+    Consolas,
+    monospace;
 }
-.rush-start:hover {
-  background: #a6eecf;
+.rush-menu-action:disabled {
+  border-color: #658c75;
+  color: #bad1bd;
+  background: #2b453e;
+  box-shadow: inset 0 -3px #1d342f;
 }
-.rush-start:active {
+.rush-menu-action:not(:disabled):active {
   transform: translateY(1px);
 }
-.rush-menu .rush-menu-bottom {
-  justify-content: center;
-}
-.rush-menu .rush-start {
-  width: min(100%, 360px);
-  min-height: 76px;
-}
-.rush-menu .rush-start > b {
-  font-size: 25px;
-  letter-spacing: 3px;
-}
-.rush-menu .rush-start > .rush-control-glyph {
-  width: 27px;
-  height: 27px;
-}
-.rush-menu .rush-hangar-caption h1 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #afcbb5;
-}
-.rush-menu .rush-menu-brand {
-  font-size: 22px;
-}
-.rush-menu .rush-workbench-title > span {
-  font-size: 16px;
-}
-.rush-menu .rush-meta-name b {
-  font-size: 14px;
-}
-.rush-menu-feedback:empty {
-  display: none;
+@keyframes rush-menu-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @media (max-width: 650px) {
-  .rush-menu .rush-start {
-    min-height: 64px;
+  .rush-menu {
+    padding: max(18px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    gap: 12px;
   }
-  .rush-menu .rush-start > b {
-    font-size: 23px;
+  .rush-menu-top {
+    gap: 10px;
   }
-  .rush-menu .rush-menu-brand {
-    font-size: 16px;
+  .rush-menu-brand {
+    gap: 8px;
+    font-size: 17px;
+    letter-spacing: 2px;
   }
-  .rush-menu .rush-meta-name b {
-    font-size: 12px;
+  .rush-menu-brand > i {
+    width: 12px;
+    height: 18px;
   }
-  .rush-menu .rush-hangar-caption h1 {
-    font-size: 13px;
+  .rush-menu-brand small {
+    font-size: 8px;
+    letter-spacing: 3px;
   }
-}
-@media (min-width: 651px) and (max-height: 620px) {
-  .rush-menu .rush-start {
-    min-height: 60px;
+  .rush-menu-wallet {
+    gap: 4px;
   }
-  .rush-menu .rush-start > b {
+  .rush-menu-wallet b {
     font-size: 22px;
   }
-  .rush-menu .rush-menu-brand {
+  .rush-menu-wallet .rush-coin {
+    width: 25px;
+    height: 25px;
+  }
+  .rush-menu-title {
     font-size: 19px;
+  }
+}
+@media (min-width: 651px) and (max-height: 480px) {
+  .rush-menu {
+    padding: max(12px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    gap: 6px;
+  }
+  .rush-menu-brand {
+    font-size: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rush-menu,
+  .rush-menu-content {
+    animation: none;
   }
 }

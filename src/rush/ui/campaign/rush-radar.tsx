@@ -19,7 +19,8 @@ export function RushRadar(props: { state: RushState }) {
   return (
     <div
       className={`rush-radar${edge ? ' near-edge' : ''}`}
-      aria-label={edge ? '接近竞技场边界' : '竞技场位置雷达'}
+      role="img"
+      aria-label={edge ? '接近地图边界' : '位置雷达'}
     >
       <svg viewBox="0 0 72 54" aria-hidden="true">
         <path className="rush-radar-bound" d="M7 3h58l4 4v40l-4 4H7l-4-4V7z" />
@@ -38,7 +39,6 @@ export function RushRadar(props: { state: RushState }) {
         })}
         <circle className="is-player" cx={player.x} cy={player.y} r="2.3" />
       </svg>
-      <small>{edge ? '边界' : '竞技场'}</small>
     </div>
   )
 }
