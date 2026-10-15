@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { FrameId, UpgradeId } from '../types'
+import { frameArt } from '../frame-art'
 
 const modules: UpgradeId[] = [
   'ricochet',
@@ -35,9 +36,8 @@ export function WeaponGlyph(props: { id: UpgradeId; size?: number }) {
 
 export function FrameGlyph(props: { id: FrameId }) {
   return (
-    <span className={`rush-frame-glyph is-${props.id}`} aria-hidden="true">
-      <span />
-      <i />
+    <span className={`rush-frame-glyph is-${props.id}`} data-frame={props.id} aria-hidden="true">
+      <img src={frameArt[props.id].portrait} alt="" decoding="async" draggable={false} />
     </span>
   )
 }

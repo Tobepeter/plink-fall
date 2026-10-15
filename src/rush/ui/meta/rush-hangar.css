@@ -12,13 +12,13 @@
   left: 50%;
   top: 45%;
   transform: translate(-50%, -50%);
-  border: 1px solid #8ce6c220;
+  border: 1px solid color-mix(in srgb, var(--hangar-color) 14%, transparent);
   border-radius: 50%;
 }
 .rush-hangar-radar > i {
   position: absolute;
   inset: 8%;
-  border: 1px dashed #8ce6c228;
+  border: 1px dashed color-mix(in srgb, var(--hangar-color) 17%, transparent);
   border-radius: 50%;
 }
 .rush-hangar-radar > i:nth-child(2) {
@@ -39,16 +39,16 @@
   top: 37%;
   height: 25%;
   width: 12px;
-  border-block: 1px solid #8ce6c271;
+  border-block: 1px solid color-mix(in srgb, var(--hangar-color) 45%, transparent);
   opacity: 0.7;
 }
 .rush-hangar-axis.is-left {
   left: 5%;
-  border-left: 1px solid #8ce6c24a;
+  border-left: 1px solid color-mix(in srgb, var(--hangar-color) 30%, transparent);
 }
 .rush-hangar-axis.is-right {
   right: 5%;
-  border-right: 1px solid #8ce6c24a;
+  border-right: 1px solid color-mix(in srgb, var(--hangar-color) 30%, transparent);
 }
 .rush-hangar-hero {
   position: absolute;
@@ -62,11 +62,8 @@
   width: var(--frame-width);
   height: calc(var(--frame-width) * 1.05);
 }
-.rush-hangar-hero .rush-frame-glyph > span {
+.rush-hangar-hero .rush-frame-glyph > img {
   filter: drop-shadow(0 9px 2px #050f1480);
-}
-.rush-hangar-hero .rush-frame-glyph > i {
-  display: none;
 }
 .rush-hangar-platform {
   position: absolute;
@@ -85,7 +82,7 @@
 .rush-hangar-platform > i {
   position: absolute;
   inset: 12% 7%;
-  border: 1px solid #8ce6c276;
+  border: 1px solid color-mix(in srgb, var(--hangar-color) 46%, transparent);
   border-radius: 50%;
 }
 .rush-hangar-platform > i:nth-child(2) {

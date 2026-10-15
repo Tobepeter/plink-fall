@@ -1,5 +1,5 @@
 import { Assets, Container, Graphics, Rectangle, Texture } from 'pixi.js'
-import type { RushEvent, RushState, Vec } from '../types'
+import type { FrameId, RushEvent, RushState, Vec } from '../types'
 import { palette } from './palette'
 import { RushActors } from './rush-actors'
 import { RushCamera } from './rush-camera'
@@ -8,6 +8,7 @@ import { RushFloor } from './rush-floor'
 import { RushProjectiles } from './rush-projectiles'
 import { RushMotion } from './rush-motion'
 import { RushReticle } from './rush-reticle'
+import { frameArt, playerAtlas } from '../frame-art'
 
 // 全屏弹幕追击场景
 export class RushScene {
@@ -44,15 +45,26 @@ export class RushScene {
   }
 
   private async load() {
-    const [atlas, modules] = await Promise.all([
+    const [atlas, modules, players] = await Promise.all([
       Assets.load<Texture>('/rush/actors-v3.webp'),
       Assets.load<Texture>('/rush/modules-v2.webp'),
+      Assets.load<Texture>(playerAtlas),
     ])
     if (this.destroyed) return
     for (let i = 0; i < 9; i++) this.frames.push(this.extract(atlas, i))
     const weapon = this.extract(modules, 0, 3, 4)
     this.frames.push(weapon)
-    this.actors = new RushActors(this.frames, weapon)
+    const playerTextures = {} as Record<FrameId, Texture>
+    for (const id of Object.keys(frameArt) as FrameId[]) {
+      const rect = frameArt[id].torso
+      const texture = new Texture({
+        source: players.source,
+        frame: new Rectangle(rect.x, rect.y, rect.width, rect.height),
+      })
+      playerTextures[id] = texture
+      this.frames.push(texture)
+    }
+    this.actors = new RushActors(this.frames, weapon, playerTextures)
     this.world.addChild(
       this.floor.view,
       this.projectiles.fields,

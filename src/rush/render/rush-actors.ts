@@ -1,9 +1,10 @@
 import { Container, Graphics, Sprite } from 'pixi.js'
 import type { Texture } from 'pixi.js'
-import type { EnemyKind, Foe, RushEvent, RushState, Vec } from '../types'
+import type { EnemyKind, Foe, FrameId, RushEvent, RushState, Vec } from '../types'
 import { clamp, foeColors, palette } from './palette'
 import { RushGait } from './rush-gait'
 import { RushRunner } from './actors/rush-runner'
+import { frameArt } from '../frame-art'
 
 const frameIndex: Record<EnemyKind, number> = {
   chaser: 1,
@@ -35,6 +36,7 @@ export class RushActors {
   constructor(
     private textures: Texture[],
     weapon: Texture,
+    players: Record<FrameId, Texture>,
   ) {
     this.weapon.texture = weapon
     this.weapon.anchor.set(229 / weapon.width, 132 / weapon.height)
@@ -50,7 +52,7 @@ export class RushActors {
       this.equipment,
     )
     this.bodies.sortableChildren = true
-    this.player = new RushRunner(textures[0]!)
+    this.player = new RushRunner(players)
     this.bodies.addChild(this.player.view)
   }
 
@@ -102,8 +104,9 @@ export class RushActors {
     const p = state.player
     g.ellipse(p.x, p.y + 9, 15, 6).fill({ color: palette.ink, alpha: 0.65 })
     // 标识置于腿后，前景环不遮鞋和接地点
-    g.ellipse(p.x, p.y + 8, 17, 7).stroke({ color: palette.teal, width: 1, alpha: 0.22 })
-    g.circle(p.x, p.y, p.radius + 5).stroke({ color: palette.teal, width: 1.5, alpha: 0.32 })
+    const accent = frameArt[p.frame].accent
+    g.ellipse(p.x, p.y + 8, 17, 7).stroke({ color: accent, width: 1, alpha: 0.22 })
+    g.circle(p.x, p.y, p.radius + 5).stroke({ color: accent, width: 1.5, alpha: 0.32 })
     for (const foe of state.enemies) {
       g.ellipse(foe.x, foe.y + foe.radius * 0.55, foe.radius * 0.95, foe.radius * 0.38).fill({
         color: palette.ink,
@@ -223,7 +226,7 @@ export class RushActors {
       aura
         .moveTo(p.x + Math.cos(start) * radius, p.y + Math.sin(start) * radius)
         .arc(p.x, p.y, radius, start, start + progress * Math.PI * 2)
-        .stroke({ color: overdrive ? palette.amber : palette.teal, width: 2, alpha: 0.82 })
+        .stroke({ color: overdrive ? palette.amber : frameArt[p.frame].accent, width: 2, alpha: 0.82 })
     }
     const a = p.angle
     const dx = Math.cos(a)

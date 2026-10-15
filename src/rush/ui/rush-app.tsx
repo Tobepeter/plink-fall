@@ -62,7 +62,7 @@ export function RushApp(props: RushAppProps) {
         aria-label="弹幕战斗场景"
       />
       {props.ready && !props.error && !menu && <RushHud state={state} store={store} ready />}
-      {!props.ready && !props.error && <RushLoading />}
+      {!props.ready && !props.error && <RushLoading frame={state.record.selected} />}
       {props.error && (
         <div className="rush-error" role="alert">
           <span>战场加载失败</span>

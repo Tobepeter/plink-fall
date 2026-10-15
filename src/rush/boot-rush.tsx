@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { RushStore } from './model/store'
 import { RushGame } from './rush-game'
 import { RushApp } from './ui/rush-app'
+import { frameArt, playerAtlas } from './frame-art'
 import './rush.css'
 
 // 零点突围游戏入口
@@ -15,6 +16,8 @@ export function bootRush(root: HTMLElement) {
     ['modules', '/rush/modules-v2.webp'],
     ['actors', '/rush/actors-v3.webp'],
     ['ui', '/rush/ui-icons-v1.webp'],
+    ['players', playerAtlas],
+    ...Object.entries(frameArt).map(([id, art]) => [id, art.portrait]),
   ]) {
     if (document.querySelector(`link[data-rush-${key}]`)) continue
     const preload = document.createElement('link')

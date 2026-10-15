@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { frameDefinitions } from '../../model/data'
+import { frameArt } from '../../frame-art'
 import type { FrameId } from '../../types'
 import { FrameGlyph } from '../weapon-glyph'
 
@@ -9,7 +10,7 @@ export function RushHangar(props: { frame: FrameId }) {
   return (
     <div
       className={`rush-hangar-stage is-${frame.id}`}
-      style={{ '--hangar-color': frame.color } as CSSProperties}
+      style={{ '--hangar-color': frameArt[frame.id].accent } as CSSProperties}
       aria-hidden="true"
     >
       <div className="rush-hangar-radar">
