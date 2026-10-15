@@ -14,20 +14,27 @@ export function attachRushDebug(store: RushPort, game: RushGame) {
   }
   const scene = game.scene as unknown as { getState: () => RushState }
   let recording: { id: number; stop: () => void } | null = null
-  const events: (Pick<RushEvent, 'type' | 'amount' | 'side' | 'protocol' | 'power'> & {
+  const events: (Pick<
+    RushEvent,
+    'type' | 'amount' | 'side' | 'protocol' | 'power' | 'weapon' | 'reaction'
+  > & {
     clock: number
     wave: number
+    runId: number
   })[] = []
   const unsubscribe = store.onEvent((event) => {
     if (events.length >= 300) events.shift()
     events.push({
       clock: store.state.clock,
       wave: store.state.wave.index,
+      runId: store.state.runId,
       type: event.type,
       amount: event.amount,
       side: event.side,
       protocol: event.protocol,
       power: event.power,
+      weapon: event.weapon,
+      reaction: event.reaction,
     })
   })
   const debug = {
@@ -123,6 +130,13 @@ export function attachRushDebug(store: RushPort, game: RushGame) {
     },
     fixture(data: Partial<RushState>) {
       Object.assign(store.state, structuredClone(data))
+      if (data.weapons) {
+        // DEBUG 外部装配也走真实卫星同步
+        const model = store as RushPort & {
+          simulation: { weapons: { syncSatellites: () => void } }
+        }
+        model.simulation.weapons.syncSatellites()
+      }
       store.update(0.1)
       game.presentation.reset(store.state)
       runtime.accumulator = 0

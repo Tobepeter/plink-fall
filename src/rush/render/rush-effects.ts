@@ -1,7 +1,11 @@
 import { Graphics } from 'pixi.js'
-import type { FrameId, Runner, RushEvent, Vec } from '../types'
+import type { FrameId, Runner, RushEvent, Vec, WeaponReaction } from '../types'
 import { palette } from './palette'
-import { abilityColors, drawAbilityImpact } from './rush-ability'
+import { abilityColors } from './rush-ability'
+import { isWeaponReaction } from './rush-reactions'
+import { reactionColors } from './rush-weapon-style'
+import { drawRushMark } from './rush-mark'
+import type { RushMark as Mark } from './rush-mark'
 
 interface Particle extends Vec {
   vx: number
@@ -10,16 +14,6 @@ interface Particle extends Vec {
   duration: number
   size: number
   color: number
-  angle: number
-}
-interface Mark extends Vec {
-  kind: 'ring' | 'chain' | 'cross' | 'ice' | 'arrow' | 'ability' | 'link'
-  life: number
-  duration: number
-  radius: number
-  color: number
-  targets: Vec[]
-  frame?: FrameId
   angle: number
 }
 
@@ -57,104 +51,28 @@ export class RushEffects {
       if (mark.life <= 0) continue
       const t = 1 - mark.life / mark.duration
       const alpha = Math.min(1, (mark.life / mark.duration) * 1.5)
-      this.drawMark(mark, t, alpha)
+      drawRushMark(this.view, mark, t, alpha, this.reducedMotion.matches)
     }
     this.particles = this.particles.filter((p) => p.life > 0)
     this.marks = this.marks.filter((m) => m.life > 0)
   }
 
-  private drawMark(mark: Mark, t: number, alpha: number) {
-    const g = this.view
-    if (mark.kind === 'ability' && mark.frame) {
-      drawAbilityImpact(g, mark.frame, mark, mark.angle, t, this.reducedMotion.matches)
-      return
-    }
-    if (mark.kind === 'link') {
-      const y = mark.y - 47
-      for (const side of [-1, 1]) {
-        const x = mark.x + side * 14
-        g.moveTo(x + side * 7, y - 6)
-          .lineTo(x, y - 6)
-          .lineTo(x - side * 5, y)
-          .lineTo(x, y + 6)
-          .lineTo(x + side * 7, y + 6)
-          .stroke({ color: side < 0 ? mark.color : palette.cream, width: 2, alpha: alpha * 0.7 })
-      }
-      return
-    }
-    if (mark.kind === 'chain') {
-      const points = [{ x: mark.x, y: mark.y }, ...mark.targets]
-      g.moveTo(points[0].x, points[0].y)
-      for (let i = 1; i < points.length; i++) {
-        const from = points[i - 1],
-          to = points[i]
-        const dx = to.x - from.x,
-          dy = to.y - from.y
-        const dist = Math.hypot(dx, dy) || 1
-        for (let step = 1; step < 5; step++) {
-          const sway = Math.sin(step * 2.4 + i * 3) * 7 * (1 - t)
-          g.lineTo(
-            from.x + (dx * step) / 5 - (dy / dist) * sway,
-            from.y + (dy * step) / 5 + (dx / dist) * sway,
-          )
-        }
-        g.lineTo(to.x, to.y)
-      }
-      g.stroke({ color: mark.color, width: 2.8, alpha })
-      for (const point of points)
-        g.circle(point.x, point.y, 3 + t * 6).stroke({ color: palette.cream, width: 1.2, alpha })
-      return
-    }
-    if (mark.kind === 'arrow') {
-      const target = mark.targets[0]
-      if (!target) return
-      const a = Math.atan2(target.y - mark.y, target.x - mark.x)
-      const dx = Math.cos(a),
-        dy = Math.sin(a)
-      const length = mark.radius * (0.3 + t * 0.4)
-      const x = mark.x + dx * length,
-        y = mark.y + dy * length
-      g.moveTo(mark.x - dx * 10, mark.y - dy * 10)
-        .lineTo(x, y)
-        .moveTo(x - dx * 11 - dy * 8, y - dy * 11 + dx * 8)
-        .lineTo(x, y)
-        .lineTo(x - dx * 11 + dy * 8, y - dy * 11 - dx * 8)
-        .stroke({ color: mark.color, width: 2, alpha })
-      return
-    }
-    if (mark.kind === 'ice') {
-      const r = mark.radius * (0.3 + t * 0.7)
-      for (let i = 0; i < 6; i++) {
-        const a = (i * Math.PI) / 3
-        const dx = Math.cos(a),
-          dy = Math.sin(a)
-        g.moveTo(mark.x + dx * r * 0.45, mark.y + dy * r * 0.45)
-          .lineTo(mark.x + dx * r, mark.y + dy * r)
-          .lineTo(mark.x + dx * r * 0.82 - dy * 6, mark.y + dy * r * 0.82 + dx * 6)
-      }
-      g.stroke({ color: palette.cream, width: 2, alpha })
-      return
-    }
-    const r = mark.radius * (0.2 + t * 0.8)
-    if (mark.kind === 'cross') {
-      g.moveTo(mark.x - r, mark.y)
-        .lineTo(mark.x + r, mark.y)
-        .moveTo(mark.x, mark.y - r)
-        .lineTo(mark.x, mark.y + r)
-        .stroke({ color: mark.color, width: 2.5, alpha })
-    } else {
-      g.circle(mark.x, mark.y, r).stroke({ color: mark.color, width: 3 * (1 - t) + 1, alpha })
-      if (t < 0.12)
-        g.circle(mark.x, mark.y, Math.min(18, r * 0.4)).fill({
-          color: palette.cream,
-          alpha: 0.3 * alpha,
-        })
-    }
-  }
-
   event(e: RushEvent) {
     const p = this.getPlayer()
     const direction = Math.atan2(e.y - p.y, e.x - p.x)
+    if (e.type === 'reaction' && e.reaction) {
+      this.mark(
+        e,
+        'reaction',
+        reactionColors[e.reaction][0],
+        Math.min(210, (e.power ?? 1) * 70),
+        e.reaction === 'combustion' ? 0.32 : 0.2,
+        e.targets,
+        undefined,
+        0,
+        e.reaction,
+      )
+    }
     if (e.type === 'shot' && e.side === 'enemy') this.mark(e, 'ring', palette.red, 16, 0.08)
     if (e.type === 'kill') {
       this.burst(e, palette.red, 7, 150, direction)
@@ -219,7 +137,17 @@ export class RushEffects {
       if (e.amount === 1) {
         // 减少动态时保留接通反馈，不运行机械 Tween
         if (this.reducedMotion.matches)
-          this.mark(e, 'link', e.protocol === 'frostburst' ? palette.amber : palette.teal, 0, 0.2)
+          this.mark(
+            e,
+            'link',
+            isWeaponReaction(e.protocol)
+              ? reactionColors[e.protocol][0]
+              : e.protocol === 'frostburst'
+                ? palette.amber
+                : palette.teal,
+            0,
+            0.2,
+          )
         return
       }
       if (e.protocol === 'circuit') this.mark(e, 'ring', palette.teal, 12, 0.08)
@@ -268,6 +196,7 @@ export class RushEffects {
     targets: Vec[] = [],
     frame?: FrameId,
     angle = 0,
+    reaction?: WeaponReaction,
   ) {
     this.marks.push({
       ...point,
@@ -279,6 +208,7 @@ export class RushEffects {
       targets: targets.map((p) => ({ ...p })),
       frame,
       angle,
+      reaction,
     })
     this.marks = this.marks.slice(-80)
   }

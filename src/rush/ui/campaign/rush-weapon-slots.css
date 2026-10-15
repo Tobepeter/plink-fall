@@ -1,0 +1,112 @@
+.rush-weapon-slots {
+  position: absolute;
+  left: var(--rush-hud-left);
+  bottom: var(--rush-control-bottom);
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rush-weapon-slots > li {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 48px;
+  border-bottom: 2px solid #436153;
+  background: linear-gradient(transparent, #17322a8c);
+}
+.rush-weapon-slots > .is-filled {
+  border-bottom-color: var(--weapon-color);
+  animation: rush-slot-seat 0.9s ease-out both;
+}
+.rush-weapon-slots > li > b {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  min-width: 11px;
+  color: #f1efdc;
+  font:
+    800 10px/1.2 'SFMono-Regular',
+    Consolas,
+    monospace;
+  text-align: right;
+  text-shadow: 0 1px 3px #050e1a;
+}
+.rush-weapon-slots > .is-empty,
+.rush-weapon-slots > .is-locked {
+  border-bottom-style: dashed;
+}
+.rush-weapon-slots > .is-empty > .rush-game-glyph,
+.rush-weapon-slots > .is-locked > .rush-game-glyph {
+  opacity: 0.27;
+  filter: grayscale(1);
+}
+.rush-weapon-slots > li > small {
+  position: absolute;
+  bottom: 2px;
+  color: #809d8a;
+  font:
+    700 8px/1.2 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.rush-slot-branch {
+  position: absolute;
+  left: 2px;
+  bottom: 3px;
+  width: 3px;
+  height: 7px;
+  background: var(--weapon-color);
+  transform: rotate(45deg);
+}
+.rush-slot-branch.is-spread {
+  width: 7px;
+  height: 3px;
+}
+.rush-slot-awakened {
+  position: absolute;
+  top: -1px;
+  right: -2px;
+}
+.rush-key-hint {
+  bottom: calc(var(--rush-control-bottom) + 60px);
+}
+@keyframes rush-slot-seat {
+  from {
+    background: color-mix(in srgb, var(--weapon-color) 45%, transparent);
+    filter: drop-shadow(0 0 8px var(--weapon-color));
+  }
+  to {
+    background: transparent;
+    filter: none;
+  }
+}
+@media (max-width: 380px) {
+  .rush-weapon-slots {
+    gap: 4px;
+  }
+  .rush-weapon-slots > li {
+    width: 36px;
+    height: 44px;
+  }
+  .rush-weapon-slots .rush-armory-glyph {
+    width: 33px;
+    height: 33px;
+  }
+}
+@media (orientation: landscape) and (max-width: 719px) and (max-height: 500px) {
+  .rush-weapon-slots {
+    gap: 4px;
+  }
+  .rush-weapon-slots > li {
+    width: 34px;
+    height: 40px;
+  }
+  .rush-weapon-slots .rush-armory-glyph {
+    width: 31px;
+    height: 31px;
+  }
+}

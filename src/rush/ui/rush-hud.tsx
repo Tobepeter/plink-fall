@@ -3,11 +3,13 @@ import { GameGlyph } from './game-glyph'
 import type { CSSProperties, PointerEvent } from 'react'
 import type { ProtocolId, RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
-import { activeProtocols, protocolDefinitions } from '../model/combat/protocols'
-import { ControlGlyph, WeaponGlyph, time } from './weapon-glyph'
+import { activeWeaponReactions } from '../model/armory/data'
+import { ControlGlyph, time } from './weapon-glyph'
+import { ArmoryGlyph } from './armory-glyph'
 import { RushAbility } from './campaign/rush-ability'
 import { RushRadar } from './campaign/rush-radar'
 import { RushWaveTrack } from './campaign/rush-wave-track'
+import { RushWeaponSlots } from './campaign/rush-weapon-slots'
 import './campaign/rush-campaign-hud.css'
 
 // 波次读数与机械控制
@@ -45,7 +47,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
   const breather = state.wave.phase === 'breather'
   const remainingSeconds = Math.max(0, state.wave.duration - state.wave.elapsed)
   const remaining = Math.ceil(remainingSeconds)
-  const protocols = activeProtocols(state)
+  const protocols = activeWeaponReactions(state)
   const focusCanvas = () =>
     document.querySelector<HTMLCanvasElement>('.rush-stage canvas')?.focus({ preventScroll: true })
   const dash = () => {
@@ -158,8 +160,8 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
       </div>
       {protocols.length > 0 && (
         <div className="rush-protocols" aria-label="已接入协议">
-          {protocols.map((id) => {
-            const item = protocolDefinitions.find((protocol) => protocol.id === id)!
+          {protocols.map((item) => {
+            const id = item.id
             return (
               <span
                 key={`${state.runId}-${id}`}
@@ -175,15 +177,16 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
                 aria-label={item.name}
                 title={item.name}
               >
-                <WeaponGlyph id={item.parts[0]} size={29} />
+                <ArmoryGlyph id={item.parts[0]} size={29} />
                 <i />
-                <WeaponGlyph id={item.parts[1]} size={29} />
+                <ArmoryGlyph id={item.parts[1]} size={29} />
                 <small aria-hidden="true">{item.name}</small>
               </span>
             )
           })}
         </div>
       )}
+      {state.phase === 'playing' && <RushWeaponSlots state={state} />}
       {state.phase === 'playing' && <RushAbility state={state} store={store} />}
       {state.phase === 'playing' && <RushRadar state={state} />}
       {state.phase === 'playing' && (

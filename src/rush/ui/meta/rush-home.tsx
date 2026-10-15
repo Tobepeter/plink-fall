@@ -1,10 +1,10 @@
 import { frameDefinitions } from '../../model/data'
-import { frameStats } from '../../model/frames'
+import { frameStartingWeapon, weaponDefinitions } from '../../model/armory/data'
 import { difficultyDefinitions } from '../../model/campaign/difficulty'
 import { metaPrice, metaUpgrades } from '../../model/meta/progression'
 import type { RushState } from '../../types'
 import { GameGlyph } from '../game-glyph'
-import { WeaponGlyph } from '../weapon-glyph'
+import { ArmoryGlyph } from '../armory-glyph'
 import { RushHangar } from './rush-hangar'
 
 export type RushMenuPage = 'home' | 'frames' | 'upgrades' | 'difficulty' | 'stats' | 'settings'
@@ -23,7 +23,7 @@ export function RushHome(props: {
 }) {
   const { record } = props.state
   const frame = frameDefinitions.find((item) => item.id === record.selected)!
-  const stats = frameStats[frame.id]
+  const weapon = weaponDefinitions.find((item) => item.id === frameStartingWeapon[frame.id])!
   const difficulty = difficultyDefinitions[record.difficulty]
   const canUpgrade = metaUpgrades.some((item) => {
     const price = metaPrice(record, item.id)
@@ -35,8 +35,8 @@ export function RushHome(props: {
         <RushHangar frame={frame.id} />
         <h1>{frame.name}</h1>
         <span className="rush-home-skill">
-          <WeaponGlyph id={stats.startingSkill} size={30} />
-          {stats.skillName}
+          <ArmoryGlyph id={weapon.id} size={30} />
+          {weapon.name}
         </span>
       </div>
       <div className="rush-home-controls">

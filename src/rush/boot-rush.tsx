@@ -14,6 +14,7 @@ export function bootRush(root: HTMLElement) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0b1223')
   for (const [key, href] of [
     ['modules', '/rush/modules-v2.webp'],
+    ['armory', '/rush/armory-v1.png'],
     ['actors', '/rush/actors-v3.webp'],
     ['ui', '/rush/ui-icons-v1.webp'],
     ['players', playerAtlas],

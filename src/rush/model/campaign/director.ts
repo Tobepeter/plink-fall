@@ -23,7 +23,7 @@ export class WaveDirector {
   }
 
   resize() {
-    if (this.s.clock > 0.3 || this.s.wave.index !== 1) return
+    if (this.s.phase !== 'playing' || this.s.clock > 0.3 || this.s.wave.index !== 1) return
     this.s.enemies = []
     initialEnemies(this.s, this.hooks)
     this.s.wave.spawned = this.s.enemies.length

@@ -57,7 +57,7 @@
   stroke-width: 3;
   stroke-dasharray: 100;
 }
-.rush-ability > .rush-module {
+.rush-ability > .rush-armory-glyph {
   position: relative;
   opacity: 0.45;
 }
@@ -100,7 +100,7 @@
   fill: color-mix(in srgb, var(--ability-color) 18%, #192b31);
   stroke: var(--ability-color);
 }
-.rush-ability.is-ready > .rush-module {
+.rush-ability.is-ready > .rush-armory-glyph {
   opacity: 1;
 }
 .rush-ability.is-active .rush-ability-charge {
@@ -114,7 +114,7 @@
   color: var(--ability-color);
   letter-spacing: 1px;
 }
-.rush-ability.is-active > .rush-module {
+.rush-ability.is-active > .rush-armory-glyph {
   opacity: 1;
 }
 .rush-ability.is-ready:active {
@@ -180,10 +180,10 @@
   align-items: center;
   animation: rush-protocol-seat 0.26s ease-out both;
 }
-.rush-protocols > span > .rush-module:first-child {
+.rush-protocols > span > .rush-armory-glyph:first-child {
   animation: rush-protocol-left 0.26s ease-out both;
 }
-.rush-protocols > span > .rush-module:nth-of-type(2) {
+.rush-protocols > span > .rush-armory-glyph:nth-of-type(2) {
   animation: rush-protocol-right 0.26s ease-out both;
 }
 .rush-protocols > span > i {
@@ -288,7 +288,7 @@
   .rush-ability > span:last-of-type {
     font-size: 10px;
   }
-  .rush-ability > .rush-module {
+  .rush-ability > .rush-armory-glyph {
     width: 38px;
     height: 38px;
   }

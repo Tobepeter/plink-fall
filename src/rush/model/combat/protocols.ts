@@ -2,6 +2,7 @@ import type { Foe, ProtocolId, RushState, UpgradeId, Vec } from '../../types'
 import { distance, level, nearest, toward } from '../math'
 import type { Hooks } from '../math'
 import { blast, damageFoe } from './damage'
+import { activeWeaponReactions } from '../armory/data'
 
 export const protocolDefinitions: {
   id: ProtocolId
@@ -33,8 +34,10 @@ export const protocolDefinitions: {
   },
 ]
 
-export const activeProtocols = (s: RushState): ProtocolId[] =>
-  protocolDefinitions.filter((p) => p.parts.every((id) => level(s, id) > 0)).map((p) => p.id)
+export const activeProtocols = (s: RushState): ProtocolId[] => [
+  ...protocolDefinitions.filter((p) => p.parts.every((id) => level(s, id) > 0)).map((p) => p.id),
+  ...activeWeaponReactions(s).map((reaction) => reaction.id),
+]
 
 export const hasProtocol = (s: RushState, id: ProtocolId) => activeProtocols(s).includes(id)
 

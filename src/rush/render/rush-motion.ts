@@ -2,6 +2,8 @@ import { Easing, Group, Tween } from '@tweenjs/tween.js'
 import { Graphics } from 'pixi.js'
 import type { ProtocolId, RushEvent, Vec } from '../types'
 import { palette } from './palette'
+import { isWeaponReaction } from './rush-reactions'
+import { reactionColors } from './rush-weapon-style'
 
 type MotionKind = 'deploy' | 'assemble' | 'boost' | 'cut' | 'reward' | 'link'
 interface MotionMark extends Vec {
@@ -116,8 +118,9 @@ export class RushMotion {
   // 双模块卡扣，接通后短暂亮芯
   private drawLink(mark: MotionMark, player: Vec) {
     const g = this.view
-    const colors =
-      mark.protocol === 'frostburst'
+    const colors = isWeaponReaction(mark.protocol)
+      ? reactionColors[mark.protocol]
+      : mark.protocol === 'frostburst'
         ? [palette.cream, palette.amber]
         : mark.protocol === 'circuit'
           ? [palette.teal, 0xb6a5ff]

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { frameDefinitions } from '../../../model/data'
 import { frameStats } from '../../../model/frames'
+import { frameStartingWeapon, weaponDefinitions } from '../../../model/armory/data'
 import type { FrameId, RushPort, RushState } from '../../../types'
 import { FrameGlyph, WeaponGlyph } from '../../weapon-glyph'
 import { GameGlyph } from '../../game-glyph'
+import { ArmoryGlyph } from '../../armory-glyph'
 import { RushCoin } from '../rush-coin'
 import { RushHangar } from '../rush-hangar'
 
@@ -14,6 +16,7 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
   const [message, setMessage] = useState('')
   const frame = frameDefinitions.find((item) => item.id === preview)!
   const stats = frameStats[preview]
+  const weapon = weaponDefinitions.find((item) => item.id === frameStartingWeapon[preview])!
   const unlocked = record.unlocked.includes(preview)
   const selected = record.selected === preview
   const buy = () => {
@@ -60,7 +63,7 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
           </span>
         </div>
         <div className="rush-frame-ability">
-          <WeaponGlyph id={stats.startingSkill} size={54} />
+          <ArmoryGlyph id={weapon.id} size={54} />
           <div>
             <h3>{stats.skillName}</h3>
             <p>{stats.skillHint}</p>
@@ -68,6 +71,7 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
               <GameGlyph id="time" size={20} />
               {stats.abilityCooldown}s
             </small>
+            <span className="rush-frame-starting">起手 · {weapon.name}</span>
           </div>
         </div>
         <p className="rush-frame-tradeoff">{stats.tradeoff}</p>

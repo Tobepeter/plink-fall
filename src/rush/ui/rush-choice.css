@@ -76,7 +76,7 @@
   align-items: center;
   flex: 1;
   min-width: 44px;
-  min-height: 108px;
+  min-height: 143px;
   padding: 0 0 4px;
   border: 0;
   color: var(--rush-ivory);
@@ -87,7 +87,7 @@
 }
 .rush-choice-key {
   position: absolute;
-  top: 2px;
+  top: 17px;
   left: 2px;
   z-index: 2;
   padding: 2px 4px;
@@ -106,7 +106,8 @@
   width: 100%;
   height: 76px;
 }
-.rush-weapon-device > .rush-module {
+.rush-weapon-device > .rush-module,
+.rush-weapon-device > .rush-armory-glyph {
   position: relative;
   z-index: 1;
 }
@@ -115,7 +116,11 @@
   inset: -5px 0 -3px;
   opacity: 0.24;
   border-radius: 50%;
-  background: radial-gradient(ellipse, #8ce6c224, transparent 72%);
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--weapon-color) 25%, transparent),
+    transparent 72%
+  );
   pointer-events: none;
 }
 .rush-weapon.is-recommended .rush-weapon-aura {
@@ -160,6 +165,9 @@
   background: var(--rush-brass);
 }
 .rush-weapon > b {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-top: 6px;
   font-size: 14px;
   font-weight: 900;
@@ -167,28 +175,13 @@
   white-space: nowrap;
   text-shadow: 0 2px 3px #07121d;
 }
-.rush-weapon-rank {
-  display: flex;
-  gap: 4px;
+.rush-weapon > .rush-armory-rank {
   margin-top: 7px;
-}
-.rush-weapon-rank > i {
-  width: 6px;
-  height: 3px;
-  background: #344440;
-  transform: skewX(-18deg);
-}
-.rush-weapon-rank > .is-owned {
-  background: var(--rush-mint);
-}
-.rush-weapon-rank > .is-next {
-  background: var(--rush-brass);
-  box-shadow: 0 0 3px #edc27466;
 }
 .rush-choice-recommended {
   position: absolute;
   z-index: 2;
-  top: 0;
+  top: 16px;
   right: -2px;
 }
 .rush-weapon-link {
@@ -199,26 +192,73 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  opacity: 0.55;
+  color: var(--weapon-color);
 }
 .rush-weapon-link > i {
   width: 3px;
   height: 3px;
-  background: #8daa94;
+  background: currentColor;
   transform: rotate(45deg);
 }
-.rush-weapon-link.is-available {
-  opacity: 1;
-}
-.rush-weapon-link.is-available > i {
-  background: var(--rush-mint);
-  box-shadow: 0 0 5px #8ce6c270;
-}
-.rush-weapon:hover .rush-weapon-device > .rush-module {
+.rush-weapon:hover .rush-weapon-device > .rush-module,
+.rush-weapon:not(.is-replace):hover .rush-weapon-device > .rush-armory-glyph {
   transform: translateY(-2px);
 }
-.rush-weapon:active .rush-weapon-device > .rush-module {
+.rush-weapon:active .rush-weapon-device > .rush-module,
+.rush-weapon:not(.is-replace):active .rush-weapon-device > .rush-armory-glyph {
   transform: translateY(1px) scale(0.96);
+}
+.rush-weapon-action {
+  min-height: 14px;
+  margin-bottom: 2px;
+  color: var(--weapon-color);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 3px #07121d;
+}
+.rush-weapon-hint {
+  max-width: 100%;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #b2c6b5;
+  font-size: 10px;
+  line-height: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 3px #07121d;
+}
+.rush-weapon.is-replace .rush-weapon-device > .rush-armory-glyph {
+  transform: translateX(12px) scale(0.85);
+}
+.rush-weapon-replace {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: 21px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.rush-weapon-replace > .rush-armory-glyph {
+  opacity: 0.6;
+  filter: grayscale(0.7);
+}
+.rush-weapon-replace > i {
+  width: 10px;
+  height: 2px;
+  background: #eac887;
+}
+.rush-weapon-replace > i::after {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: -2px 0 0 4px;
+  border-top: 2px solid #eac887;
+  border-right: 2px solid #eac887;
+  transform: rotate(45deg);
 }
 @keyframes rush-choice-breathe {
   0%,

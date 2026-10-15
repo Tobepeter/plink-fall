@@ -1,0 +1,28 @@
+.rush-armory-glyph {
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--armory-size, 68px);
+  height: var(--armory-size, 68px);
+  background-image: url('/rush/armory-v1.png');
+  background-size: 300% 200%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 3px 1px #060d18);
+}
+.rush-armory-rank {
+  display: inline-flex;
+  justify-content: center;
+  gap: 4px;
+  height: 4px;
+}
+.rush-armory-rank > i {
+  width: 6px;
+  background: #344640;
+  transform: skewX(-18deg);
+}
+.rush-armory-rank > i.is-owned {
+  background: var(--weapon-color, var(--rush-mint));
+}
+.rush-armory-rank > i.is-next {
+  background: var(--rush-brass);
+  box-shadow: 0 0 4px #edc27466;
+}

@@ -1,6 +1,9 @@
 import { Graphics } from 'pixi.js'
 import type { RushState } from '../types'
 import { palette } from './palette'
+import { drawWeaponFields } from './rush-weapon-fields'
+import { drawWeaponTraces } from './rush-weapon-traces'
+import { weaponColors } from './rush-weapon-style'
 
 // 真实弹道、拾取物与武器场
 export class RushProjectiles {
@@ -8,47 +11,24 @@ export class RushProjectiles {
   loot = new Graphics()
   shots = new Graphics()
   satellites = new Graphics()
+  traces = new Graphics()
+  enemyShots = new Graphics()
+  private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+  private destroyed = false
 
   render(state: RushState) {
-    this.drawFields(state)
+    if (this.destroyed) return
+    drawWeaponFields(this.fields, state, this.reducedMotion.matches)
+    drawWeaponTraces(this.traces, state, this.reducedMotion.matches)
     this.drawLoot(state)
     this.drawShots(state)
     this.drawSatellites(state)
   }
 
-  private drawFields(state: RushState) {
-    const g = this.fields.clear()
-    for (const zone of state.zones) {
-      const color = zone.kind === 'frost' ? palette.cream : palette.teal
-      const progress = Math.max(0, zone.life / zone.duration)
-      const radius = zone.kind === 'blast' ? zone.radius * (1 - progress * 0.3) : zone.radius
-      g.circle(zone.x, zone.y, radius).fill({ color, alpha: 0.04 + progress * 0.04 })
-      if (zone.kind === 'frost') {
-        const points = Array.from({ length: 6 }, (_, i) => {
-          const a = (i * Math.PI) / 3
-          return [zone.x + Math.cos(a) * radius, zone.y + Math.sin(a) * radius]
-        }).flat()
-        g.poly(points).stroke({ color: palette.teal, width: 1.5, alpha: progress * 0.42 })
-      } else g.circle(zone.x, zone.y, radius).stroke({ color, width: 2, alpha: progress * 0.45 })
-      if (zone.kind === 'frost') {
-        for (let i = 0; i < 8; i++) {
-          const a = (i * Math.PI) / 4
-          const x = zone.x + Math.cos(a) * radius * 0.75
-          const y = zone.y + Math.sin(a) * radius * 0.75
-          g.moveTo(x - 4, y)
-            .lineTo(x + 4, y)
-            .moveTo(x, y - 4)
-            .lineTo(x, y + 4)
-        }
-        g.stroke({ color, width: 1.5, alpha: progress * 0.35 })
-      }
-    }
-  }
-
   private drawLoot(state: RushState) {
     const g = this.loot.clear()
     for (const drop of state.loot) {
-      const bob = Math.sin(drop.age * 6 + drop.id) * 1.2
+      const bob = this.reducedMotion.matches ? 0 : Math.sin(drop.age * 6 + drop.id) * 1.2
       const x = drop.x
       const y = drop.y + bob
       g.ellipse(x, drop.y + 6, 5, 2).fill({ color: palette.ink, alpha: 0.55 })
@@ -80,13 +60,26 @@ export class RushProjectiles {
   }
 
   private drawShots(state: RushState) {
-    const g = this.shots.clear()
+    this.shots.clear()
+    this.enemyShots.clear()
     for (const shot of state.shots) {
+      const g = shot.side === 'enemy' ? this.enemyShots : this.shots
+      if (shot.kind === 'toxin') {
+        const progress = Math.max(0, Math.min(1, shot.age / (shot.duration ?? 1)))
+        const lift = Math.sin(progress * Math.PI) * 42
+        g.ellipse(shot.x, shot.y + 4, 5, 2).fill({ color: palette.ink, alpha: 0.6 })
+        g.circle(shot.x, shot.y - lift, 5)
+          .fill(weaponColors.toxin)
+          .stroke({ color: palette.ink, width: 2 })
+        g.circle(shot.x - 1.5, shot.y - lift - 1.5, 1.5).fill(palette.cream)
+        continue
+      }
       const a = Math.atan2(shot.vy, shot.vx)
       const dx = Math.cos(a)
       const dy = Math.sin(a)
       const r = Math.max(2.8, shot.radius)
-      const length = shot.side === 'enemy' ? 7 : shot.kind === 'rocket' ? 20 : 13
+      const length =
+        shot.side === 'enemy' ? 7 : shot.kind === 'pellet' ? 6 : shot.kind === 'rocket' ? 20 : 13
       const tail = { x: shot.x - dx * length, y: shot.y - dy * length }
       if (shot.side === 'player') {
         if (shot.kind === 'counter') {
@@ -118,7 +111,11 @@ export class RushProjectiles {
             .stroke({ color: palette.teal, width: 3, cap: 'round' })
           continue
         }
-        const color = shot.kind === 'rocket' ? palette.amber : palette.teal
+        const color = shot.weapon
+          ? weaponColors[shot.weapon]
+          : shot.kind === 'rocket'
+            ? palette.amber
+            : palette.teal
         g.moveTo(tail.x, tail.y)
           .lineTo(shot.x, shot.y)
           .stroke({ color: palette.ink, width: r * 2 + 3, cap: 'round' })
@@ -148,25 +145,29 @@ export class RushProjectiles {
       const x = sat.x
       const y = sat.y
       if (sat.kind === 'blade') {
-        const a = state.clock * 14 + sat.id
-        const dx = Math.cos(a)
-        const dy = Math.sin(a)
-        g.moveTo(x + Math.cos(a - 1.1) * 13, y + Math.sin(a - 1.1) * 13)
-          .arc(x, y, 13, a - 1.1, a + 1.1)
-          .stroke({ color: palette.teal, width: 2, alpha: 0.5 })
-        g.poly([
-          x + dx * 13,
-          y + dy * 13,
-          x - dy * 5,
-          y + dx * 5,
-          x - dx * 13,
-          y - dy * 13,
-          x + dy * 5,
-          y - dx * 5,
-        ])
-          .fill(palette.cream)
-          .stroke({ color: palette.ink, width: 2 })
-        g.circle(x, y, 3).fill(palette.teal)
+        const slot = state.weapons.find((slot) => slot.id === 'blade')
+        const awakened = (slot?.level ?? 0) >= 5
+        const radius = slot?.branch === 'focus' ? 14 : 11
+        const a = this.reducedMotion.matches ? sat.id : state.clock * 11 + sat.id
+        g.circle(x, y, radius)
+          .fill(palette.ink)
+          .stroke({ color: weaponColors.blade, width: awakened ? 3.5 : 2.5 })
+        for (let i = 0; i < 3; i++) {
+          const turn = a + (i * Math.PI * 2) / 3
+          const dx = Math.cos(turn),
+            dy = Math.sin(turn)
+          g.poly([
+            x + dx * radius * 0.7,
+            y + dy * radius * 0.7,
+            x + dx * (radius + 4) - dy * 3,
+            y + dy * (radius + 4) + dx * 3,
+            x + dx * radius + dy * 4,
+            y + dy * radius - dx * 4,
+          ])
+            .fill(weaponColors.blade)
+            .stroke({ color: palette.ink, width: 1 })
+        }
+        g.circle(x, y, 3).fill(awakened ? weaponColors.laser : palette.teal)
       } else {
         g.ellipse(x, y + 7, 10, 4).fill({ color: palette.ink, alpha: 0.6 })
         g.roundRect(x - 8, y - 7, 16, 13, 4)
@@ -180,10 +181,31 @@ export class RushProjectiles {
     }
   }
 
+  reset() {
+    if (this.destroyed) return
+    for (const graphic of [
+      this.fields,
+      this.loot,
+      this.shots,
+      this.satellites,
+      this.traces,
+      this.enemyShots,
+    ])
+      graphic.clear()
+  }
+
   destroy() {
-    this.fields.destroy()
-    this.loot.destroy()
-    this.shots.destroy()
-    this.satellites.destroy()
+    if (this.destroyed) return
+    this.reset()
+    this.destroyed = true
+    for (const graphic of [
+      this.fields,
+      this.loot,
+      this.shots,
+      this.satellites,
+      this.traces,
+      this.enemyShots,
+    ])
+      graphic.destroy()
   }
 }

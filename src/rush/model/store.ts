@@ -227,6 +227,13 @@ export class RushStore implements RushPort {
     s.choices = []
     s.choiceRemaining = 0
     s.choiceRecommended = null
+    s.weaponOffers = []
+    s.weaponTraces = []
+    s.shots = []
+    s.zones = []
+    s.satellites = []
+    s.enemies = []
+    s.loot = []
     s.settlement = null
     this.publish()
     return true
@@ -240,6 +247,13 @@ export class RushStore implements RushPort {
     this.state.choices = []
     this.state.choiceRemaining = 0
     this.state.choiceRecommended = null
+    this.state.weaponOffers = []
+    this.state.weaponTraces = []
+    this.state.shots = []
+    this.state.zones = []
+    this.state.satellites = []
+    this.state.enemies = []
+    this.state.loot = []
     this.publish()
   }
 
@@ -303,6 +317,14 @@ export class RushStore implements RushPort {
     if (this.destroyed) return
     this.save()
     this.destroyed = true
+    this.state.weaponOffers = []
+    this.state.weaponTraces = []
+    this.state.choices = []
+    this.state.choiceRemaining = 0
+    this.state.choiceRecommended = null
+    this.state.shots = []
+    this.state.zones = []
+    this.state.satellites = []
     this.listeners.clear()
     this.events.clear()
   }

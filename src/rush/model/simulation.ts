@@ -1,5 +1,4 @@
-import type { RushState, UpgradeId } from '../types'
-import { upgrades } from './data'
+import type { RushState } from '../types'
 import { EnemyDirector } from './enemies'
 import { distance, level } from './math'
 import type { Hooks } from './math'
@@ -7,9 +6,14 @@ import { Weapons } from './weapons'
 import { advanceLoot } from './combat/loot'
 import { advanceShots } from './combat/projectiles'
 import { keepInArena } from './arena'
-import { frameChoices, frameStats } from './frames'
-import { applyUpgrade } from './progression'
-import { counterFire, interceptShots, protocolDefinitions } from './combat/protocols'
+import { frameStats } from './frames'
+import { counterFire, interceptShots } from './combat/protocols'
+import {
+  applyWeaponOffer,
+  makeWeaponOffers,
+  recommendWeaponOffer,
+  validWeaponOffer,
+} from './armory/offers'
 
 export class Simulation {
   readonly enemies: EnemyDirector
@@ -65,79 +69,51 @@ export class Simulation {
     const s = this.s
     if (s.choices.length > 0) {
       s.choiceRemaining = Math.max(0, s.choiceRemaining - dt)
-      if (s.choiceRemaining < 0.000001 && s.choiceRecommended)
-        this.choose(s.choiceRecommended)
+      if (s.choiceRemaining < 0.000001) {
+        const safe = s.weaponOffers.find(
+          (offer) => offer.id === s.choiceRecommended && offer.action !== 'replace',
+        )
+        if (!safe || !this.choose(safe.id)) {
+          s.choices = []
+          s.weaponOffers = []
+          s.choiceRecommended = null
+          s.choiceRemaining = 0
+        }
+      }
       return
     }
     if (
       s.phase !== 'playing' ||
       s.xp < s.nextXp ||
       s.clock < 3.3 ||
-      s.clock - this.lastChoice < 7
+      s.clock - this.lastChoice < 1.2
     )
       return
-    const first = s.level === 1 ? frameChoices(s) : []
-    const choices = first.length ? first : this.rollChoices()
-    if (!choices.length) return
-    s.choices = choices
+    s.weaponOffers = makeWeaponOffers(s, this.hooks)
+    if (!s.weaponOffers.length) return
+    s.choices = s.weaponOffers.map((offer) => offer.id)
     s.choiceRemaining = 8
-    s.choiceRecommended = this.recommendChoice(choices)
+    s.choiceRecommended = recommendWeaponOffer(s, s.weaponOffers)
     this.lastChoice = s.clock
     this.hooks.emit({ type: 'level', ...s.player, amount: s.level + 1 })
   }
 
-  // 固定推荐：补齐协议优先，再考虑机体与已有技能
-  private recommendChoice(choices: UpgradeId[]) {
-    const s = this.s
-    const score = (id: UpgradeId) => {
-      const paired =
-        level(s, id) === 0 &&
-        protocolDefinitions.some(
-          (p) => p.parts.includes(id) && p.parts.some((part) => level(s, part) > 0),
-        )
-      return (
-        Number(paired) * 8 +
-        Number(frameStats[s.player.frame].bias.includes(id)) * 3 +
-        Number(level(s, id) > 0) * 2
-      )
-    }
-    return [...choices].sort((a, b) => score(b) - score(a))[0]
-  }
-
-  private rollChoices(): UpgradeId[] {
-    const pool = upgrades.filter((u) => level(this.s, u.id) < u.maxLevel).map((u) => u.id)
-    const choices: UpgradeId[] = []
-    while (choices.length < 3 && pool.length) {
-      const weights = pool.map((id) => {
-        const paired = protocolDefinitions.some(
-          (p) =>
-            p.parts.includes(id) && p.parts.some((part) => part !== id && level(this.s, part) > 0),
-        )
-        return paired && level(this.s, id) === 0 ? 3 : level(this.s, id) > 0 ? 1.4 : 1
-      })
-      let roll = this.hooks.random() * weights.reduce((sum, value) => sum + value, 0)
-      let index = 0
-      while (index < weights.length - 1 && roll >= weights[index]) roll -= weights[index++]
-      choices.push(pool.splice(index, 1)[0])
-    }
-    return choices
-  }
-
-  choose(id: UpgradeId) {
+  choose(id: string) {
     const s = this.s
     if (s.phase !== 'playing' || s.paused || !s.choices.includes(id) || s.xp < s.nextXp)
       return false
-    const def = upgrades.find((item) => item.id === id)
-    if (!def || level(s, id) >= def.maxLevel) return false
+    const offer = s.weaponOffers.find((item) => item.id === id)
+    if (!offer || !validWeaponOffer(s, offer)) return false
+    if (!applyWeaponOffer(s, this.hooks, offer)) return false
     s.xp -= s.nextXp
     s.level++
-    s.nextXp = Math.round(4 + s.level * s.level * 0.9)
+    s.nextXp = Math.round(4 + s.level * 1.7)
     s.choices = []
     s.choiceRemaining = 0
     s.choiceRecommended = null
+    s.weaponOffers = []
     this.lastChoice = s.clock
     s.player.invulnerable = Math.max(s.player.invulnerable, 0.25)
-    applyUpgrade(s, this.hooks, id)
     this.weapons.syncSatellites()
     return true
   }
@@ -161,7 +137,9 @@ export class Simulation {
     this.enemies.update(dt)
     if (s.phase !== 'playing') return
     this.weapons.update(dt)
+    if (s.phase !== 'playing') return
     advanceShots(s, this.hooks, dt)
+    if (s.phase !== 'playing') return
     advanceLoot(s, this.hooks, dt)
     for (const item of s.loot) keepInArena(item, 8)
     this.progression(dt)

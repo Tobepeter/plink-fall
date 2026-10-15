@@ -6,6 +6,7 @@ import { metaStats } from './meta/progression'
 import { frameStats } from './frames'
 import { difficultyStats } from './campaign/difficulty'
 import { clampToArena } from './arena'
+import { frameStartingWeapon } from './armory/data'
 
 export function foe(
   kind: EnemyKind,
@@ -88,7 +89,12 @@ export function createState(
     bossesDefeated: 0,
     bossIndex: 0,
     nextBoss: 25,
-    upgrades: { [frameStats[frame].startingSkill]: 1 },
+    upgrades: {},
+    weapons: [
+      { id: frameStartingWeapon[frame], level: 1, branch: null, cooldown: 0.05, charge: 0 },
+    ],
+    weaponOffers: [],
+    weaponTraces: [],
     choices: [],
     choiceRemaining: 0,
     choiceRecommended: null,

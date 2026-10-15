@@ -1,5 +1,5 @@
 import { Assets, Container, Graphics, Rectangle, Texture } from 'pixi.js'
-import type { FrameId, RushEvent, RushState, Vec } from '../types'
+import type { FrameId, RushEvent, RushState, Vec, WeaponId } from '../types'
 import { palette } from './palette'
 import { RushActors } from './rush-actors'
 import { RushCamera } from './rush-camera'
@@ -9,6 +9,7 @@ import { RushProjectiles } from './rush-projectiles'
 import { RushMotion } from './rush-motion'
 import { RushReticle } from './rush-reticle'
 import { frameArt, playerAtlas } from '../frame-art'
+import { armoryAtlas, weaponOrder } from './rush-weapon-style'
 
 // 全屏弹幕追击场景
 export class RushScene {
@@ -45,10 +46,11 @@ export class RushScene {
   }
 
   private async load() {
-    const [atlas, modules, players] = await Promise.all([
+    const [atlas, modules, players, armory] = await Promise.all([
       Assets.load<Texture>('/rush/actors-v3.webp'),
       Assets.load<Texture>('/rush/modules-v2.webp'),
       Assets.load<Texture>(playerAtlas),
+      Assets.load<Texture>(armoryAtlas),
     ])
     if (this.destroyed) return
     for (let i = 0; i < 9; i++) this.frames.push(this.extract(atlas, i))
@@ -64,16 +66,24 @@ export class RushScene {
       playerTextures[id] = texture
       this.frames.push(texture)
     }
-    this.actors = new RushActors(this.frames, weapon, playerTextures)
+    const weaponTextures = {} as Record<WeaponId, Texture>
+    for (const [index, id] of weaponOrder.entries()) {
+      const texture = this.extract(armory, index, 3, 2)
+      weaponTextures[id] = texture
+      this.frames.push(texture)
+    }
+    this.actors = new RushActors(this.frames, weapon, playerTextures, weaponTextures)
     this.world.addChild(
       this.floor.view,
       this.projectiles.fields,
+      this.projectiles.traces,
       this.motion.view,
       this.projectiles.loot,
       this.actors.view,
       this.projectiles.satellites,
       this.projectiles.shots,
       this.effects.view,
+      this.projectiles.enemyShots,
     )
     this.ready = true
     this.resize(this.camera.width, this.camera.height)
@@ -145,6 +155,7 @@ export class RushScene {
     if (state.runId !== this.runId || (state.phase === 'menu' && this.phase !== 'menu')) {
       this.runId = state.runId
       this.actors?.reset()
+      this.projectiles.reset()
       this.effects.reset()
       this.motion.reset()
       if (state.phase === 'playing') this.motion.launch()

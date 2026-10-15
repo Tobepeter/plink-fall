@@ -90,6 +90,11 @@ export function endRun(s: RushState, hooks: Hooks, won: boolean) {
   s.choices = []
   s.choiceRemaining = 0
   s.choiceRecommended = null
+  s.weaponOffers = []
+  s.weaponTraces = []
+  s.shots = []
+  s.zones = []
+  s.satellites = []
   s.record.bestTime = Math.max(s.record.bestTime, s.clock)
   s.record.bestKills = Math.max(s.record.bestKills, s.kills)
   if (won) {

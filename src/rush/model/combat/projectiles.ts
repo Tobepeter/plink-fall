@@ -4,6 +4,8 @@ import type { Hooks } from '../math'
 import { blast, damageFoe, hurtPlayer } from './damage'
 import { frostBurst, linkArc } from './protocols'
 import { arenaBounds, keepInArena } from '../arena'
+import { landToxin } from '../armory/hazards'
+import { pushFoe } from '../armory/geometry'
 
 function segmentDistance(point: Vec, a: Vec, b: Vec) {
   const dx = b.x - a.x,
@@ -15,7 +17,8 @@ function segmentDistance(point: Vec, a: Vec, b: Vec) {
 function strike(s: RushState, hooks: Hooks, shot: Shot, e: Foe) {
   shot.hits.push(e.id)
   damageFoe(s, hooks, e, shot.damage)
-  if (level(s, 'chain') && shot.kind !== 'spark') {
+  if (shot.kind === 'pellet') pushFoe(e, shot, shot.radius >= 6 ? 13 : 6)
+  if (!shot.weapon && level(s, 'chain') && shot.kind !== 'spark') {
     linkArc(s, hooks, e, e)
   }
   if (shot.kind === 'rocket') {
@@ -45,6 +48,16 @@ export function advanceShots(s: RushState, hooks: Hooks, dt: number) {
     shot.age += dt
     shot.life -= dt
     if (shot.life <= 0) continue
+    if (shot.kind === 'toxin' && shot.origin && shot.target) {
+      const t = Math.min(1, shot.age / (shot.duration ?? 0.48))
+      shot.x = shot.origin.x + (shot.target.x - shot.origin.x) * t
+      shot.y = shot.origin.y + (shot.target.y - shot.origin.y) * t
+      if (t >= 1) {
+        landToxin(s, hooks, shot)
+        shot.life = 0
+      }
+      continue
+    }
     if (shot.kind === 'rocket') {
       const target = nearest(s, shot, shot.hits)
       if (target) {
@@ -65,7 +78,11 @@ export function advanceShots(s: RushState, hooks: Hooks, dt: number) {
     const hitX = shot.x < bounds.left || shot.x > bounds.right
     const hitY = shot.y < bounds.top || shot.y > bounds.bottom
     if (hitX || hitY) {
-      if (shot.side === 'player' && shot.kind === 'shot' && shot.bounce > 0) {
+      if (
+        shot.side === 'player' &&
+        (shot.kind === 'shot' || shot.kind === 'pellet') &&
+        shot.bounce > 0
+      ) {
         shot.bounce--
         if (hitX) shot.vx *= -1
         if (hitY) shot.vy *= -1

@@ -33,7 +33,41 @@ export interface RunSettlement extends RewardParts {
   seconds: number
   difficulty: Difficulty
 }
-export type ProtocolId = 'circuit' | 'frostburst' | 'returnfire'
+export type WeaponId = 'laser' | 'scatter' | 'flame' | 'toxin' | 'arc' | 'blade'
+export type WeaponBranch = 'focus' | 'spread'
+export type WeaponReaction = 'combustion' | 'conduction' | 'prism'
+export interface WeaponSlot {
+  id: WeaponId
+  level: number
+  branch: WeaponBranch | null
+  cooldown: number
+  charge: number
+}
+export interface WeaponOffer {
+  id: string
+  action: 'equip' | 'upgrade' | 'branch' | 'replace' | 'utility'
+  weapon: WeaponId | null
+  slot: number
+  level: number
+  branch: WeaponBranch | null
+  name: string
+  hint: string
+  color: string
+  replaces?: WeaponId
+  utility?: 'haste' | 'vital' | 'magnet'
+}
+export interface WeaponTrace {
+  id: number
+  weapon: WeaponId
+  kind: 'beam' | 'flame' | 'arc' | 'slice' | 'burst'
+  from: Vec
+  targets: Vec[]
+  life: number
+  duration: number
+  width: number
+  power: number
+}
+export type ProtocolId = 'circuit' | 'frostburst' | 'returnfire' | WeaponReaction
 export interface WaveState {
   index: number
   act: number
@@ -79,11 +113,19 @@ export interface Foe extends Vec {
   hurt: number
   slow: number
   tier: number
+  burn?: number
+  burnTick?: number
+  toxin?: number
+  toxinTick?: number
 }
 export interface Shot extends Vec {
   id: number
   side: 'player' | 'enemy'
-  kind: 'shot' | 'rocket' | 'spark' | 'counter' | 'return'
+  kind: 'shot' | 'rocket' | 'spark' | 'counter' | 'return' | 'pellet' | 'toxin'
+  weapon?: WeaponId
+  target?: Vec
+  origin?: Vec
+  duration?: number
   scatter?: boolean
   vx: number
   vy: number
@@ -106,7 +148,10 @@ export interface Loot extends Vec {
 }
 export interface Zone extends Vec {
   id: number
-  kind: 'frost' | 'pulse' | 'blast'
+  kind: 'frost' | 'pulse' | 'blast' | 'fire' | 'toxin' | 'conductor'
+  damage?: number
+  weapon?: WeaponId
+  sourceSlot?: number
   radius: number
   life: number
   duration: number
@@ -163,9 +208,12 @@ export interface RushState {
   bossIndex: number
   nextBoss: number
   upgrades: Partial<Record<UpgradeId, number>>
-  choices: UpgradeId[]
+  weapons: WeaponSlot[]
+  weaponOffers: WeaponOffer[]
+  weaponTraces: WeaponTrace[]
+  choices: string[]
   choiceRemaining: number
-  choiceRecommended: UpgradeId | null
+  choiceRecommended: string | null
   move: Vec
   viewport: Vec
   record: RushRecord
@@ -207,6 +255,8 @@ export interface RushEvent extends Vec {
     | 'counter'
     | 'protocol'
     | 'ability'
+    | 'weapon'
+    | 'reaction'
   kind?: EnemyKind
   amount?: number
   power?: number
@@ -215,6 +265,8 @@ export interface RushEvent extends Vec {
   side?: 'player' | 'enemy'
   protocol?: ProtocolId
   frame?: FrameId
+  weapon?: WeaponId
+  reaction?: WeaponReaction
 }
 export interface RushPort {
   state: RushState
@@ -225,7 +277,7 @@ export interface RushPort {
   setMove(point: Vec): void
   setViewport(width: number, height: number): void
   dash(): boolean
-  choose(id: UpgradeId): boolean
+  choose(id: string): boolean
   setPaused(paused: boolean): void
   toggleSound(): void
   selectFrame(frame: FrameId): boolean

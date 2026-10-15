@@ -1,11 +1,13 @@
 import { Container, Graphics, Sprite } from 'pixi.js'
 import type { Texture } from 'pixi.js'
-import type { EnemyKind, Foe, FrameId, RushEvent, RushState, Vec } from '../types'
+import type { EnemyKind, Foe, FrameId, RushEvent, RushState, Vec, WeaponId } from '../types'
 import { clamp, foeColors, palette } from './palette'
 import { RushGait } from './rush-gait'
 import { RushRunner } from './actors/rush-runner'
 import { frameArt } from '../frame-art'
-import { abilityColors, drawAbilityAura } from './rush-ability'
+import { drawAbilityAura } from './rush-ability'
+import { RushMounts } from './actors/rush-mounts'
+import { drawWeaponStatus } from './rush-weapon-fields'
 
 const frameIndex: Record<EnemyKind, number> = {
   chaser: 1,
@@ -22,12 +24,10 @@ export class RushActors {
   private shadows = new Graphics()
   private telegraphs = new Graphics()
   private bodies = new Container()
-  private equipment = new Graphics()
   private aura = new Graphics()
   private player: RushRunner
-  private weapon = new Sprite()
+  private mounts: RushMounts
   private foes = new Map<number, Sprite>()
-  private fire = 0
   private dashLines = new Graphics()
   private steps = new Graphics()
   private gait = new RushGait()
@@ -38,10 +38,9 @@ export class RushActors {
     private textures: Texture[],
     weapon: Texture,
     players: Record<FrameId, Texture>,
+    weapons: Partial<Record<WeaponId, Texture>> = {},
   ) {
-    this.weapon.texture = weapon
-    this.weapon.anchor.set(229 / weapon.width, 132 / weapon.height)
-    this.weapon.scale.set(17 / Math.hypot(176, 44))
+    this.mounts = new RushMounts(weapons, weapon)
     this.view.addChild(
       this.telegraphs,
       this.shadows,
@@ -49,8 +48,7 @@ export class RushActors {
       this.steps,
       this.dashLines,
       this.bodies,
-      this.weapon,
-      this.equipment,
+      this.mounts.view,
     )
     this.bodies.sortableChildren = true
     this.player = new RushRunner(players)
@@ -64,7 +62,7 @@ export class RushActors {
     if (state.aim.mode === 'mouse' && state.aim.point && Math.abs(Math.cos(p.angle)) > 0.12)
       pose.face = Math.cos(p.angle) < 0 ? -1 : 1
     this.player.render(p, pose)
-    this.fire = Math.max(0, this.fire - dt)
+    this.mounts.render(state, dt, this.reducedMotion.matches)
     this.drawDash(state)
     this.drawSteps(state)
     this.drawShadows(state)
@@ -151,6 +149,7 @@ export class RushActors {
       sprite.alpha = 1
       sprite.zIndex = foe.y
       this.foeSignals(foe)
+      drawWeaponStatus(this.telegraphs, foe, state.clock, this.reducedMotion.matches)
     }
     for (const [id, sprite] of this.foes) {
       if (live.has(id)) continue
@@ -217,7 +216,6 @@ export class RushActors {
 
   private drawEquipment(state: RushState) {
     const p = state.player
-    const g = this.equipment.clear()
     const aura = this.aura.clear()
     if (state.phase === 'playing')
       drawAbilityAura(aura, p, state.abilityActive, state.clock, this.reducedMotion.matches)
@@ -235,38 +233,11 @@ export class RushActors {
           alpha: 0.82,
         })
     }
-    const a = p.angle
-    const dx = Math.cos(a)
-    const dy = Math.sin(a)
-    // 胸前枢轴、枪口与模型同一个起点；身体不含静态武器
-    this.weapon.position.set(p.x, p.y - 16)
-    this.weapon.rotation = a - Math.atan2(44, -176)
-    const tip = { x: p.x + dx * 17, y: p.y - 16 + dy * 17 }
-    if (this.fire > 0) {
-      g.poly([
-        tip.x + dx * 13,
-        tip.y + dy * 13,
-        tip.x - dy * 5,
-        tip.y + dx * 5,
-        tip.x + dx * 3,
-        tip.y + dy * 3,
-        tip.x + dy * 5,
-        tip.y - dx * 5,
-      ]).fill(palette.cream)
-      if (p.frame === 'runner' && state.abilityActive > 0) {
-        for (const offset of [-0.3, 0.3]) {
-          const a = p.angle + offset
-          g.moveTo(tip.x + Math.cos(a) * 8, tip.y + Math.sin(a) * 8)
-            .lineTo(tip.x + Math.cos(a) * 17, tip.y + Math.sin(a) * 17)
-            .stroke({ color: abilityColors.runner.core, width: 1.8, alpha: 0.9 })
-        }
-      }
-    }
   }
 
   event(event: RushEvent, actualPlayer: Vec = this.playerPoint) {
-    if (event.type !== 'shot' || event.side === 'enemy') return
-    if (Math.hypot(event.x - actualPlayer.x, event.y - actualPlayer.y) < 32) this.fire = 0.055
+    if (Math.hypot(event.x - actualPlayer.x, event.y - actualPlayer.y) < 48)
+      this.mounts.event(event)
   }
 
   gaitSnapshot() {
@@ -278,7 +249,8 @@ export class RushActors {
       playerAlpha: runner.alpha,
       bodyScale: runner.scale,
       runner,
-      gunPivot: { x: this.weapon.x, y: this.weapon.y },
+      gunPivot: this.mounts.pivot(),
+      mounts: this.mounts.snapshot(),
     }
   }
 
@@ -287,15 +259,15 @@ export class RushActors {
     this.foes.clear()
     this.dashLines.clear()
     this.aura.clear()
-    this.equipment.clear()
     this.steps.clear()
     this.gait.reset()
-    this.fire = 0
+    this.mounts.reset()
   }
 
   destroy() {
     this.reset()
     this.player.destroy()
+    this.mounts.destroy()
     this.view.destroy({ children: true })
   }
 }

@@ -2,7 +2,8 @@ import type { RushPort, RushState } from '../../types'
 import type { CSSProperties, PointerEvent } from 'react'
 import { frameStats } from '../../model/frames'
 import { frameArt } from '../../frame-art'
-import { WeaponGlyph } from '../weapon-glyph'
+import { frameStartingWeapon } from '../../model/armory/data'
+import { ArmoryGlyph } from '../armory-glyph'
 
 // 独立机体技能与有效冷却
 export function RushAbility(props: { state: RushState; store: RushPort }) {
@@ -39,7 +40,7 @@ export function RushAbility(props: { state: RushState; store: RushPort }) {
           }}
         />
       </svg>
-      <WeaponGlyph id={frame.startingSkill} size={42} />
+      <ArmoryGlyph id={frameStartingWeapon[state.player.frame]} size={42} />
       <kbd>E</kbd>
       <span>{frame.skillName}</span>
       {state.abilityCooldown > 0 && !active && <b>{Math.ceil(state.abilityCooldown)}</b>}

@@ -14,49 +14,76 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 1px;
 }
-.rush-loadout-modules,
+.rush-loadout-weapons,
 .rush-loadout-protocols {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.rush-loadout-modules {
+.rush-loadout-weapons {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 8px;
   margin-bottom: 24px;
 }
-.rush-loadout-modules > li {
+.rush-loadout-weapons > li {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
   min-width: 0;
 }
-.rush-loadout-modules > li > b {
+.rush-loadout-weapons > li > b {
   color: #e3e9d9;
   font-size: 12px;
   font-weight: 650;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.rush-loadout-rank {
+.rush-loadout-weapons > li > small {
+  min-height: 15px;
+  color: #90aa9c;
+  font-size: 10px;
+  line-height: 15px;
+}
+.rush-loadout-weapon-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+}
+.rush-loadout-weapon-icon > .rush-game-glyph:last-child:not(:first-child) {
+  position: absolute;
+  top: 3px;
+  right: 0;
+}
+.rush-loadout-weapons > .is-locked .rush-loadout-weapon-icon,
+.rush-loadout-weapons > .is-empty .rush-loadout-weapon-icon {
+  opacity: 0.32;
+  filter: grayscale(1);
+}
+.rush-loadout-weapons > .is-locked > b,
+.rush-loadout-weapons > .is-empty > b {
+  color: #8ba395;
+}
+.rush-loadout-utilities {
   display: flex;
-  gap: 3px;
-  height: 4px;
+  justify-content: center;
+  gap: 21px;
+  margin: -7px 0 20px;
 }
-.rush-loadout-rank > i {
-  width: 6px;
-  background: #334b45;
-  transform: skewX(-18deg);
-}
-.rush-loadout-rank > i.is-owned {
-  background: var(--rush-mint);
-}
-.rush-loadout-empty {
-  margin: 16px 0 24px;
-  color: #8da99c;
-  font-size: 13px;
-  text-align: center;
+.rush-loadout-utilities > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #aac4b0;
+  font:
+    750 11px 'SFMono-Regular',
+    Consolas,
+    monospace;
 }
 .rush-loadout-protocols > li {
   display: grid;
@@ -88,11 +115,11 @@
   width: 48px;
   gap: 2px;
 }
-.rush-loadout-pair > span > .rush-module {
+.rush-loadout-pair > span > .rush-armory-glyph {
   opacity: 0.3;
   filter: grayscale(1);
 }
-.rush-loadout-pair > span.is-owned > .rush-module {
+.rush-loadout-pair > span.is-owned > .rush-armory-glyph {
   opacity: 1;
   filter: none;
 }

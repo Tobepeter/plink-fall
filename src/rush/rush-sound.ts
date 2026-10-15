@@ -1,4 +1,4 @@
-import type { RushEvent, RushState } from './types'
+import type { RushEvent, RushState, WeaponId } from './types'
 
 // 节奏底鼓、枪火与击杀音色
 export class RushSound {
@@ -11,6 +11,8 @@ export class RushSound {
   private lastCut = 0
   private nextBeat = 0
   private beat = 0
+  private lastWeapons = new Map<WeaponId, number>()
+  private lastReaction = -1
   constructor(private getState: () => RushState) {}
   unlock() {
     if (
@@ -97,7 +99,20 @@ export class RushSound {
     )
       return
     const now = this.context.currentTime
-    if (event.type === 'shot') {
+    if (event.type === 'weapon' && event.weapon) {
+      this.weapon(event.weapon, now)
+    } else if (event.type === 'reaction') {
+      if (now - this.lastReaction < 0.18) return
+      this.lastReaction = now
+      if (event.reaction === 'combustion') {
+        this.crackle(now, 0.17, 750)
+        this.tone(150, now, 0.14, 0.12, 'triangle', 48)
+      } else if (event.reaction === 'conduction') {
+        this.crackle(now, 0.08, 4000)
+        this.tone(1240, now, 0.07, 0.055, 'triangle', 620)
+      } else this.tone(1568, now, 0.09, 0.065, 'sine', 2093)
+    } else if (event.type === 'shot') {
+      if (event.weapon) return
       if (event.side === 'enemy' || now - this.lastShot < 0.08) return
       this.lastShot = now
       this.tone(740 + (this.beat % 3) * 60, now, 0.045, 0.07, 'triangle', 370)
@@ -144,6 +159,25 @@ export class RushSound {
       notes.forEach((note, i) => this.tone(note, now + i * 0.1, 0.3, 0.14, 'triangle'))
     }
   }
+  // 每类枪声独立节流
+  private weapon(weapon: WeaponId, now: number) {
+    if (now - (this.lastWeapons.get(weapon) ?? -1) < (weapon === 'flame' ? 0.14 : 0.1)) return
+    this.lastWeapons.set(weapon, now)
+    if (weapon === 'laser') {
+      this.tone(950, now, 0.075, 0.065, 'sine', 1800)
+      this.tone(330, now, 0.055, 0.035, 'triangle', 190)
+    } else if (weapon === 'scatter') {
+      this.crackle(now, 0.12, 1300)
+      this.tone(190, now, 0.065, 0.09, 'triangle', 65)
+    } else if (weapon === 'flame') this.crackle(now, 0.045, 1600)
+    else if (weapon === 'toxin') {
+      this.tone(145, now, 0.09, 0.07, 'sine', 330)
+      this.crackle(now, 0.025, 550)
+    } else if (weapon === 'arc') {
+      this.tone(1500, now, 0.055, 0.045, 'triangle', 500)
+      this.crackle(now, 0.035, 4400)
+    } else this.crackle(now, 0.045, 3000)
+  }
   private tone(
     frequency: number,
     time: number,
@@ -152,7 +186,7 @@ export class RushSound {
     type: OscillatorType,
     end = frequency,
   ) {
-    if (!this.context || !this.output) return
+    if (!this.context || !this.output || this.voices.size >= 48) return
     const oscillator = this.context.createOscillator(),
       gain = this.context.createGain()
     oscillator.type = type
@@ -167,7 +201,7 @@ export class RushSound {
     oscillator.stop(time + duration + 0.015)
   }
   private crackle(time: number, volume: number, cutoff: number) {
-    if (!this.context || !this.output || !this.noise) return
+    if (!this.context || !this.output || !this.noise || this.voices.size >= 48) return
     const source = this.context.createBufferSource(),
       filter = this.context.createBiquadFilter(),
       gain = this.context.createGain()
@@ -193,6 +227,8 @@ export class RushSound {
   }
   // 整备前清掉已排程音符，不让旧结算声在新局恢复
   private stopVoices() {
+    this.lastWeapons.clear()
+    this.lastReaction = -1
     for (const [source, cleanup] of [...this.voices]) {
       source.onended = null
       try {
