@@ -88,6 +88,8 @@ export function endRun(s: RushState, hooks: Hooks, won: boolean) {
   s.phase = won ? 'won' : 'dead'
   s.move = { x: 0, y: 0 }
   s.choices = []
+  s.choiceRemaining = 0
+  s.choiceRecommended = null
   s.record.bestTime = Math.max(s.record.bestTime, s.clock)
   s.record.bestKills = Math.max(s.record.bestKills, s.kills)
   if (won) {

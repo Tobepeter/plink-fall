@@ -52,14 +52,9 @@
   background: transparent;
   color: #bad1bc;
 }
-.rush-difficulty-chip > svg {
-  width: 16px;
-  height: 16px;
-  color: var(--rush-brass);
-}
-.rush-difficulty-chip > svg:last-child {
-  width: 14px;
+.rush-difficulty-chip > .rush-menu-chevron {
   color: #8eac99;
+  margin-left: 4px;
 }
 .rush-difficulty-chip > span {
   font-size: 13px;
@@ -102,11 +97,6 @@
   font-weight: 900;
   letter-spacing: 4px;
 }
-.rush-start > svg {
-  width: 28px;
-  height: 28px;
-  stroke-width: 2.5;
-}
 .rush-start:hover {
   background: #a6eecf;
 }
@@ -136,11 +126,6 @@
   border-top: 1px solid #8ce6c22b;
   color: #c4dcc6;
   background: linear-gradient(#8ce6c209, transparent 80%);
-}
-.rush-home-nav > button > svg {
-  width: 27px;
-  height: 27px;
-  stroke-width: 1.7;
 }
 .rush-home-nav > button > span {
   font-size: 14px;

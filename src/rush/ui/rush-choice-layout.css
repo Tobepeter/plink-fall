@@ -1,0 +1,132 @@
+@media (max-width: 600px) and (orientation: portrait) {
+  .rush-choice {
+    width: min(286px, calc(100vw - 32px));
+    bottom: max(144px, calc(env(safe-area-inset-bottom) + 136px));
+  }
+  .rush-weapons {
+    gap: 9px;
+  }
+  .rush-weapon-device {
+    height: 70px;
+  }
+  .rush-weapon-device > .rush-module {
+    width: 64px;
+    height: 64px;
+  }
+  .rush-weapon > b {
+    font-size: 13px;
+    line-height: 17px;
+  }
+  .rush-choice-key {
+    display: none;
+  }
+  .rush-weapon-link > .rush-module {
+    width: 17px;
+    height: 17px;
+  }
+}
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 700px) {
+  .rush-choice {
+    bottom: max(140px, calc(env(safe-area-inset-bottom) + 132px));
+  }
+  .rush-choice-level {
+    margin-bottom: 4px;
+  }
+  .rush-weapon {
+    min-height: 90px;
+  }
+  .rush-weapon-device {
+    height: 54px;
+  }
+  .rush-weapon-device > .rush-module {
+    width: 52px;
+    height: 52px;
+  }
+  .rush-weapon > b {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 620px) {
+  .rush-choice {
+    bottom: max(124px, calc(env(safe-area-inset-bottom) + 116px));
+  }
+  .rush-weapon {
+    min-height: 84px;
+  }
+  .rush-weapon-device {
+    height: 48px;
+  }
+  .rush-weapon-device > .rush-module {
+    width: 46px;
+    height: 46px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .rush-choice {
+    width: 312px;
+    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
+  }
+  .rush-choice-level {
+    margin-bottom: 3px;
+  }
+  .rush-weapon {
+    min-height: 90px;
+  }
+  .rush-weapon-device {
+    height: 57px;
+  }
+  .rush-weapon-device > .rush-module {
+    width: 56px;
+    height: 56px;
+  }
+  .rush-weapon > b {
+    margin-top: 3px;
+    font-size: 13px;
+    line-height: 16px;
+  }
+  .rush-weapon-rank {
+    margin-top: 5px;
+  }
+}
+@media (orientation: landscape) and (max-width: 719px) and (max-height: 500px) {
+  .rush-choice {
+    left: calc(50% - 34px);
+    width: 224px;
+  }
+  .rush-choice-level {
+    min-height: 22px;
+  }
+  .rush-choice-level > small {
+    font-size: 10px;
+  }
+  .rush-choice-time {
+    width: 40px;
+  }
+  .rush-weapon {
+    min-height: 80px;
+  }
+  .rush-weapon-device {
+    height: 48px;
+  }
+  .rush-weapon-device > .rush-module {
+    width: 46px;
+    height: 46px;
+  }
+  .rush-weapon > b {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+@media (pointer: coarse) {
+  .rush-choice-key {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rush-weapon.is-recommended .rush-weapon-aura {
+    animation: none;
+    opacity: 0.62;
+  }
+}

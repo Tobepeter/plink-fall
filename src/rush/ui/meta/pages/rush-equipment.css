@@ -47,13 +47,8 @@
   font-size: 13px;
   white-space: nowrap;
 }
-.rush-frame-roster button > svg {
-  position: absolute;
-  right: 4px;
-  top: 8px;
-  width: 13px;
-  height: 13px;
-  color: var(--rush-brass);
+.rush-frame-roster > .is-locked:not(.is-preview) {
+  opacity: 0.55;
 }
 .rush-frame-spec {
   width: 100%;
@@ -80,16 +75,6 @@
     Consolas,
     monospace;
 }
-.rush-frame-metrics svg {
-  width: 19px;
-  height: 19px;
-  color: #98bca6;
-}
-.rush-frame-metrics small {
-  font:
-    12px system-ui,
-    sans-serif;
-}
 .rush-frame-ability {
   display: flex;
   align-items: center;
@@ -111,6 +96,9 @@
   line-height: 1.5;
 }
 .rush-frame-ability small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   color: #9fbaa4;
 }

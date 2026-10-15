@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Skull } from 'lucide-react'
+import { GameGlyph } from './game-glyph'
 import type { CSSProperties, PointerEvent } from 'react'
 import type { RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
@@ -72,7 +72,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           </span>
         </div>
         <span className="rush-kills" aria-label={`击败 ${state.kills} 名敌人`}>
-          <ControlGlyph id="target" />
+          <GameGlyph id="kills" size={22} />
           <b>{state.kills}</b>
         </span>
       </div>
@@ -86,7 +86,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           aria-label={state.wave.duration === 0 ? '首领战' : '本波剩余时间'}
         >
           {state.wave.duration === 0 ? (
-            <Skull aria-hidden="true" />
+            <GameGlyph id="kills" size={30} />
           ) : breather ? (
             remainingSeconds.toFixed(1)
           ) : (
@@ -94,7 +94,8 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           )}
         </b>
         <span className="rush-level">
-          <b>LV {state.level}</b>
+          <GameGlyph id="level" size={16} />
+          <b>{state.level}</b>
           <i
             className="rush-xp"
             role="progressbar"
@@ -183,7 +184,7 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
             <path d="M38 2h12M38 86h12M2 38v12M86 38v12" />
           </svg>
           <ControlGlyph id="dash" />
-          <span>截弹冲刺</span>
+          <span>冲刺</span>
           {intercepted && <b className="rush-counter-count">反击 ×{counter.amount}</b>}
         </button>
       )}

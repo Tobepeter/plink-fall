@@ -90,6 +90,8 @@ export function createState(
     nextBoss: 25,
     upgrades: { [frameStats[frame].startingSkill]: 1 },
     choices: [],
+    choiceRemaining: 0,
+    choiceRecommended: null,
     move: { x: 0, y: 0 },
     viewport: { ...viewport },
     record,

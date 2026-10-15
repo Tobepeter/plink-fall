@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Check, LockKeyhole, Shield, Zap } from 'lucide-react'
 import { frameDefinitions } from '../../../model/data'
 import { frameStats } from '../../../model/frames'
 import type { FrameId, RushPort, RushState } from '../../../types'
 import { FrameGlyph, WeaponGlyph } from '../../weapon-glyph'
+import { GameGlyph } from '../../game-glyph'
 import { RushCoin } from '../rush-coin'
 import { RushHangar } from '../rush-hangar'
 
@@ -30,8 +30,11 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
           {frameDefinitions.map((item) => (
             <button
               key={item.id}
-              className={preview === item.id ? 'is-preview' : ''}
+              className={`${preview === item.id ? 'is-preview' : ''}${!record.unlocked.includes(item.id) ? ' is-locked' : ''}`}
               aria-label={`预览${item.name}`}
+              aria-description={
+                record.unlocked.includes(item.id) ? undefined : '未解锁，预览不花费金币'
+              }
               aria-pressed={preview === item.id}
               onClick={() => {
                 setPreview(item.id)
@@ -40,7 +43,6 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
             >
               <FrameGlyph id={item.id} />
               <b>{item.name}</b>
-              {!record.unlocked.includes(item.id) && <LockKeyhole aria-hidden="true" />}
             </button>
           ))}
         </div>
@@ -48,14 +50,13 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
       <div className="rush-frame-spec">
         <h2>{frame.name}</h2>
         <div className="rush-frame-metrics">
-          <span>
-            <Shield aria-hidden="true" />
+          <span aria-label={`初始装甲 ${stats.hp} 格`}>
+            <WeaponGlyph id="vital" size={26} />
             {stats.hp}
           </span>
-          <span>
-            <Zap aria-hidden="true" />
+          <span aria-label={`移动速度 ${stats.speed}`}>
+            <WeaponGlyph id="haste" size={26} />
             {stats.speed}
-            <small>移速</small>
           </span>
         </div>
         <div className="rush-frame-ability">
@@ -63,7 +64,10 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
           <div>
             <h3>{stats.skillName}</h3>
             <p>{stats.skillHint}</p>
-            <small>冷却 {stats.abilityCooldown} 秒</small>
+            <small aria-label={`冷却 ${stats.abilityCooldown} 秒`}>
+              <GameGlyph id="time" size={20} />
+              {stats.abilityCooldown}s
+            </small>
           </div>
         </div>
         <p className="rush-frame-tradeoff">{stats.tradeoff}</p>
@@ -74,8 +78,8 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
             disabled={selected}
             aria-label={`选用${frame.name}`}
           >
-            {selected && <Check aria-hidden="true" />}
-            <b>{selected ? '当前机体' : '选用机体'}</b>
+            <GameGlyph id="equip" size={26} />
+            <b>{selected ? '已选用' : '选用'}</b>
           </button>
         ) : (
           <>
@@ -85,9 +89,9 @@ export function RushFramePage(props: { state: RushState; store: RushPort; done: 
               disabled={record.coins < stats.unlockCost}
               aria-label={`解锁${frame.name}，需要 ${stats.unlockCost} 金币`}
             >
-              <b>解锁机体</b>
+              <b>解锁</b>
               <span>
-                <RushCoin />
+                <RushCoin size={24} />
                 {stats.unlockCost}
               </span>
             </button>

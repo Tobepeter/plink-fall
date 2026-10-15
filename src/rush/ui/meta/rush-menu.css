@@ -77,23 +77,49 @@
     monospace;
 }
 .rush-coin {
-  width: 29px;
-  height: 29px;
+  width: var(--game-glyph-size, 28px);
+  height: var(--game-glyph-size, 28px);
   flex-shrink: 0;
   overflow: visible;
 }
-.rush-coin path:first-child {
-  fill: #bb8640;
-  stroke: #0f1925;
-  stroke-width: 2;
+.rush-menu-arrow {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  width: 22px;
+  height: 14px;
 }
-.rush-coin path:nth-child(2) {
-  fill: #efc574;
-  stroke: #ffdda0;
-  stroke-width: 1.5;
+.rush-menu-arrow::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
 }
-.rush-coin path:last-child {
-  fill: #765a38;
+.rush-menu-arrow::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.rush-menu-arrow.is-back {
+  transform: rotate(180deg);
+}
+.rush-menu-chevron {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
 }
 .rush-menu-gear,
 .rush-menu-back {

@@ -1,0 +1,11 @@
+.rush-game-glyph {
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--game-glyph-size, 28px);
+  height: var(--game-glyph-size, 28px);
+  background-image: url('/rush/ui-icons-v1.webp');
+  background-size: 400% 400%;
+  background-repeat: no-repeat;
+  vertical-align: middle;
+  pointer-events: none;
+}

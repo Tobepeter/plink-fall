@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Check, Plus } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { metaPrice, metaUpgrades } from '../../../model/meta/progression'
 import type { MetaUpgradeId, RushPort, RushState } from '../../../types'
@@ -25,6 +24,7 @@ export function RushUpgradePage(props: { state: RushState; store: RushPort }) {
           const maxed = level >= upgrade.maxLevel
           const cost = metaPrice(record, upgrade.id)
           const available = !maxed && record.coins >= cost
+          const nextEffect = upgrade.effect(level + 1).match(/[+-].*$/)?.[0]
           return (
             <div
               className={`rush-upgrade-slot${maxed ? ' is-maxed' : ''}`}
@@ -37,8 +37,17 @@ export function RushUpgradePage(props: { state: RushState; store: RushPort }) {
                   {upgrade.name}
                   <small>Lv {level}</small>
                 </h2>
-                <span className="rush-upgrade-current">当前 · {upgrade.effect(level)}</span>
-                <strong>{maxed ? '已完成强化' : `下阶 · ${upgrade.effect(level + 1)}`}</strong>
+                <strong
+                  aria-label={`当前 ${upgrade.effect(level)}${maxed ? '，已满级' : `，下阶 ${upgrade.effect(level + 1)}`}`}
+                >
+                  {upgrade.effect(level)}
+                  {!maxed && (
+                    <>
+                      <i className="rush-menu-arrow" aria-hidden="true" />
+                      {nextEffect}
+                    </>
+                  )}
+                </strong>
                 <span className="rush-meta-ranks" aria-hidden="true">
                   {Array.from({ length: upgrade.maxLevel }, (_, index) => (
                     <i key={index} className={index < level ? 'is-filled' : ''} />
@@ -52,12 +61,12 @@ export function RushUpgradePage(props: { state: RushState; store: RushPort }) {
                 aria-label={`${upgrade.name}，等级 ${level}，${maxed ? '已满级' : `升级需要 ${cost} 金币`}`}
               >
                 {maxed ? (
-                  <Check aria-hidden="true" />
+                  <b>MAX</b>
                 ) : (
                   <>
-                    <Plus aria-hidden="true" />
+                    <small>强化</small>
                     <span>
-                      <RushCoin />
+                      <RushCoin size={20} />
                       <b>{cost}</b>
                     </span>
                   </>
@@ -70,7 +79,7 @@ export function RushUpgradePage(props: { state: RushState; store: RushPort }) {
       <p className="rush-page-status" role="status">
         {message}
       </p>
-      <p className="rush-page-note">永久保留 · 下次出击生效</p>
+      <p className="rush-page-note">下次出击生效</p>
     </div>
   )
 }

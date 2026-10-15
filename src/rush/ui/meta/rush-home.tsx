@@ -1,24 +1,17 @@
-import {
-  ArrowRight,
-  Bot,
-  ChartNoAxesColumnIncreasing,
-  ChevronRight,
-  Star,
-  Wrench,
-} from 'lucide-react'
 import { frameDefinitions } from '../../model/data'
 import { frameStats } from '../../model/frames'
 import { difficultyDefinitions } from '../../model/campaign/difficulty'
 import type { RushState } from '../../types'
+import { GameGlyph } from '../game-glyph'
 import { WeaponGlyph } from '../weapon-glyph'
 import { RushHangar } from './rush-hangar'
 
 export type RushMenuPage = 'home' | 'frames' | 'upgrades' | 'difficulty' | 'stats' | 'settings'
 
 const entries = [
-  { page: 'frames', name: '机体', icon: Bot },
-  { page: 'upgrades', name: '强化', icon: Wrench },
-  { page: 'stats', name: '战绩', icon: ChartNoAxesColumnIncreasing },
+  { page: 'frames', name: '机体' },
+  { page: 'upgrades', name: '强化' },
+  { page: 'stats', name: '战绩' },
 ] as const
 
 // 首屏只展示本次出击，细节由玩家主动打开
@@ -48,14 +41,14 @@ export function RushHome(props: {
           onClick={() => props.open('difficulty')}
           aria-label={`调整难度，当前 ${record.difficulty} 星 ${difficulty.name}`}
         >
-          <Star aria-hidden="true" />
+          <GameGlyph id="star" size={22} />
           <span>{difficulty.name}</span>
-          <b>{record.difficulty} 星</b>
-          <ChevronRight aria-hidden="true" />
+          <b>{record.difficulty}</b>
+          <i className="rush-menu-chevron" aria-hidden="true" />
         </button>
         <button className="rush-start" onClick={props.start}>
           <b>开始突围</b>
-          <ArrowRight aria-hidden="true" />
+          <i className="rush-menu-arrow" aria-hidden="true" />
         </button>
         <nav className="rush-home-nav" aria-label="整备功能">
           {entries.map((entry) => (
@@ -65,7 +58,7 @@ export function RushHome(props: {
               onClick={() => props.open(entry.page)}
               aria-label={`打开${entry.name}`}
             >
-              <entry.icon aria-hidden="true" />
+              <GameGlyph id={entry.page} size={30} />
               <span>{entry.name}</span>
             </button>
           ))}

@@ -1,6 +1,7 @@
 @import './ui/rush-hud.css';
 @import './ui/rush-controls.css';
 @import './ui/rush-choice.css';
+@import './ui/rush-choice-layout.css';
 @import './ui/rush-result.css';
 
 body.rush-mode {

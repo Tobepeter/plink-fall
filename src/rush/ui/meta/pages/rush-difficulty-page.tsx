@@ -1,6 +1,7 @@
-import { Check, ChevronRight, LockKeyhole, Star } from 'lucide-react'
 import { difficultyDefinitions } from '../../../model/campaign/difficulty'
 import type { RushPort, RushState } from '../../../types'
+import { GameGlyph } from '../../game-glyph'
+import { RushCoin } from '../rush-coin'
 
 // 星级在自己的页面选择，确认后回到出击
 export function RushDifficultyPage(props: { state: RushState; store: RushPort; done: () => void }) {
@@ -16,38 +17,37 @@ export function RushDifficultyPage(props: { state: RushState; store: RushPort; d
               key={item.id}
               className={`rush-difficulty-option${selected ? ' is-selected' : ''}`}
               disabled={locked}
-              aria-label={`选择${item.id}星难度，金币收益 ${item.rewardMultiplier} 倍${locked ? '，尚未解锁' : ''}`}
+              aria-label={`选择${item.id}星难度，${item.hint}，金币收益 ${item.rewardMultiplier} 倍${locked ? '，尚未解锁' : ''}`}
               aria-pressed={selected}
               onClick={() => {
                 if (props.store.selectDifficulty(item.id)) props.done()
               }}
             >
               <span className="rush-difficulty-emblem">
-                <Star aria-hidden="true" />
+                <GameGlyph id="star" size={42} className="rush-star-art" />
                 <b>{item.id}</b>
               </span>
               <span className="rush-difficulty-name">
                 <b>{item.name}</b>
-                <small>{locked ? `通关 ${item.id - 1} 星解锁` : item.hint.split(' · ')[0]}</small>
+                {locked && <small>通关 {item.id - 1} 星解锁</small>}
               </span>
               <span className="rush-difficulty-reward">
                 ×{item.rewardMultiplier}
-                <small>金币</small>
+                <RushCoin size={20} />
               </span>
               {locked ? (
-                <LockKeyhole aria-hidden="true" />
+                <span className="rush-difficulty-locked" aria-hidden="true">
+                  —
+                </span>
               ) : selected ? (
-                <Check aria-hidden="true" />
+                <GameGlyph id="equip" size={22} />
               ) : (
-                <ChevronRight aria-hidden="true" />
+                <i className="rush-menu-chevron" aria-hidden="true" />
               )}
             </button>
           )
         })}
       </div>
-      <p className="rush-page-note">
-        {record.highestDifficulty === 3 ? '全部星级已解锁' : '通关当前星级，解锁下一星'}
-      </p>
     </div>
   )
 }

@@ -164,6 +164,8 @@ export interface RushState {
   nextBoss: number
   upgrades: Partial<Record<UpgradeId, number>>
   choices: UpgradeId[]
+  choiceRemaining: number
+  choiceRecommended: UpgradeId | null
   move: Vec
   viewport: Vec
   record: RushRecord

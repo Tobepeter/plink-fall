@@ -14,6 +14,7 @@ export function bootRush(root: HTMLElement) {
   for (const [key, href] of [
     ['modules', '/rush/modules-v2.webp'],
     ['actors', '/rush/actors-v3.webp'],
+    ['ui', '/rush/ui-icons-v1.webp'],
   ]) {
     if (document.querySelector(`link[data-rush-${key}]`)) continue
     const preload = document.createElement('link')

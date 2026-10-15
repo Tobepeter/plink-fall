@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowLeft, Settings } from 'lucide-react'
 import type { RushPort, RushState } from '../../types'
+import { GameGlyph } from '../game-glyph'
 import { RushCoin } from './rush-coin'
 import { RushHome } from './rush-home'
 import type { RushMenuPage } from './rush-home'
@@ -72,13 +72,13 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
         ) : (
           <>
             <button className="rush-menu-back" onClick={home} aria-label="返回首页">
-              <ArrowLeft aria-hidden="true" />
+              <i className="rush-menu-arrow is-back" aria-hidden="true" />
             </button>
             <h1 className="rush-menu-title">{pageNames[page]}</h1>
           </>
         )}
         <div className="rush-menu-wallet" aria-label={`金币余额 ${state.record.coins}`}>
-          <RushCoin />
+          <RushCoin size={25} />
           <b>{state.record.coins}</b>
         </div>
         {page === 'home' && (
@@ -88,7 +88,7 @@ export function RushMenu(props: { state: RushState; store: RushPort; start: () =
             onClick={() => open('settings')}
             aria-label="打开设置"
           >
-            <Settings aria-hidden="true" />
+            <GameGlyph id="settings" size={26} />
           </button>
         )}
       </header>

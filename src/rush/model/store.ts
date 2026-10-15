@@ -221,6 +221,8 @@ export class RushStore implements RushPort {
     this.state.paused = false
     this.state.move = { x: 0, y: 0 }
     this.state.choices = []
+    this.state.choiceRemaining = 0
+    this.state.choiceRecommended = null
     this.publish()
   }
 

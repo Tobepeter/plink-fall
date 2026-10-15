@@ -61,11 +61,16 @@ export class Simulation {
     }
   }
 
-  private progression() {
+  private progression(dt: number) {
     const s = this.s
+    if (s.choices.length > 0) {
+      s.choiceRemaining = Math.max(0, s.choiceRemaining - dt)
+      if (s.choiceRemaining < 0.000001 && s.choiceRecommended)
+        this.choose(s.choiceRecommended)
+      return
+    }
     if (
       s.phase !== 'playing' ||
-      s.choices.length > 0 ||
       s.xp < s.nextXp ||
       s.clock < 3.3 ||
       s.clock - this.lastChoice < 7
@@ -75,8 +80,28 @@ export class Simulation {
     const choices = first.length ? first : this.rollChoices()
     if (!choices.length) return
     s.choices = choices
+    s.choiceRemaining = 8
+    s.choiceRecommended = this.recommendChoice(choices)
     this.lastChoice = s.clock
     this.hooks.emit({ type: 'level', ...s.player, amount: s.level + 1 })
+  }
+
+  // 固定推荐：补齐协议优先，再考虑机体与已有技能
+  private recommendChoice(choices: UpgradeId[]) {
+    const s = this.s
+    const score = (id: UpgradeId) => {
+      const paired =
+        level(s, id) === 0 &&
+        protocolDefinitions.some(
+          (p) => p.parts.includes(id) && p.parts.some((part) => level(s, part) > 0),
+        )
+      return (
+        Number(paired) * 8 +
+        Number(frameStats[s.player.frame].bias.includes(id)) * 3 +
+        Number(level(s, id) > 0) * 2
+      )
+    }
+    return [...choices].sort((a, b) => score(b) - score(a))[0]
   }
 
   private rollChoices(): UpgradeId[] {
@@ -108,6 +133,8 @@ export class Simulation {
     s.level++
     s.nextXp = Math.round(4 + s.level * s.level * 0.9)
     s.choices = []
+    s.choiceRemaining = 0
+    s.choiceRecommended = null
     this.lastChoice = s.clock
     s.player.invulnerable = Math.max(s.player.invulnerable, 0.25)
     applyUpgrade(s, this.hooks, id)
@@ -137,6 +164,6 @@ export class Simulation {
     advanceShots(s, this.hooks, dt)
     advanceLoot(s, this.hooks, dt)
     for (const item of s.loot) keepInArena(item, 8)
-    this.progression()
+    this.progression(dt)
   }
 }

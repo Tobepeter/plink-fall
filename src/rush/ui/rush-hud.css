@@ -122,15 +122,6 @@
   justify-self: end;
   color: var(--rush-mint);
 }
-.rush-clock > b.is-boss-wave > svg {
-  display: block;
-  width: 26px;
-  height: 26px;
-  stroke: var(--rush-red);
-  stroke-width: 1.8;
-  stroke-linecap: square;
-  fill: none;
-}
 .rush-level {
   grid-column: 1 / -1;
   display: flex;

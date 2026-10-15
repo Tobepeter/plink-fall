@@ -1,251 +1,201 @@
-.rush-result {
-  gap: 17px;
-  padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
-  justify-content: safe center;
-  overflow-y: auto;
+.rush-shell .rush-result {
+  display: grid;
+  place-items: center;
+  gap: 0;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  overflow: hidden;
+}
+.rush-settlement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(18px, 4vh, 30px);
+  width: min(100%, 430px);
+}
+.rush-settlement-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.rush-settlement-title > h1 {
+  margin: 0;
+  font-size: 36px;
+  line-height: 1.25;
+  letter-spacing: 4px;
+  text-shadow: 0 3px #070f1d;
+}
+.rush-settlement-title > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--rush-brass);
+  font:
+    800 14px 'SFMono-Regular',
+    Consolas,
+    monospace;
 }
 .rush-result-reward {
   display: flex;
   align-items: center;
-  gap: 21px;
-  margin: 6px 0 0;
-}
-.rush-reward-emblem {
-  position: relative;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  width: 111px;
-  height: 111px;
+  gap: 16px;
+  min-height: 100px;
 }
-.rush-reward-emblem > .rush-coin {
-  width: 79px;
-  height: 79px;
-  animation: rush-reward-coin 0.45s ease-out both;
+.rush-result-reward > .rush-coin {
+  animation: rush-reward-coin 0.32s ease-out both;
 }
-.rush-reward-emblem > i {
-  position: absolute;
-  inset: 3px;
-  border: 1px solid #edc27444;
-  border-radius: 50%;
-}
-.rush-reward-emblem > i:last-child {
-  inset: 0;
-  border: 2px solid transparent;
-  border-top-color: #edc27477;
-  border-bottom-color: #edc27477;
-  transform: rotate(-35deg);
-}
-.rush-result-reward > div {
-  display: flex;
-  align-items: baseline;
-  column-gap: 9px;
-  flex-wrap: wrap;
-  width: 135px;
-}
-.rush-result-reward small {
-  width: 100%;
-  color: #b9be9e;
-  font-size: 11px;
-  letter-spacing: 3px;
-}
-.rush-result-reward b {
+.rush-result-reward > b {
   color: var(--rush-brass);
   font:
-    900 48px 'SFMono-Regular',
+    900 60px/1.15 'SFMono-Regular',
     Consolas,
     monospace;
-  line-height: 1.3;
-  letter-spacing: -2px;
+  letter-spacing: -3px;
 }
-.rush-result-reward > div > span {
-  color: #b9be9e;
-  font-size: 11px;
-}
-.rush-reward-parts {
-  display: flex;
-  gap: 11px;
-  color: #8da38e;
-  font-size: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.rush-reward-parts b {
-  color: #c2c8a9;
-  font-weight: 750;
-  margin-left: 2px;
-}
-.rush-result-encourage {
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #a9c5b2;
+.rush-result .rush-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, 320px);
   margin: 0;
+}
+.rush-result .rush-results > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.rush-result .rush-results b {
+  font:
+    800 24px/1.2 'SFMono-Regular',
+    Consolas,
+    monospace;
 }
 .rush-result-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 12px;
+  width: min(100%, 330px);
 }
 .rush-result-actions .rush-restart {
-  width: 246px;
-  min-height: 55px;
-  margin-top: 0;
+  width: 100%;
+  min-height: 68px;
+  margin: 0;
+  padding: 12px 18px;
+  gap: 14px;
   background: #8ce6c2;
   color: #152a29;
   box-shadow:
     inset 0 3px #c8f0d9,
     inset 0 -4px #438c74;
 }
+.rush-result-actions .rush-restart > span {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
 .rush-again {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 166px;
+  width: 150px;
   min-height: 44px;
+  padding: 6px 12px;
   border: 0;
-  color: #a2b5a5;
+  color: #b8cdb9;
   background: transparent;
-  font-size: 12px;
 }
-.rush-again > svg {
-  width: 17px;
-  height: 17px;
+.rush-again > span {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
 }
 .rush-again:hover {
   color: var(--rush-ivory);
 }
-.rush-result-balance {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: #91a58d;
-  font-size: 10px;
-}
-.rush-result-balance > .rush-coin {
-  width: 17px;
-  height: 17px;
-}
 @keyframes rush-reward-coin {
   from {
     opacity: 0;
-    transform: scale(0.75) rotate(-18deg);
+    transform: scale(0.78) rotate(-12deg);
   }
   to {
     opacity: 1;
     transform: scale(1) rotate(0);
   }
 }
-@media (max-width: 600px) {
-  .rush-result {
-    gap: 16px;
-    padding-inline: 16px;
+@media (max-width: 360px) {
+  .rush-settlement-title > h1 {
+    font-size: 30px;
+  }
+  .rush-result-reward > b {
+    font-size: 52px;
+  }
+  .rush-result .rush-results b {
+    font-size: 21px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .rush-shell .rush-result {
+    padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  }
+  .rush-settlement {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+    grid-template-areas: 'title actions' 'reward actions' 'metrics actions';
+    gap: 14px 28px;
+    width: min(100%, 720px);
+  }
+  .rush-settlement-title {
+    grid-area: title;
+    flex-direction: row;
+    justify-content: center;
+    gap: 14px;
+  }
+  .rush-settlement-title > h1 {
+    font-size: 27px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  .rush-settlement-title > span {
+    gap: 3px;
+    font-size: 12px;
   }
   .rush-result-reward {
-    gap: 17px;
-    margin-top: 2px;
+    grid-area: reward;
+    min-height: 84px;
+    gap: 10px;
   }
-  .rush-reward-emblem {
-    width: 95px;
-    height: 95px;
+  .rush-result-reward > b {
+    font-size: 48px;
   }
-  .rush-reward-emblem > .rush-coin {
-    width: 67px;
-    height: 67px;
-  }
-  .rush-result-reward b {
-    font-size: 43px;
-  }
-  .rush-reward-parts {
+  .rush-result .rush-results {
+    grid-area: metrics;
+    justify-self: center;
     gap: 8px;
-    font-size: 9px;
   }
-}
-@media (max-height: 700px) {
-  .rush-result {
-    gap: 12px;
-    padding-block: 16px;
-  }
-  .rush-result-title > h1 {
-    font-size: 28px;
-    margin-top: 6px;
-  }
-  .rush-reward-emblem {
-    width: 78px;
-    height: 78px;
-  }
-  .rush-reward-emblem > .rush-coin {
-    width: 56px;
-    height: 56px;
-  }
-  .rush-result-reward b {
-    font-size: 37px;
-  }
-  .rush-results b {
-    font-size: 23px;
-  }
-}
-@media (max-height: 500px) and (min-width: 600px) {
-  .rush-result {
-    gap: 8px;
-    padding-block: 12px;
-  }
-  .rush-result-title > h1 {
-    font-size: 25px;
-    margin-top: 3px;
-  }
-  .rush-result-title > span {
-    font-size: 9px;
-  }
-  .rush-reward-emblem {
-    width: 65px;
-    height: 65px;
-  }
-  .rush-reward-emblem > .rush-coin {
-    width: 48px;
-    height: 48px;
-  }
-  .rush-result-reward b {
-    font-size: 32px;
-  }
-  .rush-result-reward small {
-    font-size: 9px;
-  }
-  .rush-results {
-    gap: 43px;
-    margin: 0;
-  }
-  .rush-results > span {
-    gap: 3px;
-  }
-  .rush-results b {
+  .rush-result .rush-results b {
     font-size: 20px;
   }
-  .rush-results small {
-    font-size: 8px;
-  }
   .rush-result-actions {
-    flex-direction: row;
-    gap: 20px;
-    margin-top: 0;
+    grid-area: actions;
   }
   .rush-result-actions .rush-restart {
-    width: 198px;
-    min-height: 43px;
-    font-size: 13px;
+    min-height: 64px;
+    padding-inline: 12px;
+    gap: 10px;
   }
-  .rush-result-actions .rush-restart > svg {
-    width: 19px;
-    height: 19px;
+  .rush-result-actions .rush-restart > span {
+    font-size: 21px;
   }
-  .rush-again {
-    width: 134px;
-    min-height: 43px;
-  }
-  .rush-result-encourage,
-  .rush-best {
-    font-size: 9px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rush-result-reward > .rush-coin {
+    animation: none;
   }
 }
