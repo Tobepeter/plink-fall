@@ -8,6 +8,11 @@ async function boot() {
     bootRush(root)
     return
   }
+  if (mode === 'claude-drift') {
+    const { bootDrift } = await import('./drift/boot-drift')
+    bootDrift(root)
+    return
+  }
   if (mode === 'codex-mine') {
     const { bootMine } = await import('./mine/boot-mine')
     bootMine(root)

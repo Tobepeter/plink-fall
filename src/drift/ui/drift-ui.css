@@ -1,0 +1,162 @@
+/* 流灯界面：墨夜底色、金线、毛笔字 */
+@font-face {
+  font-family: 'DriftBrush';
+  src: url('/drift/brush.woff2') format('woff2');
+  font-display: swap;
+}
+
+.drift-ui {
+  --ink: rgba(9, 13, 24, 0.72);
+  --ink-strong: rgba(8, 11, 20, 0.88);
+  --line: rgba(255, 214, 150, 0.22);
+  --cream: #f4ead6;
+  --muted: rgba(244, 234, 214, 0.6);
+  --amber: #ffb35c;
+  --jade: #5fe3c3;
+  --rose: #ff86b0;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--cream);
+  font-family:
+    system-ui,
+    -apple-system,
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+.drift-ui .pe {
+  pointer-events: auto;
+}
+.brush {
+  font-family: 'DriftBrush', 'STKaiti', 'KaiTi', serif;
+  font-weight: 400;
+}
+.drift-panel {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.drift-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--cream);
+  transition:
+    transform 0.12s ease,
+    background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.drift-btn:active {
+  transform: scale(0.94);
+}
+.drift-btn.primary {
+  background: radial-gradient(circle at 50% 30%, #ffcf8a, #ff9a3c 60%, #c9561e);
+  border-color: rgba(255, 230, 190, 0.7);
+  color: #3b1606;
+  box-shadow:
+    0 0 28px rgba(255, 160, 70, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.drift-btn:disabled {
+  opacity: 0.4;
+}
+.drift-title {
+  text-shadow:
+    0 0 24px rgba(255, 170, 80, 0.55),
+    0 0 2px rgba(255, 220, 170, 0.8);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes drift-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drift-banner {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.6em;
+  }
+  18%,
+  70% {
+    opacity: 1;
+    letter-spacing: 0.25em;
+  }
+  100% {
+    opacity: 0;
+    letter-spacing: 0.2em;
+  }
+}
+@keyframes drift-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes drift-ripple {
+  from {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+@keyframes drift-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.drift-rise {
+  animation: drift-rise 0.35s ease-out both;
+}
+.drift-banner {
+  animation: drift-banner 3.2s ease-out both;
+}
+.drift-toast {
+  animation: drift-toast 2.4s ease-out both;
+}
+.drift-hint-ring {
+  animation: drift-ripple 1.6s ease-out infinite;
+}
+.drift-breathe {
+  animation: drift-breathe 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drift-rise,
+  .drift-banner,
+  .drift-toast,
+  .drift-hint-ring,
+  .drift-breathe {
+    animation-duration: 0.01s;
+  }
+}

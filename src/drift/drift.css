@@ -1,0 +1,18 @@
+body.drift-mode #root {
+  padding: 0;
+  background: #04070d;
+}
+.drift-stage,
+.drift-overlay {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+.drift-overlay {
+  pointer-events: none;
+}
+.drift-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
