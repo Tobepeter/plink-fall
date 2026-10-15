@@ -1,6 +1,7 @@
 import { Graphics } from 'pixi.js'
-import type { RushEvent, Vec } from '../types'
+import type { FrameId, Runner, RushEvent, Vec } from '../types'
 import { palette } from './palette'
+import { abilityColors, drawAbilityImpact } from './rush-ability'
 
 interface Particle extends Vec {
   vx: number
@@ -12,12 +13,14 @@ interface Particle extends Vec {
   angle: number
 }
 interface Mark extends Vec {
-  kind: 'ring' | 'chain' | 'cross' | 'ice' | 'arrow'
+  kind: 'ring' | 'chain' | 'cross' | 'ice' | 'arrow' | 'ability' | 'link'
   life: number
   duration: number
   radius: number
   color: number
   targets: Vec[]
+  frame?: FrameId
+  angle: number
 }
 
 // 实际击中点的碎片与协议几何
@@ -26,8 +29,9 @@ export class RushEffects {
   private particles: Particle[] = []
   private marks: Mark[] = []
   private seed = 7231
+  private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 
-  constructor(private getPlayer: () => Vec) {}
+  constructor(private getPlayer: () => Runner) {}
 
   render(dt: number) {
     const g = this.view.clear()
@@ -61,6 +65,23 @@ export class RushEffects {
 
   private drawMark(mark: Mark, t: number, alpha: number) {
     const g = this.view
+    if (mark.kind === 'ability' && mark.frame) {
+      drawAbilityImpact(g, mark.frame, mark, mark.angle, t, this.reducedMotion.matches)
+      return
+    }
+    if (mark.kind === 'link') {
+      const y = mark.y - 47
+      for (const side of [-1, 1]) {
+        const x = mark.x + side * 14
+        g.moveTo(x + side * 7, y - 6)
+          .lineTo(x, y - 6)
+          .lineTo(x - side * 5, y)
+          .lineTo(x, y + 6)
+          .lineTo(x + side * 7, y + 6)
+          .stroke({ color: side < 0 ? mark.color : palette.cream, width: 2, alpha: alpha * 0.7 })
+      }
+      return
+    }
     if (mark.kind === 'chain') {
       const points = [{ x: mark.x, y: mark.y }, ...mark.targets]
       g.moveTo(points[0].x, points[0].y)
@@ -156,7 +177,29 @@ export class RushEffects {
     }
     if (e.type === 'dash') this.mark(e, 'ring', palette.teal, 22, 0.09)
     if (e.type === 'pickup') this.mark(e, 'cross', palette.amber, 8, 0.08)
-    if (e.type === 'chain') this.mark(e, 'chain', palette.teal, 0, 0.12, e.targets)
+    if (e.type === 'chain')
+      this.mark(
+        e,
+        'chain',
+        p.frame === 'spark' ? abilityColors.spark.main : palette.teal,
+        0,
+        0.12,
+        e.targets,
+      )
+    if (e.type === 'ability' && e.frame) {
+      this.mark(
+        e,
+        'ability',
+        abilityColors[e.frame].main,
+        0,
+        e.frame === 'warden' ? 0.42 : 0.3,
+        [],
+        e.frame,
+        p.angle,
+      )
+      if (!this.reducedMotion.matches)
+        this.burst(e, abilityColors[e.frame].core, e.frame === 'warden' ? 8 : 5, 125)
+    }
     if (e.type === 'explode') {
       const radius = e.power ? Math.min(210, e.power * 70) : 75
       this.mark(e, 'ring', palette.cream, radius, 0.23)
@@ -173,6 +216,12 @@ export class RushEffects {
       this.mark(e, 'ring', palette.teal, 48, 0.18)
     }
     if (e.type === 'protocol') {
+      if (e.amount === 1) {
+        // 减少动态时保留接通反馈，不运行机械 Tween
+        if (this.reducedMotion.matches)
+          this.mark(e, 'link', e.protocol === 'frostburst' ? palette.amber : palette.teal, 0, 0.2)
+        return
+      }
       if (e.protocol === 'circuit') this.mark(e, 'ring', palette.teal, 12, 0.08)
       if (e.protocol === 'frostburst') this.mark(e, 'ice', palette.cream, (e.power ?? 1) * 70, 0.3)
       if (e.protocol === 'returnfire')
@@ -217,6 +266,8 @@ export class RushEffects {
     radius: number,
     duration: number,
     targets: Vec[] = [],
+    frame?: FrameId,
+    angle = 0,
   ) {
     this.marks.push({
       ...point,
@@ -226,6 +277,8 @@ export class RushEffects {
       life: duration,
       duration,
       targets: targets.map((p) => ({ ...p })),
+      frame,
+      angle,
     })
     this.marks = this.marks.slice(-80)
   }

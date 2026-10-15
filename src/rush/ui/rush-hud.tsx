@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { GameGlyph } from './game-glyph'
 import type { CSSProperties, PointerEvent } from 'react'
-import type { RushPort, RushState } from '../types'
+import type { ProtocolId, RushPort, RushState } from '../types'
 import { dashMaxCooldown } from '../model/weapons'
 import { activeProtocols, protocolDefinitions } from '../model/combat/protocols'
 import { ControlGlyph, WeaponGlyph, time } from './weapon-glyph'
@@ -21,11 +21,18 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
   const dashCooldown = dashMaxCooldown(state)
   const dashReady = playing && state.player.dashCooldown <= 0
   const [counter, setCounter] = useState<{ amount: number; runId: number } | null>(null)
+  const [connected, setConnected] = useState<{
+    id: ProtocolId
+    clock: number
+    runId: number
+  } | null>(null)
   useEffect(
     () =>
       store.onEvent((event) => {
         if (event.type === 'counter')
           setCounter({ amount: event.amount ?? 0, runId: store.state.runId })
+        if (event.type === 'protocol' && event.amount === 1 && event.protocol)
+          setConnected({ id: event.protocol, clock: store.state.clock, runId: store.state.runId })
       }),
     [store],
   )
@@ -154,10 +161,24 @@ export function RushHud(props: { state: RushState; store: RushPort; ready: boole
           {protocols.map((id) => {
             const item = protocolDefinitions.find((protocol) => protocol.id === id)!
             return (
-              <span key={id} aria-label={item.name} title={item.name}>
+              <span
+                key={`${state.runId}-${id}`}
+                data-protocol={id}
+                className={
+                  connected?.id === id &&
+                  connected.runId === state.runId &&
+                  state.clock - connected.clock < 2.4
+                    ? 'is-new'
+                    : undefined
+                }
+                style={{ '--protocol-color': item.color } as CSSProperties}
+                aria-label={item.name}
+                title={item.name}
+              >
                 <WeaponGlyph id={item.parts[0]} size={29} />
                 <i />
                 <WeaponGlyph id={item.parts[1]} size={29} />
+                <small aria-hidden="true">{item.name}</small>
               </span>
             )
           })}

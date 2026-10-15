@@ -226,7 +226,7 @@
   }
 }
 .rush-shell.is-paused .rush-hud {
-  z-index: 8;
+  visibility: hidden;
 }
 @media (max-width: 600px) {
   .rush-hud {

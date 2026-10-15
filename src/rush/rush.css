@@ -101,7 +101,7 @@ body.rush-mode #root {
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: #101a2bda;
+  background: #101a2bf2;
 }
 .rush-shell.is-paused *,
 .rush-shell.is-paused *::before,

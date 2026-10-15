@@ -1,6 +1,7 @@
 import type { RushPort, RushState } from '../../types'
-import type { PointerEvent } from 'react'
+import type { CSSProperties, PointerEvent } from 'react'
 import { frameStats } from '../../model/frames'
+import { frameArt } from '../../frame-art'
 import { WeaponGlyph } from '../weapon-glyph'
 
 // 独立机体技能与有效冷却
@@ -21,10 +22,12 @@ export function RushAbility(props: { state: RushState; store: RushPort }) {
   return (
     <button
       className={`rush-ability${ready ? ' is-ready' : ''}${active ? ' is-active' : ''}`}
+      style={{ '--ability-color': frameArt[state.player.frame].accent } as CSSProperties}
       onClick={activate}
       onPointerDown={pointerDown}
       disabled={!ready}
       aria-label={`机体技能：${frame.skillName}`}
+      aria-description={frame.skillHint}
     >
       <svg className="rush-ability-charge" viewBox="0 0 66 66" aria-hidden="true">
         <path d="M11 2h44l9 9v44l-9 9H11l-9-9V11z" />

@@ -53,7 +53,7 @@
 }
 .rush-ability-charge > path:last-child {
   fill: none;
-  stroke: var(--rush-mint);
+  stroke: var(--ability-color, var(--rush-mint));
   stroke-width: 3;
   stroke-dasharray: 100;
 }
@@ -97,21 +97,21 @@
   color: var(--rush-ivory);
 }
 .rush-ability.is-ready .rush-ability-charge {
-  fill: #335344;
-  stroke: #94bea2;
+  fill: color-mix(in srgb, var(--ability-color) 18%, #192b31);
+  stroke: var(--ability-color);
 }
 .rush-ability.is-ready > .rush-module {
   opacity: 1;
 }
 .rush-ability.is-active .rush-ability-charge {
-  fill: #564c34;
+  fill: color-mix(in srgb, var(--ability-color) 32%, #192b31);
 }
 .rush-ability > b.rush-ability-active {
   top: 23px;
   font-size: 10px;
   font-weight: 900;
   font-family: inherit;
-  color: var(--rush-brass);
+  color: var(--ability-color);
   letter-spacing: 1px;
 }
 .rush-ability.is-active > .rush-module {
@@ -175,6 +175,7 @@
   gap: 5px;
 }
 .rush-protocols > span {
+  position: relative;
   display: flex;
   align-items: center;
   animation: rush-protocol-seat 0.26s ease-out both;
@@ -182,14 +183,14 @@
 .rush-protocols > span > .rush-module:first-child {
   animation: rush-protocol-left 0.26s ease-out both;
 }
-.rush-protocols > span > .rush-module:last-child {
+.rush-protocols > span > .rush-module:nth-of-type(2) {
   animation: rush-protocol-right 0.26s ease-out both;
 }
 .rush-protocols > span > i {
   position: relative;
   width: 10px;
   height: 2px;
-  background: var(--rush-mint);
+  background: var(--protocol-color, var(--rush-mint));
 }
 .rush-protocols > span > i::after {
   content: '';
@@ -202,6 +203,23 @@
   background: #3a6f5b;
   transform: rotate(45deg);
   animation: rush-protocol-latch 0.32s ease-out both;
+}
+.rush-protocols > span > small {
+  position: absolute;
+  left: calc(100% + 8px);
+  color: var(--protocol-color);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  opacity: 0;
+}
+.rush-protocols > span.is-new > small {
+  opacity: 1;
+}
+.rush-protocols > span.is-new > i::after {
+  background: var(--protocol-color);
+  box-shadow: 0 0 8px var(--protocol-color);
 }
 @keyframes rush-protocol-seat {
   from {

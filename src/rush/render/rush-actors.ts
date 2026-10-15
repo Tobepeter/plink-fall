@@ -5,6 +5,7 @@ import { clamp, foeColors, palette } from './palette'
 import { RushGait } from './rush-gait'
 import { RushRunner } from './actors/rush-runner'
 import { frameArt } from '../frame-art'
+import { abilityColors, drawAbilityAura } from './rush-ability'
 
 const frameIndex: Record<EnemyKind, number> = {
   chaser: 1,
@@ -218,6 +219,8 @@ export class RushActors {
     const p = state.player
     const g = this.equipment.clear()
     const aura = this.aura.clear()
+    if (state.phase === 'playing')
+      drawAbilityAura(aura, p, state.abilityActive, state.clock, this.reducedMotion.matches)
     const overdrive = state.overdrive > 0
     const progress = clamp(overdrive ? state.overdrive / 3 : state.charge / 100, 0, 1)
     if (progress > 0.01) {
@@ -226,7 +229,11 @@ export class RushActors {
       aura
         .moveTo(p.x + Math.cos(start) * radius, p.y + Math.sin(start) * radius)
         .arc(p.x, p.y, radius, start, start + progress * Math.PI * 2)
-        .stroke({ color: overdrive ? palette.amber : frameArt[p.frame].accent, width: 2, alpha: 0.82 })
+        .stroke({
+          color: overdrive ? palette.amber : frameArt[p.frame].accent,
+          width: 2,
+          alpha: 0.82,
+        })
     }
     const a = p.angle
     const dx = Math.cos(a)
@@ -246,6 +253,14 @@ export class RushActors {
         tip.x + dy * 5,
         tip.y - dx * 5,
       ]).fill(palette.cream)
+      if (p.frame === 'runner' && state.abilityActive > 0) {
+        for (const offset of [-0.3, 0.3]) {
+          const a = p.angle + offset
+          g.moveTo(tip.x + Math.cos(a) * 8, tip.y + Math.sin(a) * 8)
+            .lineTo(tip.x + Math.cos(a) * 17, tip.y + Math.sin(a) * 17)
+            .stroke({ color: abilityColors.runner.core, width: 1.8, alpha: 0.9 })
+        }
+      }
     }
   }
 
@@ -271,6 +286,8 @@ export class RushActors {
     for (const sprite of this.foes.values()) sprite.destroy()
     this.foes.clear()
     this.dashLines.clear()
+    this.aura.clear()
+    this.equipment.clear()
     this.steps.clear()
     this.gait.reset()
     this.fire = 0

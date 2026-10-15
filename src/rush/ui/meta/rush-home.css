@@ -115,6 +115,7 @@
   margin-top: 10px;
 }
 .rush-home-nav > button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -135,6 +136,31 @@
 .rush-home-nav > button:hover {
   color: var(--rush-mint);
   background: #8ce6c20d;
+}
+.rush-home-nav > button.can-upgrade {
+  border-top-color: #edc2749c;
+}
+.rush-home-upgrade-mark {
+  position: absolute;
+  top: 3px;
+  right: calc(50% - 28px);
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--rush-brass);
+  background: #26352f;
+  border-radius: 50%;
+  animation: rush-upgrade-ready 2.4s ease-in-out infinite;
+}
+@keyframes rush-upgrade-ready {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 #edc27400;
+  }
+  50% {
+    box-shadow: 0 0 0 4px #edc27422;
+  }
 }
 @media (max-width: 650px) {
   .rush-start {

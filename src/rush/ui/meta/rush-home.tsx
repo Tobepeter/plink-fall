@@ -1,6 +1,7 @@
 import { frameDefinitions } from '../../model/data'
 import { frameStats } from '../../model/frames'
 import { difficultyDefinitions } from '../../model/campaign/difficulty'
+import { metaPrice, metaUpgrades } from '../../model/meta/progression'
 import type { RushState } from '../../types'
 import { GameGlyph } from '../game-glyph'
 import { WeaponGlyph } from '../weapon-glyph'
@@ -24,6 +25,10 @@ export function RushHome(props: {
   const frame = frameDefinitions.find((item) => item.id === record.selected)!
   const stats = frameStats[frame.id]
   const difficulty = difficultyDefinitions[record.difficulty]
+  const canUpgrade = metaUpgrades.some((item) => {
+    const price = metaPrice(record, item.id)
+    return record.meta[item.id] < item.maxLevel && price > 0 && record.coins >= price
+  })
   return (
     <div className="rush-home">
       <div className="rush-home-hero">
@@ -54,12 +59,18 @@ export function RushHome(props: {
           {entries.map((entry) => (
             <button
               key={entry.page}
+              className={entry.page === 'upgrades' && canUpgrade ? 'can-upgrade' : undefined}
               data-menu-entry={entry.page}
               onClick={() => props.open(entry.page)}
-              aria-label={`打开${entry.name}`}
+              aria-label={`打开${entry.name}${entry.page === 'upgrades' && canUpgrade ? '，可购买永久强化' : ''}`}
             >
               <GameGlyph id={entry.page} size={30} />
               <span>{entry.name}</span>
+              {entry.page === 'upgrades' && canUpgrade && (
+                <i className="rush-home-upgrade-mark" aria-hidden="true">
+                  <GameGlyph id="level" size={17} />
+                </i>
+              )}
             </button>
           ))}
         </nav>
